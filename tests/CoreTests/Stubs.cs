@@ -27,7 +27,11 @@ namespace UnityEngine
 // RELATIVE cloud path, which is not a filesystem location.
 public static class FileHelpers
 {
-    public enum FileSource { Auto = 0, Local = 1, Cloud = 2, Legacy = 3 }
+    // 1.0.7 made this a [Flags] enum and RENUMBERED it: Local moved from 1 to 2. Mirrored
+    // faithfully because that is the trap — passing the symbol stays correct, storing the
+    // number does not.
+    [System.Flags]
+    public enum FileSource { Auto = 1, Local = 2, Cloud = 4, Legacy = 8 }
 }
 
 public class World
@@ -35,9 +39,14 @@ public class World
     // long, not ulong — matches the real assembly. Persistence casts on the way out, and
     // asking FieldRefAccess for the wrong one throws rather than converting.
     public long m_uid;
+}
 
-    // Tests always set Persistence.OverrideDirectory, so this is never the path taken.
-    public static string GetWorldSavePath(FileHelpers.FileSource fileSource)
+// Valheim 1.0.7 deleted World.GetWorldSavePath and rehoused it here, same body and the same
+// "/worlds_local" suffix for Local. Tests always set Persistence.OverrideDirectory, so this is
+// never the path taken; it exists so the shipping source compiles.
+public static class SaveSystem
+{
+    public static string GetWorldsSaveRootPath(FileHelpers.FileSource fileSource)
         => System.IO.Path.GetTempPath();
 }
 

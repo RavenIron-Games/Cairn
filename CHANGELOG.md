@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.0
+
+- **Valheim 1.0.7 support. This release REQUIRES it, and does not run on 0.2x.** The 1.0
+  release deleted `World.GetWorldSavePath`, which is how the landmark ledger found its file —
+  a clean compile and a mod that could not save. It now resolves through
+  `SaveSystem.GetWorldsSaveRootPath`, the same method rehoused, so your existing
+  `cairn_landmarks_*.dat` is found exactly where it was. **Nothing to migrate.**
+- The singleton reader now also recognises `s_instance`, the name Valheim 1.0.7 gave
+  `ZoneSystem`'s backing field. It already coped by falling through to the public property;
+  this makes that deliberate rather than lucky.
+- No gameplay or config change. Same sweeps, same beacons, same defaults.
+
 ## 0.7.0
 
 First release. Built and verified in one day on a dedicated server, against cairns stacked

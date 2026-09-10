@@ -98,7 +98,11 @@ namespace RavenIron.Cairn.Core
                 //
                 // Deliberate consequence, inherited from RW: on a cloud-saved world the ledger
                 // stays on this machine and does not travel with the save.
-                return World.GetWorldSavePath(FileHelpers.FileSource.Local);
+                // Valheim 1.0.7 deleted World.GetWorldSavePath; SaveSystem.GetWorldsSaveRootPath
+                // is the same method rehoused, same body and same "/worlds_local" for Local.
+                // 1.0.7 also renumbered FileSource into a [Flags] enum (Local is 2, was 1) —
+                // pass the symbol, never the number.
+                return SaveSystem.GetWorldsSaveRootPath(FileHelpers.FileSource.Local);
             }
             catch (Exception ex)
             {

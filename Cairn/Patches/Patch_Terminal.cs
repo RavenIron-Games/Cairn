@@ -454,7 +454,12 @@ namespace RavenIron.Cairn.Patches
         /// <summary>A game singleton, however the class spells it, without naming it in our IL.</summary>
         private static object ReadSingleton(Type t)
         {
-            FieldInfo f = AccessTools.Field(t, "m_instance") ?? AccessTools.Field(t, "instance");
+            // "however the class spells it" now includes s_instance: Valheim 1.0.7 renamed
+            // ZoneSystem's backing field m_instance -> s_instance. The property fallback below
+            // already covered that by luck; naming it here makes the coverage deliberate.
+            FieldInfo f = AccessTools.Field(t, "m_instance")
+                          ?? AccessTools.Field(t, "s_instance")
+                          ?? AccessTools.Field(t, "instance");
             object v = f?.GetValue(null);
 
             if (v == null)
