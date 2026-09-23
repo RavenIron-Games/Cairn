@@ -15,6 +15,15 @@ knowledge a crew carries in their heads.
 Design document (the reasoning behind every decision here):
 <https://claude.ai/code/artifact/a04abbae-14d5-4a21-9bdc-032e91da0936>
 
+**Unreleased on main (2026-09-23): the build no longer embeds the build machine's
+folders.** Every shipped DLL through 0.8.0 carried the absolute PDB path
+(`C:\Users\<name>\...\obj\Release\Cairn.pdb`) in its PE debug directory. The csproj now
+sets `DeterministicSourcePaths` and always names the repo root as a `SourceRoot`, so the
+DLL carries `/_/Cairn/obj/Release/Cairn.pdb` and neither the DLL nor the PDB names a local
+path; the IL is unchanged. At the next cut, say in the changelog that the DLL no longer
+carries an absolute build path that included the build machine's user name (quote no
+path), and name the commit the DLL was built from: the md5 follows the commit and no longer the checkout folder (the PDB's Source Link URL carries the commit).
+
 **Status: PUBLISHED 2026-09-02/03, v0.7.0.** Live on the stores under team
 `RavenIronStudios`, categorised "Client & Server - must be installed on both". Built,
 verified and shipped in a single day.
