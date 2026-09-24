@@ -121,6 +121,13 @@ namespace RavenIron.Cairn.Systems
         {
             if (_targets.Count == 0) return;
 
+            // Logout empties ZDOMan (ZNet.Shutdown -> ZDOMan.ShutDown) a frame before the scene
+            // swap destroys ZNet. A sweep in that frame finds an empty world without throwing,
+            // completes "cleanly", prunes every row, and the world-end flush would then save
+            // that pruned ledger into the world's own file. Nothing is swept while shutting down.
+            Game game = Game.instance;
+            if (game != null && game.IsShuttingDown()) return;
+
             ZDOMan man = ZDOMan.instance;
             if (man == null) return;
 
