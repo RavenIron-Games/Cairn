@@ -438,6 +438,43 @@ namespace Cairn.Tests
                   "a distant sign does not name it — an unnamed cairn is still a cairn");
             Equal(-1, PileDetection.NearestSign(top, null, 6f), "no signs at all is not a crash");
 
+            // --- one sign, two cairns (review finding 3, 2026-09-24) ---------------------------
+            // A cairn either side of a path and one named sign between them. Pile-picks-sign
+            // gave BOTH piles the sign, so they collapsed into one landmark, one never lit, and
+            // the ledger was rewritten every minute. Each sign now names only its nearest pile.
+            var trail = new List<Vector3> { new Vector3(-3f, 2f, 0f), new Vector3(2f, 2f, 0f) };
+            var trailSign = new List<Vector3> { new Vector3(0f, 1f, 0f) };
+            int[] paired = PileDetection.PairSigns(trail, trailSign, 6f);
+            Equal(2, paired.Length, "one answer per pile");
+            Equal(0, paired[1], "the sign names the nearer cairn");
+            Equal(-1, paired[0], "the farther cairn is left unnamed — still its own lit waymark, not merged");
+
+            // Greedy by distance, not by pile order: pile 0 is within reach of both signs, but
+            // sign 0 is much closer to pile 1, so pile 0 must end up with sign 1.
+            var piles2 = new List<Vector3> { new Vector3(0f, 0f, 0f), new Vector3(4f, 0f, 0f) };
+            var signs2 = new List<Vector3> { new Vector3(3.8f, 0f, 0f), new Vector3(-3f, 0f, 0f) };
+            int[] greedy = PileDetection.PairSigns(piles2, signs2, 6f);
+            Equal(0, greedy[1], "the closest pair in the world is settled first");
+            Equal(1, greedy[0], "and the other pile takes the sign left over");
+
+            // Two signs by one cairn: it takes the nearer; the other stays a sign-only place.
+            int[] twoSigns = PileDetection.PairSigns(
+                new List<Vector3> { new Vector3(0f, 0f, 0f) },
+                new List<Vector3> { new Vector3(5f, 0f, 0f), new Vector3(1f, 0f, 0f) }, 6f);
+            Equal(1, twoSigns[0], "one cairn, two signs: the nearer names it");
+
+            Equal(-1, PileDetection.PairSigns(trail, new List<Vector3> { new Vector3(40f, 0f, 40f) }, 6f)[0],
+                  "a sign out of reach names nothing");
+            Equal(-1, PileDetection.PairSigns(trail, null, 6f)[1], "no signs at all is not a crash");
+            Equal(0, PileDetection.PairSigns(null, trailSign, 6f).Length, "no piles at all is not a crash");
+
+            // Ties are settled by index, never by sort instability: equal distances, same answer.
+            int[] tie = PileDetection.PairSigns(
+                new List<Vector3> { new Vector3(-2f, 0f, 0f), new Vector3(2f, 0f, 0f) },
+                new List<Vector3> { new Vector3(0f, 0f, 0f) }, 6f);
+            Equal(0, tie[0], "an exact tie goes to the lower pile index");
+            Equal(-1, tie[1], "and only one pile gets the sign");
+
             // --- a drifting cairn keeps its identity ----------------------------------------
             // Live defect, 2026-09-02: an unnamed cairn is keyed on its own crown, a crown is a
             // computed centroid, and adding a stone moved it 0.8m — across a metre boundary,

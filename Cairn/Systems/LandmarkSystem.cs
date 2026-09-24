@@ -208,9 +208,17 @@ namespace RavenIron.Cairn.Systems
 
             float pairMeters = ModConfig.LandmarkPairMeters.Value;
 
-            foreach (PileDetection.Pile pile in piles)
+            // Each sign names at most one pile — the nearest one. Two cairns within reach of
+            // one sign used to both claim it, collapse into one landmark, and fight over its
+            // light on every sweep.
+            var pileTops = new List<Vector3>(piles.Count);
+            foreach (PileDetection.Pile pile in piles) pileTops.Add(pile.Top);
+            int[] signFor = PileDetection.PairSigns(pileTops, _signPositions, pairMeters);
+
+            for (int p = 0; p < piles.Count; p++)
             {
-                int sign = PileDetection.NearestSign(pile.Top, _signPositions, pairMeters);
+                PileDetection.Pile pile = piles[p];
+                int sign = signFor[p];
 
                 // A named sign is the landmark's identity when one is in reach, so building a
                 // cairn around a sign that was ALREADY a landmark flips its light on rather
