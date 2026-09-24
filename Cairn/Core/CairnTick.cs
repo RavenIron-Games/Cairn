@@ -65,10 +65,59 @@ namespace RavenIron.Cairn.Core
             return "client";
         }
 
+        /// <summary>The ZNet of the world this process is in, or null between worlds.</summary>
+        private static ZNet _world;
+
+        /// <summary>
+        /// The world is ending. Called from a ZNet.OnDestroy prefix (logout, disconnect,
+        /// server shutdown) and, as a fallback, from Update when ZNet.instance has changed.
+        /// Idempotent: the second caller finds nothing to do.
+        ///
+        /// This object is DontDestroyOnLoad and lives for the whole process, so without this
+        /// the first world's ledger, beacons and half-finished rotation carried into every
+        /// world or server after it until the game was restarted.
+        /// </summary>
+        public static void EndWorld(string why)
+        {
+            if (_world == null && !Persistence.IsLoaded && !_initialised) return;
+
+            // Flush FIRST, while ZNet.GetWorldIfIsHost still names the world that is ending —
+            // m_world and m_isServer are static, so they hold until the next world is chosen.
+            Persistence.Save(force: true);
+            Persistence.Unload();
+
+            Net.LandmarkSync.ResetForWorldChange();
+            try { Visuals.Beacon.Instance?.ClearForWorldChange(); }
+            catch (Exception ex) { Cairn.Log.LogWarning($"Beacon clear on world change failed: {ex.Message}"); }
+
+            _world = null;
+            _initialised = false;
+            _roleLogged = false;
+            _lastSave = 0f;
+            _lastBeaconSend = 0f;
+            _cursor = 0;
+            foreach (IWorldSystem system in _systems) _lastRun[system] = 0f;
+
+            Cairn.Log.LogInfo($"Cairn: world ended ({why}) — ledger saved and unloaded, beacons cleared.");
+        }
+
+        /// <summary>From the ZNet.OnDestroy prefix. Only the ZNet we were running in counts.</summary>
+        public static void OnZNetDestroyed(ZNet znet)
+        {
+            if (znet != null && ReferenceEquals(znet, _world)) EndWorld("ZNet.OnDestroy");
+        }
+
         private void Update()
         {
             ZNet znet = ZNet.instance;
+
+            // Fallback for the ZNet.OnDestroy prefix: a different (or no) ZNet means the world
+            // we were in has gone, whatever path it went by.
+            if (!ReferenceEquals(znet, _world) && (_world != null || Persistence.IsLoaded))
+                EndWorld("ZNet changed");
+
             if (znet == null) return;   // main menu: nothing is knowable yet
+            _world = znet;
 
             if (!_roleLogged)
             {
@@ -202,7 +251,9 @@ namespace RavenIron.Cairn.Core
             // plugin all land here — without this, up to one autosave interval of the ledger
             // is lost every session, which reads as the mod randomly forgetting a landmark.
             Persistence.Save(force: true);
+            Persistence.Unload();
 
+            _world = null;
             _systems.Clear();
             _lastRun.Clear();
             _cursor = 0;

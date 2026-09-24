@@ -59,6 +59,19 @@ namespace RavenIron.Cairn.Net
             return live;
         }
 
+        /// <summary>
+        /// The world is ending: drop the last world's beacons so they cannot be drawn in the
+        /// next world, or at the same coordinates on the next server.
+        /// </summary>
+        public static void ResetForWorldChange()
+        {
+            // _registeredOn is left alone: every session builds a new ZRoutedRpc, so the
+            // reference check re-registers on the next world by itself, and re-registering on
+            // the same instance would throw on the duplicate name.
+            _cache.Clear();
+            Revision++;
+        }
+
         public static void EnsureRegistered()
         {
             ZRoutedRpc rpc = ZRoutedRpc.instance;

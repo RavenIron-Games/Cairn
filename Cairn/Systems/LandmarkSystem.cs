@@ -77,6 +77,20 @@ namespace RavenIron.Cairn.Systems
 
         public void Initialise()
         {
+            // Initialise runs once PER WORLD. A rotation cut short by leaving the last world
+            // must not carry that world's stone and signs into this one, where they would pair
+            // with this world's piles and be saved to this world's ledger.
+            _cursor = 0;
+            _found.Clear();
+            _sweepIndex = 0;
+            _stones.Clear();
+            _signPositions.Clear();
+            _signNames.Clear();
+            _signAuthors.Clear();
+            _foundCounts.Clear();
+            _keptCounts.Clear();
+            _rotationClean = true;
+
             _targets.Clear();
             AddTargets(ModConfig.SignPrefabs.Value, isSign: true);
             AddTargets(ModConfig.StonePrefabs.Value, isSign: false);

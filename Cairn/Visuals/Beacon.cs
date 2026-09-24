@@ -207,6 +207,17 @@ namespace RavenIron.Cairn.Visuals
             return new Lit { Go = go, Renderer = renderer, Visibility = 0f };
         }
 
+        /// <summary>
+        /// The world is ending. Drop every light now, rather than waiting for a camera and a
+        /// rebuild to notice, so nothing from the last world is ever drawn in the next.
+        /// </summary>
+        public void ClearForWorldChange()
+        {
+            ClearAll();
+            _seenRevision = -1;
+            _occlusionCursor = 0;
+        }
+
         private void ClearAll()
         {
             foreach (KeyValuePair<LandmarkKey, Lit> kv in _lit)
