@@ -156,11 +156,11 @@ landmarks, and that is correct.
 |---|---|
 | Scope | **Knowing where you are, and telling someone else.** Nothing else. |
 | Map / compass / waypoints / markers / pin sharing | **None.** See house rule A. |
-| Anchor object | **A pile of stone marks it; a named `Sign` names it.** Amended 2026-09-02 by the owner, reversing "the sign is the anchor". A qualifying stack of vanilla stone pieces is a cairn and gets the light — that is the navigation function, and it works unnamed. A named sign within `LandmarkPairMeters` gives that cairn its name. A sign with no pile is a named place with no light; a pile with no sign is a lit waymark with no name. Both are legitimate and the ledger holds both. |
+| Anchor object | **A pile of stone marks it; a named `Sign` names it.** Amended 2026-09-02 by RavenIron, reversing "the sign is the anchor". A qualifying stack of vanilla stone pieces is a cairn and gets the light — that is the navigation function, and it works unnamed. A named sign within `LandmarkPairMeters` gives that cairn its name. A sign with no pile is a named place with no light; a pile with no sign is a lit waymark with no name. Both are legitimate and the ledger holds both. |
 | New prefabs | **Still none.** The pile is DETECTED, never provided: a cairn is a pattern in what players build out of ordinary stone. Adding a piece would mean shipping a prefab, and a mod adding a prefab must ship server-side or `ZNetScene.CreateObjectsSorted` calls `DestroyZDO` on every hash it cannot resolve — silent damage in someone else's world. Everyone's cairn looks different, and with the mod uninstalled it degrades to exactly what it appears to be: a pile of rocks with a sign on it. |
 | Vanilla recipes | **Untouched by default (0.4.2).** `StonePileStoneCost` briefly shipped at 10, rewriting vanilla stone_pile from 50 — the only place this mod reached outside its scope. `cairn pieces stone` then found `Placeable_Stone` at **[Hoe] Stone x1**, a single stackable stone, and the problem the override existed to solve stopped existing. Default is now 0: do not touch the game. The switch stays for anyone who prefers heaps to stacks. |
 | A cairn is made of | **`Placeable_Stone`** (Hoe, 1 stone each) stacked, or `stone_pile` heaps. Four pieces minimum inside a 4m footprint. Architecture is deliberately excluded, so a stone HOUSE can never become a landmark. |
-| The beacon | **A bright light on top of the pile** (owner, 2026-09-02), not a smoke column. Strictly easier than a plume, and it may make the fog measurement far less decisive: a bright point at night carries where grey smoke dies. |
+| The beacon | **A bright light on top of the pile** (RavenIron, 2026-09-02), not a smoke column. Strictly easier than a plume, and it may make the fog measurement far less decisive: a bright point at night carries where grey smoke dies. |
 | Beacon rendering | **Client-drawn from synced state, never a networked object.** RW's `ZoneSync` → `PlagueFog` path, already verified in-game. Rendering does not depend on the anchor's ZDO being loaded, which at beacon range it will not be. |
 | Vanilla smoke | **Never used.** `SmokeSpawner.Spawn` refuses to emit past 64m from the local player, `Smoke` is globally capped at 100 puffs with `FadeMostDistant()` culling the furthest first, and every puff is a `Rigidbody`. The engine's own policy is the opposite of a beacon's. |
 | Hugin / the Raven | **Optional flavour, additive only, never load-bearing.** Register static texts; never overwrite vanilla tutorial text; degrade to silence. It cannot be the navigation channel — see Known traps. |
@@ -173,7 +173,7 @@ landmarks, and that is correct.
 | Seabirds as a landfall signal | **Not in v1.** Good idea, unproven, and it competes for the same "is this legible?" budget as the beacon. Revisit once the beacon is shipped. |
 | Console prefix | `cairn` |
 | GUID / namespace | `com.raveniron.cairn` / `RavenIron.Cairn` |
-| Distribution | **Hexium only** (hexium.gg), store team `RavenIronStudios`, packaged by `tools\package.ps1` — never hand-zipped. Thunderstore is deliberately NOT a channel (owner's call, 2026-09-03). The zip is still built to Thunderstore's package *format*, because that is what Hexium consumes — format and channel are different things and these docs kept conflating them. |
+| Distribution | **Hexium only** (hexium.gg), store team `RavenIronStudios`, packaged by `tools\package.ps1` — never hand-zipped. Thunderstore is deliberately NOT a channel (RavenIron's call, 2026-09-03). The zip is still built to Thunderstore's package *format*, because that is what Hexium consumes — format and channel are different things and these docs kept conflating them. |
 | Timeline | Open-ended. Done when it's done. |
 
 ### Deliberately unresolved
@@ -289,7 +289,7 @@ rewriting before task 3 exists.
 owed.** Plugin loads, `cairn` console registers and confirms itself by reading Terminal's
 command map back, and the role line prints.
 
-Verified on a minimal dedicated server (`C:\Users\donfr\ValheimServers\CairnTest`, port
+Verified on a minimal dedicated server (`%USERPROFILE%\ValheimServers\CairnTest`, port
 2466, world `CairnTest`, Cairn.dll and nothing else), `isModded: True`, world created from
 nothing:
 
