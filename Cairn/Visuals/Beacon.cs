@@ -51,6 +51,7 @@ namespace RavenIron.Cairn.Visuals
         {
             public GameObject Go;
             public Renderer Renderer;
+            public Material Material;     // this beacon's own instance; destroyed with it
             public Vector3 Position;
             public float Visibility;      // 0..1, smoothed — never pops
             public bool Blocked;
@@ -176,7 +177,7 @@ namespace RavenIron.Cairn.Visuals
 
             foreach (LandmarkKey gone in _scratch)
             {
-                Destroy(_lit[gone].Go);
+                Discard(_lit[gone]);
                 _lit.Remove(gone);
             }
         }
@@ -202,16 +203,35 @@ namespace RavenIron.Cairn.Visuals
             renderer.receiveShadows = false;
 
             // Its own material instance: alpha is per-beacon, because occlusion and range are.
-            renderer.material = new Material(_material);
+            // Kept on the Lit so it can be destroyed with the beacon — destroying the
+            // GameObject does not free a material, so every removed beacon used to leak one.
+            var own = new Material(_material);
+            renderer.material = own;
 
-            return new Lit { Go = go, Renderer = renderer, Visibility = 0f };
+            return new Lit { Go = go, Renderer = renderer, Material = own, Visibility = 0f };
+        }
+
+        /// <summary>
+        /// The world is ending. Drop every light now, rather than waiting for a camera and a
+        /// rebuild to notice, so nothing from the last world is ever drawn in the next.
+        /// </summary>
+        public void ClearForWorldChange()
+        {
+            ClearAll();
+            _seenRevision = -1;
+            _occlusionCursor = 0;
         }
 
         private void ClearAll()
         {
-            foreach (KeyValuePair<LandmarkKey, Lit> kv in _lit)
-                if (kv.Value.Go != null) Destroy(kv.Value.Go);
+            foreach (KeyValuePair<LandmarkKey, Lit> kv in _lit) Discard(kv.Value);
             _lit.Clear();
+        }
+
+        private static void Discard(Lit lit)
+        {
+            if (lit.Go != null) Destroy(lit.Go);
+            if (lit.Material != null) Destroy(lit.Material);
         }
 
         // ---- per-frame ---------------------------------------------------------------------
@@ -261,7 +281,7 @@ namespace RavenIron.Cairn.Visuals
 
                 Color c = warm;
                 c.a = lit.Visibility;
-                lit.Renderer.material.color = c;
+                lit.Material.color = c;
             }
         }
 

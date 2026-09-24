@@ -43,7 +43,18 @@ namespace RavenIron.Cairn.Core
         public static bool IsLoaded => _loaded;
 
         /// <summary>Test seam: forget everything, as though the plugin had just loaded.</summary>
-        public static void ResetForTests()
+        public static void ResetForTests() => Unload();
+
+        /// <summary>
+        /// The world is ending: forget its ledger so the next world loads its own. Does NOT
+        /// save — the caller flushes first, while the old world's path still resolves.
+        ///
+        /// Without this a process that hosted one world carried that world's rows into the
+        /// next one: `Load` returned early on the stale flag, a later autosave wrote the old
+        /// rows under the new world's uid, and a client that had played single-player first
+        /// still believed it was the authority on a dedicated server.
+        /// </summary>
+        public static void Unload()
         {
             LandmarkStore.Clear();
             _loaded = false;

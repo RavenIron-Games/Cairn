@@ -96,6 +96,12 @@ namespace RavenIron.Cairn.Voice
                       "— we no longer queue there, see Offer");
             lines.Add($"  our guide point : {(_holding ? "planted" : "none")}");
 
+            // Vanilla's Raven.Spawn refuses any text flagged as a tutorial while the player has
+            // tutorials switched off, and a RavenText is a tutorial by default. Reported rather
+            // than changed: unflagging it also changes when the bird flies away (unrun in game).
+            if (resolved && AccessTools.Field(_ravenType, "m_tutorialsEnabled")?.GetValue(null) is bool tutorials)
+                lines.Add($"  tutorials : {(tutorials ? "on" : "OFF in the game settings — the raven will not land to say a name while they are off")}");
+
             // "Planted" only means WE made a GameObject. Everything below asks vanilla
             // whether it accepted it — registration, selection, and the bird's own state.
             // Three round trips were spent on the gap between those two claims.

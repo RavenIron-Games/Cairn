@@ -153,6 +153,60 @@ namespace RavenIron.Cairn.Core
         }
 
         /// <summary>
+        /// Which sign names which pile: result[p] is the sign index for pile p, or -1 when the
+        /// pile is unnamed. Each sign names AT MOST ONE pile.
+        ///
+        /// The pairing used to be "each pile takes its nearest sign", which let two cairns
+        /// either side of a path claim the same sign. Both then keyed on that sign, so they
+        /// collapsed into one landmark: only one ever lit, and the two disagreed about where
+        /// the light was on every sweep, rewriting the ledger every minute forever.
+        ///
+        /// Now it is greedy by distance: the closest pile-sign pair in the world is settled
+        /// first, and each pile and each sign is used once. A pile that loses its sign to a
+        /// nearer one falls back to being an unnamed cairn keyed on its own crown — still lit,
+        /// still a waymark. Ties break on pile index, then sign index, so the answer never
+        /// depends on dictionary order. XZ-planar, like every distance here.
+        /// </summary>
+        public static int[] PairSigns(IList<Vector3> pileTops, IList<Vector3> signPositions, float withinMeters)
+        {
+            int pileCount = pileTops?.Count ?? 0;
+            var result = new int[pileCount];
+            for (int p = 0; p < pileCount; p++) result[p] = -1;
+            if (pileCount == 0 || signPositions == null || signPositions.Count == 0) return result;
+
+            float reachSq = withinMeters * withinMeters;
+            var pairs = new List<KeyValuePair<float, long>>();
+
+            for (int p = 0; p < pileCount; p++)
+            for (int s = 0; s < signPositions.Count; s++)
+            {
+                float dx = signPositions[s].x - pileTops[p].x;
+                float dz = signPositions[s].z - pileTops[p].z;
+                float sq = dx * dx + dz * dz;
+                if (sq <= reachSq) pairs.Add(new KeyValuePair<float, long>(sq, ((long)p << 32) | (uint)s));
+            }
+
+            pairs.Sort((a, b) =>
+            {
+                int byDistance = a.Key.CompareTo(b.Key);
+                return byDistance != 0 ? byDistance : a.Value.CompareTo(b.Value);
+            });
+
+            var signTaken = new bool[signPositions.Count];
+            foreach (KeyValuePair<float, long> pair in pairs)
+            {
+                int p = (int)(pair.Value >> 32);
+                int s = (int)(pair.Value & 0xFFFFFFFF);
+                if (result[p] >= 0 || signTaken[s]) continue;
+
+                result[p] = s;
+                signTaken[s] = true;
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// The nearest candidate key to <paramref name="key"/>, within reach. Returns -1 when
         /// nothing is close enough.
         ///

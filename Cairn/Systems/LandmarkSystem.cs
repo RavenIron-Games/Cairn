@@ -77,6 +77,20 @@ namespace RavenIron.Cairn.Systems
 
         public void Initialise()
         {
+            // Initialise runs once PER WORLD. A rotation cut short by leaving the last world
+            // must not carry that world's stone and signs into this one, where they would pair
+            // with this world's piles and be saved to this world's ledger.
+            _cursor = 0;
+            _found.Clear();
+            _sweepIndex = 0;
+            _stones.Clear();
+            _signPositions.Clear();
+            _signNames.Clear();
+            _signAuthors.Clear();
+            _foundCounts.Clear();
+            _keptCounts.Clear();
+            _rotationClean = true;
+
             _targets.Clear();
             AddTargets(ModConfig.SignPrefabs.Value, isSign: true);
             AddTargets(ModConfig.StonePrefabs.Value, isSign: false);
@@ -106,6 +120,13 @@ namespace RavenIron.Cairn.Systems
         public void Tick(float deltaSeconds)
         {
             if (_targets.Count == 0) return;
+
+            // Logout empties ZDOMan (ZNet.Shutdown -> ZDOMan.ShutDown) a frame before the scene
+            // swap destroys ZNet. A sweep in that frame finds an empty world without throwing,
+            // completes "cleanly", prunes every row, and the world-end flush would then save
+            // that pruned ledger into the world's own file. Nothing is swept while shutting down.
+            Game game = Game.instance;
+            if (game != null && game.IsShuttingDown()) return;
 
             ZDOMan man = ZDOMan.instance;
             if (man == null) return;
@@ -194,9 +215,17 @@ namespace RavenIron.Cairn.Systems
 
             float pairMeters = ModConfig.LandmarkPairMeters.Value;
 
-            foreach (PileDetection.Pile pile in piles)
+            // Each sign names at most one pile — the nearest one. Two cairns within reach of
+            // one sign used to both claim it, collapse into one landmark, and fight over its
+            // light on every sweep.
+            var pileTops = new List<Vector3>(piles.Count);
+            foreach (PileDetection.Pile pile in piles) pileTops.Add(pile.Top);
+            int[] signFor = PileDetection.PairSigns(pileTops, _signPositions, pairMeters);
+
+            for (int p = 0; p < piles.Count; p++)
             {
-                int sign = PileDetection.NearestSign(pile.Top, _signPositions, pairMeters);
+                PileDetection.Pile pile = piles[p];
+                int sign = signFor[p];
 
                 // A named sign is the landmark's identity when one is in reach, so building a
                 // cairn around a sign that was ALREADY a landmark flips its light on rather
