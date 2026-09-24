@@ -15,8 +15,8 @@ knowledge a crew carries in their heads.
 Design document (the reasoning behind every decision here):
 <https://claude.ai/code/artifact/a04abbae-14d5-4a21-9bdc-032e91da0936>
 
-**The build no longer embeds the build machine's folders**, as of the 2026-09-24 review
-fixes. Every shipped DLL through 0.8.0 carried the absolute PDB path
+**The build no longer embeds the build machine's folders**, as of PR #3 (merged 2026-09-23;
+first shipped in 0.9.0). Every shipped DLL through 0.8.0 carried the absolute PDB path
 (`C:\Users\<name>\...\obj\Release\Cairn.pdb`) in its PE debug directory. The csproj now
 sets `DeterministicSourcePaths` and always names the repo root as a `SourceRoot`, so the
 DLL carries `/_/Cairn/obj/Release/Cairn.pdb` and neither the DLL nor the PDB names a local
@@ -25,17 +25,23 @@ checkout folder (the PDB's Source Link URL carries the commit) — CHANGELOG.md 
 tagged commit rather than "TBD".
 
 **CUT 2026-09-24: v0.9.0.** PR #4 merged to main at `1006999`; its tree is byte-identical
-to `802c368`, the commit tested in game (solo batch, 2026-09-24 — see
-`SOLO-BATCH-results-2026-09-24.md` for the results). The test DLL's md5 started
-`e46e0831`. Still owed: the tag, the GitHub pre-release, and the store upload, which is
-RavenIron's to do.
+to `802c368`, the commit tested in game on 2026-09-24 (test DLL md5 `e46e0831...`, built
+from a working copy with mixed line endings; a fresh clone of 802c368 builds `0f71be98...`).
+In game: world change, save at the mid-run stop, rename and the dedicated-server client
+PASS; beacon toggle on screen only; raven vs tutorials PARTIAL; twin cairns
+PASS-WITH-DEVIATION (sign about equidistant, 86→82 stones unexplained); a second sign by the
+losing cairn not run. Still owed: pushing `release/0.9.0-cut`, its PR and merge to main, the
+tag on that merge, the ship build from a fresh clone of the tagged commit with its md5 in
+the release note, the GitHub pre-release, and the store upload, which is RavenIron's to do.
+Follow-ups: rerun the twin check with the sign clearly nearer one pile, plus the second-sign
+case.
 
-**Status: PUBLISHED 2026-09-02/03, v0.7.0.** Live on the stores under team
-`RavenIronStudios`, categorised "Client & Server - must be installed on both". Built,
-verified and shipped in a single day.
+**Status: 0.8.0 live on the store** under team `RavenIronStudios` (0.7.0 first published
+2026-09-02/03), categorised "Client & Server - must be installed on both". Built, verified
+and shipped in a single day.
 
 Stacked stones become a cairn, a cairn burns, and the light was seen from 420m down a chain
-of fifteen the owner built by hand.
+of fifteen built by hand.
 
 Every task except the fog probe now has a live run behind it: the skeleton on all three
 roles, the ledger with its sweep, sign pairing, prune, unlight, drift carryover and v1-to-v2
