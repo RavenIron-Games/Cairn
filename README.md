@@ -1,6 +1,6 @@
 # Cairn
 
-A Valheim mod by [Raven Iron](https://github.com/RavenIron).
+A Valheim mod by [Raven Iron](https://ravenirongames.com/).
 
 **Stack stones on a headland and they burn.**
 
@@ -19,7 +19,7 @@ cairn is four stone and a minute's work. Pile them within four metres of each ot
 them out and it stays a scatter, because a cairn is narrow and a wall is wide, and that is how
 the mod tells them apart.
 
-**It lights itself.** Within about ten seconds a fire appears on the crown, and it can be seen
+**It lights itself.** Within about twenty seconds a fire appears on the crown, and it can be seen
 from hundreds of metres away.
 
 **Name it, if you want.** Put a sign within six metres and write on it, and the place has a
@@ -46,9 +46,11 @@ stranger. The default is firelight.
 Stand at a named cairn and Hugin may land and say its name.
 
 He is fussy, and deliberately so — vanilla will not land the bird below 30 metres of altitude,
-with anything hostile within ten metres, or during a world event. So he is silent exactly when
-you would most want him, which is why nothing in the mod depends on him. He is a grace note,
-not a compass. `cairn raven` will tell you why he has not come.
+with anything hostile within ten metres, during a world event, or while tutorials are turned
+off in the game settings. So he is silent exactly when you would most want him, which is why
+nothing in the mod depends on him. He is a grace note, not a compass. `cairn raven` shows most
+of what keeps him away: the tutorials setting, your altitude, and how far the nearest named
+cairn is.
 
 ## What it does not do
 
@@ -89,8 +91,8 @@ explaining what it costs. The ones most worth knowing:
 `cairn status` · `landmarks` · `beacons` · `raven` · `prefabs <text>` · `pieces <text>` · `save`
 
 Each reports **state rather than verdicts** — `beacons` says whether a light is out of range
-or hidden behind a hill, `raven` says which of four reasons the bird is quiet for. They exist
-because guessing at each of those cost an afternoon.
+or hidden behind a hill, `raven` shows the tutorials setting, your altitude and how far the nearest named cairn is. They exist because guessing at
+each of those cost an afternoon.
 
 ## Compatibility
 

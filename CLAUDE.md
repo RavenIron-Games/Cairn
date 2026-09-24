@@ -15,30 +15,42 @@ knowledge a crew carries in their heads.
 Design document (the reasoning behind every decision here):
 <https://claude.ai/code/artifact/a04abbae-14d5-4a21-9bdc-032e91da0936>
 
-**Unreleased on main (2026-09-23; prepared as 0.8.1 on 2026-09-24, now 0.9.0 with the 2026-09-24 review fixes, not cut): the build no longer embeds the build machine's
-folders.** Every shipped DLL through 0.8.0 carried the absolute PDB path
+**The build no longer embeds the build machine's folders**, as of PR #3 (merged 2026-09-23;
+first shipped in 0.9.0). Every shipped DLL through 0.8.0 carried the absolute PDB path
 (`C:\Users\<name>\...\obj\Release\Cairn.pdb`) in its PE debug directory. The csproj now
 sets `DeterministicSourcePaths` and always names the repo root as a `SourceRoot`, so the
 DLL carries `/_/Cairn/obj/Release/Cairn.pdb` and neither the DLL nor the PDB names a local
-path; the IL is unchanged. At the next cut, say in the changelog that the DLL no longer
-carries an absolute build path that included the build machine's user name (quote no
-path), and name the commit the DLL was built from: the md5 follows the commit and no longer the checkout folder (the PDB's Source Link URL carries the commit).
+path; the IL is unchanged. The md5 now follows the commit the DLL was built from, not the
+checkout folder (the PDB's Source Link URL carries the commit) — CHANGELOG.md names the
+tagged commit rather than "TBD".
 
-**Status: PUBLISHED 2026-09-02/03, v0.7.0.** Live on the stores under team
-`RavenIronStudios`, categorised "Client & Server - must be installed on both". Built,
-verified and shipped in a single day.
+**CUT 2026-09-24: v0.9.0.** PR #4 merged to main at `1006999`; its tree is byte-identical
+to `802c368`, the commit tested in game on 2026-09-24 (test DLL md5 `e46e0831...`, built
+from a working copy with mixed line endings; a fresh clone of 802c368 builds `0f71be98...`).
+In game: world change, save at the mid-run stop, rename and the dedicated-server client
+PASS; beacon toggle on screen only; raven vs tutorials PARTIAL; twin cairns
+PASS-WITH-DEVIATION (sign about equidistant, 86→82 stones unexplained); a second sign by the
+losing cairn not run. Still owed: pushing `release/0.9.0-cut`, its PR and merge to main, the
+tag on that merge, the ship build from a fresh clone of the tagged commit with its md5 in
+the release note, the GitHub pre-release, and the store upload, which is RavenIron's to do.
+Follow-ups: rerun the twin check with the sign clearly nearer one pile, plus the second-sign
+case, and find out why the sweep's stone count dropped from 86 to 82 during the twin check.
+
+**Status: 0.8.0 live on the store** under team `RavenIronStudios`, categorised "Client &
+Server - must be installed on both". 0.7.0, the first release, was built, verified and
+shipped in a single day (published 2026-09-02/03).
 
 Stacked stones become a cairn, a cairn burns, and the light was seen from 420m down a chain
-of fifteen the owner built by hand.
+of fifteen built by hand.
 
 Every task except the fog probe now has a live run behind it: the skeleton on all three
 roles, the ledger with its sweep, sign pairing, prune, unlight, drift carryover and v1-to-v2
-migration, and the beacon itself. Off-game 156/156, and every load-bearing assertion was
-proven to fail without its fix.
+migration, and the beacon itself. Off-game 156/156 at 0.7.0 (206/206 at 0.9.0), and every
+load-bearing assertion was proven to fail without its fix.
 
-The beacon is fully verified, occlusion included: a ridge really does put a light out. What
-remains is **the raven** — the line is offered correctly but no bird has yet been seen — and
-**task 0**, the fog measurement in
+The beacon is fully verified, occlusion included: a ridge really does put a light out. The raven
+has now been seen landing and saying a name (2026-09-24, on screen only, not in the logs; it
+will not land while game tutorials are off). What remains is **task 0**, the fog measurement in
 `tools\probe\`, still unrun and now genuinely optional: it was a gate when the beacon was a
 grey plume, and a bright point at night is a different proposition. See **Build order**.
 
