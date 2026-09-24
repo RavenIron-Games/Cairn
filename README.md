@@ -48,8 +48,9 @@ Stand at a named cairn and Hugin may land and say its name.
 He is fussy, and deliberately so — vanilla will not land the bird below 30 metres of altitude,
 with anything hostile within ten metres, during a world event, or while tutorials are turned
 off in the game settings. So he is silent exactly when you would most want him, which is why
-nothing in the mod depends on him. He is a grace note, not a compass. `cairn raven` will tell
-you why he has not come.
+nothing in the mod depends on him. He is a grace note, not a compass. `cairn raven` shows most
+of what keeps him away: the tutorials setting, your altitude, and how far the nearest named
+cairn is.
 
 ## What it does not do
 
@@ -90,7 +91,7 @@ explaining what it costs. The ones most worth knowing:
 `cairn status` · `landmarks` · `beacons` · `raven` · `prefabs <text>` · `pieces <text>` · `save`
 
 Each reports **state rather than verdicts** — `beacons` says whether a light is out of range
-or hidden behind a hill, `raven` says why the bird is quiet. They exist because guessing at
+or hidden behind a hill, `raven` shows the tutorials setting, your altitude and how far the nearest named cairn is. They exist because guessing at
 each of those cost an afternoon.
 
 ## Compatibility

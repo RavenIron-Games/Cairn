@@ -57,8 +57,9 @@ off and on worked on screen. Building two cairns beside one sign: both lit, only
 sign's name, and the rotation settled at zero changed — but the sign stood about 3.1 m from one
 pile and 3.3 m from the other, so which cairn is nearer was not clearly demonstrated, and the
 sweep's stone count also dropped once (86 to 82) for a reason not in the logs. With tutorials
-off in the game settings, `cairn raven` reported them off, and that the raven then kept away,
-then landed and spoke a name once tutorials were back on, was seen on screen, not in the logs.
+off in the game settings, `cairn raven` reported them off. The raven then kept away, and
+landed and spoke a name once tutorials were back on; that part was seen on screen only, not
+in the logs.
 The second `cairn raven` (which should read `tutorials : on`) was not typed in this run; that
 reading was seen changing from OFF to on in an earlier session the same day, on the same DLL.
 Cairn logged no error or warning on either side, and none of the lines that would mean a beacon

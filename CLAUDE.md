@@ -34,23 +34,23 @@ losing cairn not run. Still owed: pushing `release/0.9.0-cut`, its PR and merge 
 tag on that merge, the ship build from a fresh clone of the tagged commit with its md5 in
 the release note, the GitHub pre-release, and the store upload, which is RavenIron's to do.
 Follow-ups: rerun the twin check with the sign clearly nearer one pile, plus the second-sign
-case.
+case, and find out why the sweep's stone count dropped from 86 to 82 during the twin check.
 
-**Status: 0.8.0 live on the store** under team `RavenIronStudios` (0.7.0 first published
-2026-09-02/03), categorised "Client & Server - must be installed on both". Built, verified
-and shipped in a single day.
+**Status: 0.8.0 live on the store** under team `RavenIronStudios`, categorised "Client &
+Server - must be installed on both". 0.7.0, the first release, was built, verified and
+shipped in a single day (published 2026-09-02/03).
 
 Stacked stones become a cairn, a cairn burns, and the light was seen from 420m down a chain
 of fifteen built by hand.
 
 Every task except the fog probe now has a live run behind it: the skeleton on all three
 roles, the ledger with its sweep, sign pairing, prune, unlight, drift carryover and v1-to-v2
-migration, and the beacon itself. Off-game 156/156, and every load-bearing assertion was
-proven to fail without its fix.
+migration, and the beacon itself. Off-game 156/156 at 0.7.0 (206/206 at 0.9.0), and every
+load-bearing assertion was proven to fail without its fix.
 
-The beacon is fully verified, occlusion included: a ridge really does put a light out. What
-remains is **the raven** — the line is offered correctly but no bird has yet been seen — and
-**task 0**, the fog measurement in
+The beacon is fully verified, occlusion included: a ridge really does put a light out. The raven
+has now been seen landing and saying a name (2026-09-24, on screen only, not in the logs; it
+will not land while game tutorials are off). What remains is **task 0**, the fog measurement in
 `tools\probe\`, still unrun and now genuinely optional: it was a gate when the beacon was a
 grey plume, and a bright point at night is a different proposition. See **Build order**.
 
