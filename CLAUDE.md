@@ -15,7 +15,7 @@ knowledge a crew carries in their heads.
 Design document (the reasoning behind every decision here):
 <https://claude.ai/code/artifact/a04abbae-14d5-4a21-9bdc-032e91da0936>
 
-**Unreleased on main (2026-09-23; prepared as 0.8.1 on 2026-09-24, not cut): the build no longer embeds the build machine's
+**Unreleased on main (2026-09-23; prepared as 0.8.1 on 2026-09-24, now 0.9.0 with the 2026-09-24 review fixes, not cut): the build no longer embeds the build machine's
 folders.** Every shipped DLL through 0.8.0 carried the absolute PDB path
 (`C:\Users\<name>\...\obj\Release\Cairn.pdb`) in its PE debug directory. The csproj now
 sets `DeterministicSourcePaths` and always names the repo root as a `SourceRoot`, so the
@@ -95,6 +95,8 @@ Cairn/                     plugin (net472) — role-aware single DLL
   Visuals/Beacon.cs        the light — client-drawn, gated on a real GPU
   Patches/Patch_PieceCost.cs the vanilla recipe override (off by default)
   Patches/Patch_Terminal.cs  the `cairn` console
+  Patches/Patch_WorldLifecycle.cs  ZNet.OnDestroy: flush + reset per-world state (0.9.0)
+  Patches/Patch_RoutedRpcGuard.cs  server drops client-sent beacon pushes (0.9.0)
 tests/CoreTests/           net10 harness; compiles the REAL source against stubs
 docs/design-doc.html       source of the published design document
 tools/fetch-libs.ps1       populates libs\ from a local Valheim install

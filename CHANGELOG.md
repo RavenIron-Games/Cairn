@@ -1,14 +1,38 @@
 # Changelog
 
-## 0.8.1
+## 0.9.0
 
-A housekeeping release. **No gameplay or config change.** Same sweeps, same beacons, same
-defaults, and the same Valheim requirement as 0.8.0.
+Bug fixes. No new feature, no config key added or removed, the same ledger file format, and
+the same Valheim requirement as 0.8.0. Install it on the server and on every player's game, as
+before.
 
+- **Leaving a world now properly leaves it.** Until now nothing was reset when you logged
+  out, so the first world you played carried into the next one until the game was restarted:
+  - Play single-player, then join a server: you saw your single-player world's lights at
+    those coordinates, never the server's real beacons, and the raven spoke single-player
+    names.
+  - Host one world, then another: the second world's ledger was not loaded, and the first
+    world's cairns could be written into the second world's ledger file, replacing its
+    history.
+  - The ledger is now saved when a world ends, and everything is cleared before the next
+    one starts.
+- **Only the server can send beacons.** A modified client could previously push fake
+  beacons, or any text for the raven, to every player on a server. The server now drops such
+  pushes, and players' games accept beacons only from the server they are connected to.
+- **Two cairns beside one sign both light.** When two cairns stood within reach of the same
+  named sign, they merged into one landmark: only one of them ever lit, and the ledger was
+  rewritten every minute. The sign now names only the nearer cairn, and the other stays lit
+  as an unnamed cairn.
+- **A small memory leak is fixed:** each beacon that went out (a cairn taken down, or beacons
+  switched off) left a little memory behind until the game was closed.
+- **`cairn raven` now says when tutorials are turned off** in the game settings. The raven
+  does not land to say a name while they are off.
+- **`StonePileStoneCost` is described correctly.** It only affects the game of the player
+  who sets it; setting it on a dedicated server changes nothing for players. The behaviour is
+  unchanged, only the description.
 - **The DLL no longer carries the build machine's folder path.** Every release through 0.8.0
   embedded an absolute build path, which included the build machine's user name, in the
-  DLL's debug information. The build now records a neutral placeholder path instead. The
-  compiled code is unchanged.
+  DLL's debug information. The build now records a neutral placeholder path instead.
 - **The build is reproducible from the commit.** The same commit now builds to the same
   bytes wherever the repository is checked out. This DLL was built from commit TBD.
 - **The README has a Support Raven Iron section:** the website, the Patreon and a permanent
