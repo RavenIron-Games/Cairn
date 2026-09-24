@@ -183,7 +183,10 @@ namespace RavenIron.Cairn.Config
                     "looked like the only way to make cairns affordable. Then `cairn pieces " +
                     "stone` turned up Placeable_Stone at ONE stone, the problem the override " +
                     "existed to solve stopped existing, and the right move was to hand vanilla " +
-                    "back. Kept as a switch for anyone who prefers heaps to stacks.",
+                    "back. Kept as a switch for anyone who prefers heaps to stacks. " +
+                    "PER PLAYER: the cost is charged by the building player's own game, so this " +
+                    "applies to whoever sets it in their own config. It is not sent from the " +
+                    "server, and setting it on a dedicated server changes nothing for players.",
                     new AcceptableValueRange<int>(0, 100)));
 
             EnableBeacons = config.Bind(

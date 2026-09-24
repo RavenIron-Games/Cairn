@@ -18,10 +18,15 @@ namespace RavenIron.Cairn.Patches
     /// 2026-09-02, over a recorded objection that `stone_pile` is not our prefab and people
     /// build them for decoration too.
     ///
-    /// Two things keep it honest. `StonePileStoneCost = 0` leaves vanilla entirely alone, so
-    /// a server owner who disagrees has a switch rather than an argument. And the change
-    /// announces itself at boot with the before and after, because a mod that silently
-    /// halves a recipe is exactly the kind of surprise this studio complains about in others.
+    /// Two things keep it honest. `StonePileStoneCost = 0` leaves vanilla entirely alone. And
+    /// the change announces itself at boot with the before and after, because a mod that
+    /// silently halves a recipe is exactly the kind of surprise this studio complains about
+    /// in others.
+    ///
+    /// IT IS PER PLAYER. Build cost is checked and consumed on the building player's own
+    /// client, against the prefab in their own ZNetScene, and config is not synced. So the
+    /// value in effect is whatever each player set; a dedicated server's own setting changes
+    /// nothing for anyone (review finding 4, 2026-09-24 — documented, not synced).
     ///
     /// Applied from a ZNetScene.Awake postfix: prefabs do not exist before that, and the
     /// Piece component's requirement array is shared prefab data, so one write covers every
