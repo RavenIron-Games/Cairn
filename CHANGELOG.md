@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.8.1
+
+A housekeeping release. **No gameplay or config change.** Same sweeps, same beacons, same
+defaults, and the same Valheim requirement as 0.8.0.
+
+- **The DLL no longer carries the build machine's folder path.** Every release through 0.8.0
+  embedded an absolute build path, which included the build machine's user name, in the
+  DLL's debug information. The build now records a neutral placeholder path instead. The
+  compiled code is unchanged.
+- **The build is reproducible from the commit.** The same commit now builds to the same
+  bytes wherever the repository is checked out. This DLL was built from commit TBD.
+- **The README has a Support Raven Iron section:** the website, the Patreon and a permanent
+  Discord invite. Every Raven Iron mod is free and stays free; nothing is held back for
+  patrons.
+
 ## 0.8.0
 
 - **Valheim 1.0.7 support. This release REQUIRES it, and does not run on 0.2x.** The 1.0

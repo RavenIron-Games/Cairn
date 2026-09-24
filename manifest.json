@@ -1,6 +1,6 @@
 {
   "name": "Cairn",
-  "version_number": "0.8.0",
+  "version_number": "0.8.1",
   "website_url": "https://github.com/RavenIron-Games/Cairn",
   "description": "Stack stones on a headland and they burn. A trail of cairns you build yourself, lit and remembered, on a world with no map. No HUD, no markers, no new pieces.",
   "dependencies": [
