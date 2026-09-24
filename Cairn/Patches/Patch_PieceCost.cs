@@ -14,7 +14,7 @@ namespace RavenIron.Cairn.Patches
     /// reaches outside its own scope. Recorded plainly because it was argued against and
     /// then decided: at vanilla's 50 stone a piece, a two-pile cairn costs 100 stone, which
     /// is enough that nobody builds waymarks casually — and a navigation mod whose waymarks
-    /// are too expensive to litter has failed at the only thing it does. The owner's call,
+    /// are too expensive to litter has failed at the only thing it does. RavenIron's call,
     /// 2026-09-02, over a recorded objection that `stone_pile` is not our prefab and people
     /// build them for decoration too.
     ///
