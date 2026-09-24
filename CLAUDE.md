@@ -15,14 +15,20 @@ knowledge a crew carries in their heads.
 Design document (the reasoning behind every decision here):
 <https://claude.ai/code/artifact/a04abbae-14d5-4a21-9bdc-032e91da0936>
 
-**Unreleased on main (2026-09-23; prepared as 0.8.1 on 2026-09-24, now 0.9.0 with the 2026-09-24 review fixes, not cut): the build no longer embeds the build machine's
-folders.** Every shipped DLL through 0.8.0 carried the absolute PDB path
+**The build no longer embeds the build machine's folders**, as of the 2026-09-24 review
+fixes. Every shipped DLL through 0.8.0 carried the absolute PDB path
 (`C:\Users\<name>\...\obj\Release\Cairn.pdb`) in its PE debug directory. The csproj now
 sets `DeterministicSourcePaths` and always names the repo root as a `SourceRoot`, so the
 DLL carries `/_/Cairn/obj/Release/Cairn.pdb` and neither the DLL nor the PDB names a local
-path; the IL is unchanged. At the next cut, say in the changelog that the DLL no longer
-carries an absolute build path that included the build machine's user name (quote no
-path), and name the commit the DLL was built from: the md5 follows the commit and no longer the checkout folder (the PDB's Source Link URL carries the commit).
+path; the IL is unchanged. The md5 now follows the commit the DLL was built from, not the
+checkout folder (the PDB's Source Link URL carries the commit) — CHANGELOG.md names the
+tagged commit rather than "TBD".
+
+**CUT 2026-09-24: v0.9.0.** PR #4 merged to main at `1006999`; its tree is byte-identical
+to `802c368`, the commit tested in game (solo batch, 2026-09-24 — see
+`SOLO-BATCH-results-2026-09-24.md` for the results). The test DLL's md5 started
+`e46e0831`. Still owed: the tag, the GitHub pre-release, and the store upload, which is
+RavenIron's to do.
 
 **Status: PUBLISHED 2026-09-02/03, v0.7.0.** Live on the stores under team
 `RavenIronStudios`, categorised "Client & Server - must be installed on both". Built,

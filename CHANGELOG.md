@@ -37,10 +37,36 @@ before.
   DLL's debug information. The build now records a neutral placeholder path instead.
 - **The build no longer depends on the folder it is built in.** Two builds of the same
   commit, from Windows clones with Git's default line endings and the same .NET SDK, produce
-  the same bytes. This DLL was built from commit TBD.
+  the same bytes. This DLL was built from the commit tagged `v0.9.0`; the GitHub release
+  names that commit and gives the DLL's md5.
 - **The README has a Support Raven Iron section:** the website, the Patreon and a permanent
   Discord invite. Every Raven Iron mod is free and stays free; nothing is held back for
   patrons.
+- **The store page's website link now goes to the Raven Iron website** instead of the
+  GitHub repo.
+
+**Tested in game on 2026-09-24**, on the code in this release (commit `802c368`; this
+release's tree is identical): a Valheim 1.0.15 dedicated server (crossplay) plus three
+single-player/hosted worlds in turn, with one client throughout. Leaving a world and coming
+back worked as designed — a second local world loaded with none of the first world's
+landmarks, returning to the first re-loaded all of them, and joining the dedicated server as
+a client showed no local landmarks and `ledger : not on this process`. The ledger was saved
+when the server stopped mid-run, within 15 seconds and with the landmark's first-seen time
+unchanged. Renaming a sign and toggling beacons off and on both worked as expected. Building
+two cairns beside one sign: both lit, only one took the sign's name, and the rotation
+settled at zero changed — but the sign stood about 3.1 m from one pile and 3.3 m from the
+other, so which cairn is nearer was not clearly demonstrated, and the sweep's stone count
+also dropped once (86 to 82) for a reason not in the logs. With tutorials off in the game
+settings, `cairn raven` reported them off and the raven kept away, then landed and spoke a
+name once tutorials were back on — seen on screen, not in the logs, and the second reading
+(tutorials back on) was not re-checked in this run. Cairn logged no error or warning on
+either side, and none of the strings a working guard should never print (a dropped or
+ignored beacon push, a failed receive, a tick that threw) appeared.
+
+Not tried in game: a second named sign within 6 m of the cairn that lost the pairing to the
+other sign; a beacon push spoofed from a hostile client (the guard's only evidence is that
+normal pushes were never dropped); and the landmark list and raven commands on the
+dedicated-server client session, which were not typed there. Off-game: 206/206.
 
 ## 0.8.0
 
