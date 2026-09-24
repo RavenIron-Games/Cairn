@@ -18,11 +18,13 @@ before.
     one starts.
 - **Only the server can send beacons.** A modified client could previously push fake
   beacons, or any text for the raven, to every player on a server. The server now drops such
-  pushes, and players' games accept beacons only from the server they are connected to.
+  pushes, so this needs the server updated to 0.9.0. Players' games also ignore pushes that
+  do not claim to come from the server, as an extra check.
 - **Two cairns beside one sign both light.** When two cairns stood within reach of the same
   named sign, they merged into one landmark: only one of them ever lit, and the ledger was
-  rewritten every minute. The sign now names only the nearer cairn, and the other stays lit
-  as an unnamed cairn.
+  rewritten every minute. The sign now names only the nearer cairn. The other stays lit,
+  either unnamed or named by another sign within reach, and on an existing world it shows up
+  once as a new landmark.
 - **A small memory leak is fixed:** each beacon that went out (a cairn taken down, or beacons
   switched off) left a little memory behind until the game was closed.
 - **`cairn raven` now says when tutorials are turned off** in the game settings. The raven
@@ -33,8 +35,9 @@ before.
 - **The DLL no longer carries the build machine's folder path.** Every release through 0.8.0
   embedded an absolute build path, which included the build machine's user name, in the
   DLL's debug information. The build now records a neutral placeholder path instead.
-- **The build is reproducible from the commit.** The same commit now builds to the same
-  bytes wherever the repository is checked out. This DLL was built from commit TBD.
+- **The build no longer depends on the folder it is built in.** Two builds of the same
+  commit, from Windows clones with Git's default line endings and the same .NET SDK, produce
+  the same bytes. This DLL was built from commit TBD.
 - **The README has a Support Raven Iron section:** the website, the Patreon and a permanent
   Discord invite. Every Raven Iron mod is free and stays free; nothing is held back for
   patrons.
