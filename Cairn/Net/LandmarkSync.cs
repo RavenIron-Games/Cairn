@@ -137,10 +137,27 @@ namespace RavenIron.Cairn.Net
         {
             if (Persistence.IsLoaded) return;   // authority: the store is the truth here
 
+            // Only the server sends beacons. The server already drops client-sent pushes
+            // before relaying them (Patch_RoutedRpcGuard); this is the client's own check, and
+            // it also refuses anything that arrives before the server connection is up.
+            if (!FromServer(sender))
+            {
+                WarnRejected($"sender {sender} is not the server");
+                return;
+            }
+
             try
             {
                 var received = new List<Beacon>(16);
                 int count = pkg.ReadInt();
+
+                // A real server never sends more than BeaconMaxCount allows. A count past that
+                // is not a world, it is an attack or a corrupt packet, and neither is drawn.
+                if (count < 0 || count > MaxBeaconsPerPush)
+                {
+                    WarnRejected($"{count} beacons in one push (the most a server sends is {MaxBeaconsPerPush})");
+                    return;
+                }
 
                 for (int i = 0; i < count; i++)
                 {
@@ -150,7 +167,10 @@ namespace RavenIron.Cairn.Net
                     float lx = pkg.ReadSingle();
                     float ly = pkg.ReadSingle();
                     float lz = pkg.ReadSingle();
-                    string name = pkg.ReadString();
+                    string name = pkg.ReadString() ?? "";
+
+                    // The ledger never stores a longer name, so a longer one did not come from it.
+                    if (name.Length > Landmark.MaxNameLength) name = name.Substring(0, Landmark.MaxNameLength);
 
                     received.Add(new Beacon
                     {
@@ -170,6 +190,33 @@ namespace RavenIron.Cairn.Net
                 // wholesale by the next push anyway.
                 Cairn.Log.LogWarning($"LandmarkSync: receive failed: {ex.Message}");
             }
+        }
+
+        /// <summary>The upper bound of the BeaconMaxCount config range.</summary>
+        private const int MaxBeaconsPerPush = 500;
+
+        private static float _lastRejectWarn = -999f;
+
+        /// <summary>
+        /// Is this routed sender the server we are connected to? `GetServerPeer` is public;
+        /// `ZRoutedRpc.GetServerPeerID` reads public in the publicized assembly but is private
+        /// at runtime, so it is never named here.
+        /// </summary>
+        private static bool FromServer(long sender)
+        {
+            ZNet znet = ZNet.instance;
+            if (znet == null) return false;
+
+            ZNetPeer server = znet.GetServerPeer();
+            return server != null && server.m_uid == sender;
+        }
+
+        private static void WarnRejected(string why)
+        {
+            float now = Time.realtimeSinceStartup;
+            if (now - _lastRejectWarn < 60f) return;
+            _lastRejectWarn = now;
+            Cairn.Log.LogWarning($"LandmarkSync: ignored a beacon push — {why}.");
         }
     }
 }
