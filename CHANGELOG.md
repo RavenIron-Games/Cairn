@@ -4,12 +4,14 @@
 
 A rebuild for Valheim 1.0.16, the game's hotfix of 2026-09-25. The mod's code is the same as
 0.9.0: no gameplay change, no config key added or removed, the same ledger file format, and
-the same Valheim requirement. Install it on the server and on every player's game, as before.
+the same Valheim requirement (1.0.7 or later). Install it on the server and on every player's
+game, as before.
 
 - **Checked against Valheim 1.0.16, and built against it.** The hotfix needed no change in
   Cairn: it compiles cleanly against 1.0.16, every game method it patches and every game
   member it looks up by name is found the same way on 1.0.15 and 1.0.16, and none of the
-  game code the hotfix changed is code Cairn patches or calls.
+  game code the hotfix changed is code Cairn patches or calls. 0.9.0 has the same code, so
+  updating from it is not required to play on 1.0.16 (read from the code, not tried in game).
 - **0.9.0 and 0.9.1 can be mixed** between the server and players' games, since the two
   differ only in their version number. That is read from the code, not tried in game.
 
