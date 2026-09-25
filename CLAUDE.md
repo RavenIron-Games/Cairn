@@ -36,17 +36,24 @@ is md5 `e77c1aa3...`, 83,456 bytes. Follow-ups: rerun the twin check with the si
 nearer one pile, plus the second-sign case, and find out why the sweep's stone count dropped
 from 86 to 82 during the twin check.
 
-**0.9.1 PREPARED 2026-09-25, not cut.** Valheim hot-fixed 1.0.15 to 1.0.16 that day. A
-static check found no code change needed: a clean compile against the 1.0.16 assemblies,
-every Harmony target and reflection-by-name lookup resolving the same on both, and none of
-the game methods the hotfix changed patched or called by Cairn. 0.9.1 is the version bump,
-its changelog entry and a docs-and-comments wording pass, on `release/0.9.1-prep`; its IL
-matches 0.9.0's apart from the version string. **Not yet run in game on 1.0.16.**
-Merge, tag, GitHub pre-release and store upload happen on RavenIron's word.
+**CUT 2026-09-25: v0.9.1.** Valheim hot-fixed 1.0.15 to 1.0.16 that day. Tagged `v0.9.1` on
+`5dbd608` (`release/0.9.1-prep`) and published as a GitHub pre-release, titled "v0.9.1 -
+updated due to 1.0.16 Patch". No code change from 0.9.0: it compiles clean against the 1.0.16
+assemblies, every Harmony target and reflection-by-name lookup resolves the same on both, and
+its IL matches 0.9.0's apart from the version string. The ship DLL, built from a fresh clone
+of that commit, is md5 `6252e456...`, 83,456 bytes. Smoke-tested in game on 1.0.16 on
+2026-09-25 (a dedicated server plus one client, both running the ship DLL): loaded on both
+sides; `cairn status` on the client showed role client with the ledger on the server; the
+server loaded 1 landmark and its sweeps kept it (0 changed, 0 pruned); no Cairn errors. No
+beacon or raven check is recorded for that run. Not tried on 1.0.16: mixed 0.9.0/0.9.1, a
+1.0.15 game with a 1.0.16 one, a second player, building a new cairn. **`main` does not have
+0.9.1 yet:** it stays at the 0.9.0 cut (`8d8fe34`) until `release/0.9.1-prep` is merged, with
+a merge commit so the tag stays in main's history.
 
 **Status: 0.9.0 live on the store** (since 2026-09-24) under team `RavenIronStudios`,
-categorised "Client & Server - must be installed on both". 0.7.0, the first release, was
-built, verified and shipped in a single day (published 2026-09-02/03).
+categorised "Client & Server - must be installed on both". The 0.9.1 store upload is
+RavenIron's step, pending as of 2026-09-25. 0.7.0, the first release, was built, verified and
+shipped in a single day (published 2026-09-02/03).
 
 Stacked stones become a cairn, a cairn burns, and the light was seen from 420m down a chain
 of fifteen built by hand.
