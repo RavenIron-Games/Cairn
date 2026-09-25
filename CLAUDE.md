@@ -30,14 +30,29 @@ from a working copy with mixed line endings; a fresh clone of 802c368 builds `0f
 In game: world change, save at the mid-run stop, rename and the dedicated-server client
 PASS; beacon toggle on screen only; raven vs tutorials PARTIAL; twin cairns
 PASS-WITH-DEVIATION (sign about equidistant, 86→82 stones unexplained); a second sign by the
-losing cairn not run. Still owed: pushing `release/0.9.0-cut`, its PR and merge to main, the
-tag on that merge, the ship build from a fresh clone of the tagged commit with its md5 in
-the release note, the GitHub pre-release, and the store upload, which is RavenIron's to do.
-Follow-ups: rerun the twin check with the sign clearly nearer one pile, plus the second-sign
-case, and find out why the sweep's stone count dropped from 86 to 82 during the twin check.
+losing cairn not run. Tagged `v0.9.0` on the cut PR's merge `8d8fe34` (PR #5) and published
+as a GitHub pre-release on 2026-09-24; the ship DLL, built from a fresh clone of that commit,
+is md5 `e77c1aa3...`, 83,456 bytes. Follow-ups: rerun the twin check with the sign clearly
+nearer one pile, plus the second-sign case, and find out why the sweep's stone count dropped
+from 86 to 82 during the twin check.
 
-**Status: 0.8.0 live on the store** under team `RavenIronStudios`, categorised "Client &
-Server - must be installed on both". 0.7.0, the first release, was built, verified and
+**CUT 2026-09-25: v0.9.1.** Valheim hot-fixed 1.0.15 to 1.0.16 that day. Tagged `v0.9.1` on
+`5dbd608` (`release/0.9.1-prep`) and published as a GitHub pre-release, titled "v0.9.1 -
+updated due to 1.0.16 Patch". No code change from 0.9.0: it compiles clean against the 1.0.16
+assemblies, every Harmony target and reflection-by-name lookup resolves the same on both, and
+its IL matches 0.9.0's apart from the version string. The ship DLL, built from a fresh clone
+of that commit, is md5 `6252e456...`, 83,456 bytes. Smoke-tested in game on 1.0.16 on
+2026-09-25 (a dedicated server plus one client, both running the ship DLL): loaded on both
+sides; `cairn status` on the client showed role client with the ledger on the server; the
+server loaded 1 landmark and its sweeps kept it (0 changed, 0 pruned); no Cairn errors. No
+beacon or raven check is recorded for that run. Not tried on 1.0.16: mixed 0.9.0/0.9.1, a
+1.0.15 game with a 1.0.16 one, a second player, building a new cairn. **`main` does not have
+0.9.1 yet:** it stays at the 0.9.0 cut (`8d8fe34`) until `release/0.9.1-prep` is merged, with
+a merge commit so the tag stays in main's history.
+
+**Status: 0.9.0 live on the store** (since 2026-09-24) under team `RavenIronStudios`,
+categorised "Client & Server - must be installed on both". The 0.9.1 store upload is
+RavenIron's step, pending as of 2026-09-25. 0.7.0, the first release, was built, verified and
 shipped in a single day (published 2026-09-02/03).
 
 Stacked stones become a cairn, a cairn burns, and the light was seen from 420m down a chain
@@ -156,11 +171,11 @@ landmarks, and that is correct.
 |---|---|
 | Scope | **Knowing where you are, and telling someone else.** Nothing else. |
 | Map / compass / waypoints / markers / pin sharing | **None.** See house rule A. |
-| Anchor object | **A pile of stone marks it; a named `Sign` names it.** Amended 2026-09-02 by the owner, reversing "the sign is the anchor". A qualifying stack of vanilla stone pieces is a cairn and gets the light — that is the navigation function, and it works unnamed. A named sign within `LandmarkPairMeters` gives that cairn its name. A sign with no pile is a named place with no light; a pile with no sign is a lit waymark with no name. Both are legitimate and the ledger holds both. |
+| Anchor object | **A pile of stone marks it; a named `Sign` names it.** Amended 2026-09-02 by RavenIron, reversing "the sign is the anchor". A qualifying stack of vanilla stone pieces is a cairn and gets the light — that is the navigation function, and it works unnamed. A named sign within `LandmarkPairMeters` gives that cairn its name. A sign with no pile is a named place with no light; a pile with no sign is a lit waymark with no name. Both are legitimate and the ledger holds both. |
 | New prefabs | **Still none.** The pile is DETECTED, never provided: a cairn is a pattern in what players build out of ordinary stone. Adding a piece would mean shipping a prefab, and a mod adding a prefab must ship server-side or `ZNetScene.CreateObjectsSorted` calls `DestroyZDO` on every hash it cannot resolve — silent damage in someone else's world. Everyone's cairn looks different, and with the mod uninstalled it degrades to exactly what it appears to be: a pile of rocks with a sign on it. |
 | Vanilla recipes | **Untouched by default (0.4.2).** `StonePileStoneCost` briefly shipped at 10, rewriting vanilla stone_pile from 50 — the only place this mod reached outside its scope. `cairn pieces stone` then found `Placeable_Stone` at **[Hoe] Stone x1**, a single stackable stone, and the problem the override existed to solve stopped existing. Default is now 0: do not touch the game. The switch stays for anyone who prefers heaps to stacks. |
 | A cairn is made of | **`Placeable_Stone`** (Hoe, 1 stone each) stacked, or `stone_pile` heaps. Four pieces minimum inside a 4m footprint. Architecture is deliberately excluded, so a stone HOUSE can never become a landmark. |
-| The beacon | **A bright light on top of the pile** (owner, 2026-09-02), not a smoke column. Strictly easier than a plume, and it may make the fog measurement far less decisive: a bright point at night carries where grey smoke dies. |
+| The beacon | **A bright light on top of the pile** (RavenIron, 2026-09-02), not a smoke column. Strictly easier than a plume, and it may make the fog measurement far less decisive: a bright point at night carries where grey smoke dies. |
 | Beacon rendering | **Client-drawn from synced state, never a networked object.** RW's `ZoneSync` → `PlagueFog` path, already verified in-game. Rendering does not depend on the anchor's ZDO being loaded, which at beacon range it will not be. |
 | Vanilla smoke | **Never used.** `SmokeSpawner.Spawn` refuses to emit past 64m from the local player, `Smoke` is globally capped at 100 puffs with `FadeMostDistant()` culling the furthest first, and every puff is a `Rigidbody`. The engine's own policy is the opposite of a beacon's. |
 | Hugin / the Raven | **Optional flavour, additive only, never load-bearing.** Register static texts; never overwrite vanilla tutorial text; degrade to silence. It cannot be the navigation channel — see Known traps. |
@@ -173,7 +188,7 @@ landmarks, and that is correct.
 | Seabirds as a landfall signal | **Not in v1.** Good idea, unproven, and it competes for the same "is this legible?" budget as the beacon. Revisit once the beacon is shipped. |
 | Console prefix | `cairn` |
 | GUID / namespace | `com.raveniron.cairn` / `RavenIron.Cairn` |
-| Distribution | **Hexium only** (hexium.gg), store team `RavenIronStudios`, packaged by `tools\package.ps1` — never hand-zipped. Thunderstore is deliberately NOT a channel (owner's call, 2026-09-03). The zip is still built to Thunderstore's package *format*, because that is what Hexium consumes — format and channel are different things and these docs kept conflating them. |
+| Distribution | **Hexium only** (hexium.gg), store team `RavenIronStudios`, packaged by `tools\package.ps1` — never hand-zipped. Thunderstore is deliberately NOT a channel (RavenIron's call, 2026-09-03). The zip is still built to Thunderstore's package *format*, because that is what Hexium consumes — format and channel are different things and these docs kept conflating them. |
 | Timeline | Open-ended. Done when it's done. |
 
 ### Deliberately unresolved
@@ -289,7 +304,7 @@ rewriting before task 3 exists.
 owed.** Plugin loads, `cairn` console registers and confirms itself by reading Terminal's
 command map back, and the role line prints.
 
-Verified on a minimal dedicated server (`C:\Users\donfr\ValheimServers\CairnTest`, port
+Verified on a minimal dedicated server (`%USERPROFILE%\ValheimServers\CairnTest`, port
 2466, world `CairnTest`, Cairn.dll and nothing else), `isModded: True`, world created from
 nothing:
 

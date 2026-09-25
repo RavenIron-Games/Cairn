@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.1 — 2026-09-25
+
+Updated due to 1.0.16 Patch.
+
 ## 0.9.0
 
 Bug fixes. No new feature, no config key added or removed, the same ledger file format, and
@@ -65,13 +69,14 @@ reading was seen changing from OFF to on in an earlier session the same day, on 
 Cairn logged no error or warning on either side, and none of the lines that would mean a beacon
 push was dropped or ignored, a receive failed, or a sweep tick threw appeared.
 
-Not tried in game: a second named sign within 6 m of the cairn that lost the pairing to the
-other sign; a beacon push spoofed from a hostile client (the guard's only evidence is that
-normal pushes were never dropped); the memory-leak fix itself (the beacon toggle was checked
-on screen only); a targeted test of the check that skips a sweep while the game shuts down;
-the landmark list and raven commands on the dedicated-server client session, which were not
-typed there; and a clean exit at the final server stop, whose log ends before any mod's stop
-line (the ledger file was written at that stop). Off-game: 206/206.
+Not tried in game: mixed versions (0.8.x on the server and 0.9.0 on players' games, or the
+reverse), since both sides ran 0.9.0; a second named sign within 6 m of the cairn that lost
+the pairing to the other sign; a beacon push spoofed from a hostile client (the guard's only
+evidence is that normal pushes were never dropped); the memory-leak fix itself (the beacon
+toggle was checked on screen only); a targeted test of the check that skips a sweep while the
+game shuts down; the landmark list and raven commands on the dedicated-server client session,
+which were not typed there; and a clean exit at the final server stop, whose log ends before
+any mod's stop line (the ledger file was written at that stop). Off-game: 206/206.
 
 ## 0.8.0
 
