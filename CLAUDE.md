@@ -30,15 +30,23 @@ from a working copy with mixed line endings; a fresh clone of 802c368 builds `0f
 In game: world change, save at the mid-run stop, rename and the dedicated-server client
 PASS; beacon toggle on screen only; raven vs tutorials PARTIAL; twin cairns
 PASS-WITH-DEVIATION (sign about equidistant, 86→82 stones unexplained); a second sign by the
-losing cairn not run. Still owed: pushing `release/0.9.0-cut`, its PR and merge to main, the
-tag on that merge, the ship build from a fresh clone of the tagged commit with its md5 in
-the release note, the GitHub pre-release, and the store upload, which is RavenIron's to do.
-Follow-ups: rerun the twin check with the sign clearly nearer one pile, plus the second-sign
-case, and find out why the sweep's stone count dropped from 86 to 82 during the twin check.
+losing cairn not run. Tagged `v0.9.0` on the cut PR's merge `8d8fe34` (PR #5) and published
+as a GitHub pre-release on 2026-09-24; the ship DLL, built from a fresh clone of that commit,
+is md5 `e77c1aa3...`, 83,456 bytes. Follow-ups: rerun the twin check with the sign clearly
+nearer one pile, plus the second-sign case, and find out why the sweep's stone count dropped
+from 86 to 82 during the twin check.
 
-**Status: 0.8.0 live on the store** under team `RavenIronStudios`, categorised "Client &
-Server - must be installed on both". 0.7.0, the first release, was built, verified and
-shipped in a single day (published 2026-09-02/03).
+**0.9.1 PREPARED 2026-09-25, not cut.** Valheim hot-fixed 1.0.15 to 1.0.16 that day. A
+static check found no code change needed: a clean compile against the 1.0.16 assemblies,
+every Harmony target and reflection-by-name lookup resolving the same on both, and none of
+the game methods the hotfix changed patched or called by Cairn. 0.9.1 is the version bump,
+its changelog entry and a docs-and-comments wording pass, on `release/0.9.1-prep`; its IL
+matches 0.9.0's apart from the version string. **Not yet run in game on 1.0.16.**
+Merge, tag, GitHub pre-release and store upload happen on RavenIron's word.
+
+**Status: 0.9.0 live on the store** (since 2026-09-24) under team `RavenIronStudios`,
+categorised "Client & Server - must be installed on both". 0.7.0, the first release, was
+built, verified and shipped in a single day (published 2026-09-02/03).
 
 Stacked stones become a cairn, a cairn burns, and the light was seen from 420m down a chain
 of fifteen built by hand.

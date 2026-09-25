@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.9.1
+
+A rebuild for Valheim 1.0.16, the game's hotfix of 2026-09-25. The mod's code is the same as
+0.9.0: no gameplay change, no config key added or removed, the same ledger file format, and
+the same Valheim requirement. Install it on the server and on every player's game, as before.
+
+- **Checked against Valheim 1.0.16, and built against it.** The hotfix needed no change in
+  Cairn: it compiles cleanly against 1.0.16, every game method it patches and every game
+  member it looks up by name is found the same way on 1.0.15 and 1.0.16, and none of the
+  game code the hotfix changed is code Cairn patches or calls.
+- **0.9.0 and 0.9.1 can be mixed** between the server and players' games, since the two
+  differ only in their version number. That is read from the code, not tried in game.
+
 ## 0.9.0
 
 Bug fixes. No new feature, no config key added or removed, the same ledger file format, and
@@ -65,13 +78,14 @@ reading was seen changing from OFF to on in an earlier session the same day, on 
 Cairn logged no error or warning on either side, and none of the lines that would mean a beacon
 push was dropped or ignored, a receive failed, or a sweep tick threw appeared.
 
-Not tried in game: a second named sign within 6 m of the cairn that lost the pairing to the
-other sign; a beacon push spoofed from a hostile client (the guard's only evidence is that
-normal pushes were never dropped); the memory-leak fix itself (the beacon toggle was checked
-on screen only); a targeted test of the check that skips a sweep while the game shuts down;
-the landmark list and raven commands on the dedicated-server client session, which were not
-typed there; and a clean exit at the final server stop, whose log ends before any mod's stop
-line (the ledger file was written at that stop). Off-game: 206/206.
+Not tried in game: mixed versions (0.8.x on the server and 0.9.0 on players' games, or the
+reverse), since both sides ran 0.9.0; a second named sign within 6 m of the cairn that lost
+the pairing to the other sign; a beacon push spoofed from a hostile client (the guard's only
+evidence is that normal pushes were never dropped); the memory-leak fix itself (the beacon
+toggle was checked on screen only); a targeted test of the check that skips a sweep while the
+game shuts down; the landmark list and raven commands on the dedicated-server client session,
+which were not typed there; and a clean exit at the final server stop, whose log ends before
+any mod's stop line (the ledger file was written at that stop). Off-game: 206/206.
 
 ## 0.8.0
 
