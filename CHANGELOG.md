@@ -1,5 +1,50 @@
 # Changelog
 
+## 0.10.0
+
+**Stones stack.** Vanilla never let a stone go on another stone. The hoe's single
+`Placeable_Stone` shows red when aimed at one, so a cairn could only be a ring on the ground.
+Now stones stack, and a stack stays standing.
+
+- **Only stones go on stones.** A wall, beam or anything else aimed at a stone still shows red, so
+  a single pebble can never become a foundation.
+- **Everyone needs this version, the server included.** The machine that owns a stack decides
+  whether it stands. On an older Cairn, or with Cairn removed, stacked stones may fall.
+- **It is a setting.** `StackableStones` in `[3 - Cairn piles]` is on by default. Set it to
+  `false` to leave the vanilla stone exactly as it was. It is read on each player's game and on
+  the server when the world loads, so change it everywhere and restart.
+- **Tall cairns light.** A cairn may now hold up to 100 stones, up from 12. Stones that
+  stand closer than 2.5 m join into one cairn, so three columns side by side are one cairn with
+  one light. Under the old limit they got no light at all. A setting still at the old 12 moves
+  to 100 on first start, and a number you chose yourself is kept. The 4 m footprint rule
+  still tells a cairn from a stone building.
+- `cairn pieces` now reports, for every piece, whether something can be placed on it and why
+  not.
+
+Includes every 0.9.2 change below.
+
+## 0.9.2
+
+One fix, on the server. Players' games do not need updating — a 0.9.1 game reads a 0.9.2
+server exactly as before — but the server does.
+
+- **New cairns light again on a busy world.** A server sends players at most
+  `BeaconMaxCount` lit cairns, and once a world had more than that (100, by default), it
+  always sent the OLDEST ones. Every cairn built after that point stayed dark for joined
+  players while the old ones kept burning — exactly the cairns you are standing beside and
+  waiting on. Past the limit, the server now sends the cairns nearest a player instead, so
+  anything near you lights and the ones dropped are those too far away to see anyway.
+  Singleplayer and the host's own game were never affected; they draw every cairn.
+- **The limit is no longer silent.** The server log warns once per session when a world has
+  more lit cairns than it sends, and `cairn status` on the server shows how many are lit,
+  how many are sent, and the limit.
+- **`BeaconMaxCount` defaults to 250**, up from 100 — and this reaches existing servers too.
+  Cairn now updates its own config file: on the first start of 0.9.2, a `BeaconMaxCount`
+  still at the old default of 100 moves to 250, while any number you chose yourself is kept.
+  The log says which happened, and the file as it was is saved beside it
+  (`com.raveniron.cairn.cfg.v0.bak`). A new `[0 - Meta] ConfigVersion` line at the top of the
+  file records that this has been done; leave it alone. 500 is the most players' games accept.
+
 ## 0.9.1 — 2026-09-25
 
 Updated due to 1.0.16 Patch.

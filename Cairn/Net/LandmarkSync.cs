@@ -70,6 +70,9 @@ namespace RavenIron.Cairn.Net
             // the same instance would throw on the duplicate name.
             _cache.Clear();
             Revision++;
+            LastLit = -1;
+            LastSent = -1;
+            _warnedCap = false;
         }
 
         public static void EnsureRegistered()
@@ -91,7 +94,22 @@ namespace RavenIron.Cairn.Net
             }
         }
 
-        /// <summary>Authority-side: broadcast every lit cairn to everyone.</summary>
+        /// <summary>Lit cairns in the ledger at the last broadcast. -1 before the first.</summary>
+        public static int LastLit { get; private set; } = -1;
+
+        /// <summary>How many of those the last broadcast actually carried.</summary>
+        public static int LastSent { get; private set; } = -1;
+
+        private static bool _warnedCap;
+
+        /// <summary>
+        /// Authority-side: broadcast the lit cairns to everyone — all of them, or, past
+        /// `BeaconMaxCount`, the ones nearest a player (see BeaconSelection for why the
+        /// oldest-first cut this replaced left every NEW cairn dark).
+        ///
+        /// The packet's shape is unchanged from 0.9.1, so a 0.9.1 client reads a 0.9.2
+        /// server's broadcast exactly as before. Only the choice of WHICH cairns moved.
+        /// </summary>
         public static void Broadcast(int maxBeacons)
         {
             ZRoutedRpc rpc = ZRoutedRpc.instance;
@@ -100,13 +118,27 @@ namespace RavenIron.Cairn.Net
             try
             {
                 var pkg = new ZPackage();
-                var lit = new List<Landmark>(16);
-
+                var all = new List<Landmark>(16);
                 foreach (Landmark l in LandmarkStore.Snapshot())
+                    if (l.HasPile) all.Add(l);
+
+                List<Landmark> lit = all.Count > maxBeacons
+                    ? BeaconSelection.Choose(all, PlayerPositions(), maxBeacons)
+                    : all;
+
+                LastLit = all.Count;
+                LastSent = lit.Count;
+
+                if (all.Count > maxBeacons && !_warnedCap)
                 {
-                    if (!l.HasPile) continue;
-                    lit.Add(l);
-                    if (lit.Count >= maxBeacons) break;
+                    // Once per session. The cut used to be silent, and silence is what cost a
+                    // player an hour of waiting beside a cairn that was never going to light.
+                    _warnedCap = true;
+                    Cairn.Log.LogWarning(
+                        $"LandmarkSync: {all.Count} cairns are lit and BeaconMaxCount is {maxBeacons} — " +
+                        $"each broadcast carries the {maxBeacons} nearest a player. Cairns further " +
+                        "out stay unlit for clients until someone comes near. Raise BeaconMaxCount " +
+                        "(up to 500, on the server) to send more. `cairn status` shows the numbers.");
                 }
 
                 pkg.Write(lit.Count);
@@ -127,6 +159,29 @@ namespace RavenIron.Cairn.Net
             {
                 Cairn.Log.LogWarning($"LandmarkSync: broadcast failed: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Where the players are, as the authority knows it: every ready peer's reference
+        /// position (what vanilla itself loads zones around), plus the host's own on a listen
+        /// server. `ZNet.GetPeers`, `ZNetPeer.m_refPos` and `ZNet.GetReferencePosition` are
+        /// all public in the REAL assembly (checked on the 2026-10-15 build), not only under
+        /// publicization, so they are called directly.
+        ///
+        /// A dedicated server's own reference position is not a player and is left out: it
+        /// would rank cairns by their distance from wherever the server happens to point.
+        /// </summary>
+        private static List<Vector3> PlayerPositions()
+        {
+            var positions = new List<Vector3>(8);
+            ZNet znet = ZNet.instance;
+            if (znet == null) return positions;
+
+            foreach (ZNetPeer peer in znet.GetPeers())
+                if (peer != null && peer.IsReady()) positions.Add(peer.m_refPos);
+
+            if (!znet.IsDedicated()) positions.Add(znet.GetReferencePosition());
+            return positions;
         }
 
         /// <summary>

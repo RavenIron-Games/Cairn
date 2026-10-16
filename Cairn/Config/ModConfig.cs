@@ -19,6 +19,9 @@ namespace RavenIron.Cairn.Config
     /// </summary>
     public static class ModConfig
     {
+        // ---- Meta -----------------------------------------------------------------
+        public static ConfigEntry<int> ConfigVersion;
+
         // ---- Core -----------------------------------------------------------------
         public static ConfigEntry<bool>  Enabled;
         public static ConfigEntry<float> TickBudgetMs;
@@ -39,6 +42,7 @@ namespace RavenIron.Cairn.Config
         public static ConfigEntry<float>  LandmarkPairMeters;
         public static ConfigEntry<float>  PileDriftMeters;
         public static ConfigEntry<int>    StonePileStoneCost;
+        public static ConfigEntry<bool>   StackableStones;
 
         // ---- The light ------------------------------------------------------------
         public static ConfigEntry<bool>  EnableBeacons;
@@ -59,6 +63,15 @@ namespace RavenIron.Cairn.Config
 
         public static void Bind(ConfigFile config)
         {
+            // Bound at 0 and stamped by ConfigMigration.Finish. NO AcceptableValueRange, on
+            // purpose: BepInEx clamps out-of-range values silently, so a ceiling would one day
+            // refuse the stamp and turn the migration into something that re-runs every boot.
+            ConfigVersion = config.Bind(
+                Core.ConfigLedger.MetaSection, Core.ConfigLedger.VersionKey, 0,
+                "Which config layout this file is at. Written by the mod; do not edit. Each " +
+                "update that changes a default moves your value only if it was still the old " +
+                "default, and keeps anything you set yourself (the log names it either way).");
+
             Enabled = config.Bind(
                 "1 - Core", "Enabled", true,
                 "Master switch. False leaves the plugin loaded and the console registered, " +
@@ -137,10 +150,12 @@ namespace RavenIron.Cairn.Config
                     new AcceptableValueRange<int>(2, 20)));
 
             PileMaxPieces = config.Bind(
-                "3 - Cairn piles", "PileMaxPieces", 12,
+                "3 - Cairn piles", "PileMaxPieces", 100,
                 new ConfigDescription(
                     "More than this is a structure. A backstop only — the footprint rule does the " +
-                    "real work, because piece count alone can never tell a tidy wall from a waymark.",
+                    "real work, because piece count alone can never tell a tidy wall from a waymark. " +
+                    "Was 12 until 0.10.0, when stones began to stack: one tall column passes 12 on its " +
+                    "own, and stacks standing closer than PileLinkMeters join into one cairn.",
                     new AcceptableValueRange<int>(3, 100)));
 
             PileMaxExtentMeters = config.Bind(
@@ -189,6 +204,17 @@ namespace RavenIron.Cairn.Config
                     "server, and setting it on a dedicated server changes nothing for players.",
                     new AcceptableValueRange<int>(0, 100)));
 
+            StackableStones = config.Bind(
+                "3 - Cairn piles", "StackableStones", true,
+                "Lets a Placeable_Stone (Hoe, 1 stone) be placed ON another one, so a cairn can be " +
+                "a real stack instead of a ring of pebbles on the ground. Vanilla refuses it: the " +
+                "stone is made non-supporting, which blocks anything being placed on it. With this " +
+                "on, the stone supports what is stacked on it, and ONLY another stone may be placed " +
+                "on one — no hut on a one-stone foundation. This changes a VANILLA piece, and says " +
+                "so in the log at start-up; false leaves it exactly as the game made it. " +
+                "EVERY PLAYER'S GAME: placement is checked by the player who places, so each " +
+                "player's own setting is what counts for them. Takes effect when a world loads.");
+
             EnableBeacons = config.Bind(
                 "4 - The light", "EnableBeacons", true,
                 "Draw a light on top of every cairn. Client-side and purely visual: turning it " +
@@ -203,10 +229,16 @@ namespace RavenIron.Cairn.Config
                     new AcceptableValueRange<float>(5f, 120f)));
 
             BeaconMaxCount = config.Bind(
-                "4 - The light", "BeaconMaxCount", 100,
+                "4 - The light", "BeaconMaxCount", 250,
                 new ConfigDescription(
-                    "Most cairns carried in one broadcast. A bound on the packet, not a limit " +
-                    "anyone should reach.",
+                    "SERVER setting. Most lit cairns carried in one broadcast; past it, the ones " +
+                    "nearest a player are sent and the rest stay dark for clients until someone " +
+                    "comes near (the server log warns once when that happens, and `cairn status` " +
+                    "shows lit vs sent). Was 100 through 0.9.1, described as \"not a limit anyone " +
+                    "should reach\" — and a no-map waymark trail reached it, at which point every " +
+                    "NEW cairn stayed dark, because 0.9.1 kept the oldest. 500 is the ceiling: " +
+                    "clients refuse a larger push. A singleplayer game or a host draws every lit " +
+                    "cairn regardless; this only limits what is sent to joined players.",
                     new AcceptableValueRange<int>(1, 500)));
 
             BeaconMaxDistanceMeters = config.Bind(

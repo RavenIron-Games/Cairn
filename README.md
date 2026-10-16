@@ -8,7 +8,8 @@ On a world with no map, knowing where you are is knowledge — and it lives in p
 and in screenshots pasted into Discord. Cairn moves it into the world, where it can be built,
 found, lit, and lost.
 
-It adds no pieces, no assets, and nothing to your screen.
+It adds no pieces, no assets, and nothing to your screen. It changes one vanilla piece:
+the hoe's stone, so stones stack.
 
 ---
 
@@ -19,6 +20,11 @@ cairn is four stone and a minute's work. Pile them within four metres of each ot
 them out and it stays a scatter, because a cairn is narrow and a wall is wide, and that is how
 the mod tells them apart.
 
+**Stones stack.** In vanilla a stone cannot go on another stone. With Cairn it can, so a
+cairn can stand tall rather than lie in a ring. Only stones go on stones: a wall or beam aimed
+at a stone still shows red. This is the one change Cairn makes to a vanilla piece, so the
+server and every player need it. `StackableStones = false` turns it off.
+
 **It lights itself.** Within about twenty seconds a fire appears on the crown, and it can be seen
 from hundreds of metres away.
 
@@ -26,7 +32,8 @@ from hundreds of metres away.
 name. A cairn with no sign is still a lit waymark — plenty of them should be.
 
 Every one looks different because you built it, and uninstalling the mod leaves exactly what
-it appears to be: a pile of rocks with a sign on it.
+it appears to be: a pile of rocks with a sign on it. Stones stacked on stones may fall once the
+mod is gone, because vanilla does not let one stone hold up another.
 
 ## The light
 

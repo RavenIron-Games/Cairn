@@ -28,10 +28,19 @@
     <Compile Include="..\..\Cairn\Core\LandmarkStore.cs" />
     <Compile Include="..\..\Cairn\Core\SignReading.cs" />
     <Compile Include="..\..\Cairn\Core\PileDetection.cs" />
+    <Compile Include="..\..\Cairn\Core\BeaconSelection.cs" />
+    <Compile Include="..\..\Cairn\Core\StoneStacking.cs" />
     <Compile Include="..\..\Cairn\Core\DisplayText.cs" />
     <Compile Include="..\..\Cairn\Core\HexColour.cs" />
     <Compile Include="..\..\Cairn\Core\Persistence.cs" />
+    <Compile Include="..\..\Cairn\Core\ConfigLedger.cs" />
     <Compile Include="..\..\Cairn\Config\ModConfig.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Config files a SHIPPED build really wrote, not hand-built ones: a fixture written by
+         hand agrees with the parser that was written alongside it. -->
+    <None Include="fixtures\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
