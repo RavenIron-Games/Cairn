@@ -25,7 +25,8 @@ namespace RavenIron.Cairn.Core
     ///
     /// Versions (nothing before 0.9.2 stamped one):
     ///   0 = any unstamped file, whatever build wrote it.
-    ///   1 = 0.9.2: `4 - The light.BeaconMaxCount` still at 100 moves to 250. Current.
+    ///   1 = 0.9.2: `4 - The light.BeaconMaxCount` still at 100 moves to 250.
+    ///   2 = 0.10.0: `3 - Cairn piles.PileMaxPieces` still at 12 moves to 100. Current.
     /// </summary>
     public static class ConfigLedger
     {
@@ -36,7 +37,7 @@ namespace RavenIron.Cairn.Core
         /// </summary>
         public const string MetaSection = "0 - Meta";
         public const string VersionKey = "ConfigVersion";
-        public const int CurrentVersion = 1;
+        public const int CurrentVersion = 2;
 
         /// <summary>One slot's every old default. A stored value equal to ANY of them is the mod's own, not admin work.</summary>
         public sealed class Rebase
@@ -55,6 +56,15 @@ namespace RavenIron.Cairn.Core
                     // 0.9.1 then kept the OLDEST cairns, so every new one stayed dark for joined
                     // players. BepInEx writes an int as "100", so that is the text to match.
                     new Rebase { Section = "4 - The light", Key = "BeaconMaxCount", OldDefaults = new[] { "100" } },
+                }
+            },
+            { 2, new[]
+                {
+                    // 0.10.0 made stones stack, and a cap of 12 then rejected the very cairns it
+                    // made possible: three columns built side by side on Storm10 on 2026-10-16
+                    // linked into one cluster of about 23 stones and got no light. The footprint
+                    // rule is what tells a cairn from a building; the count is only a backstop.
+                    new Rebase { Section = "3 - Cairn piles", Key = "PileMaxPieces", OldDefaults = new[] { "12" } },
                 }
             },
         };

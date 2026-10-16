@@ -13,6 +13,11 @@ Now stones stack, and a stack stays standing.
 - **It is a setting.** `StackableStones` in `[3 - Cairn piles]` is on by default. Set it to
   `false` to leave the vanilla stone exactly as it was. It is read on each player's game and on
   the server when the world loads, so change it everywhere and restart.
+- **Tall cairns light.** A cairn may now hold up to 100 stones, up from 12. Stones that
+  stand closer than 2.5 m join into one cairn, so three columns side by side are one cairn with
+  one light. Under the old limit they got no light at all. A setting still at the old 12 moves
+  to 100 on first start, and a number you chose yourself is kept. The 4 m footprint rule
+  still tells a cairn from a stone building.
 - `cairn pieces` now reports, for every piece, whether something can be placed on it and why
   not.
 

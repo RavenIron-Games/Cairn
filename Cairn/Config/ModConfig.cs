@@ -150,10 +150,12 @@ namespace RavenIron.Cairn.Config
                     new AcceptableValueRange<int>(2, 20)));
 
             PileMaxPieces = config.Bind(
-                "3 - Cairn piles", "PileMaxPieces", 12,
+                "3 - Cairn piles", "PileMaxPieces", 100,
                 new ConfigDescription(
                     "More than this is a structure. A backstop only — the footprint rule does the " +
-                    "real work, because piece count alone can never tell a tidy wall from a waymark.",
+                    "real work, because piece count alone can never tell a tidy wall from a waymark. " +
+                    "Was 12 until 0.10.0, when stones began to stack: one tall column passes 12 on its " +
+                    "own, and stacks standing closer than PileLinkMeters join into one cairn.",
                     new AcceptableValueRange<int>(3, 100)));
 
             PileMaxExtentMeters = config.Bind(

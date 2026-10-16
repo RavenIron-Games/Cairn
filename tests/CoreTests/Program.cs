@@ -423,6 +423,34 @@ namespace Cairn.Tests
             Equal(0, PileDetection.Find(chain, link, min, max, extent).Count,
                   "a chain links into one oversized cluster rather than several small ones");
 
+            // STACKED COLUMNS (0.10.0). Three columns of eight stones, 1.5m apart — what was built
+            // on Storm10 on 2026-10-16. They link into one cluster of 24 inside a 3m footprint:
+            // one cairn at the shipped defaults, and nothing at all under the old cap of 12.
+            var columns = new List<Vector3>();
+            for (int c = 0; c < 3; c++)
+                for (int s = 0; s < 8; s++)
+                    columns.Add(new Vector3(c * 1.5f, s * 0.35f, 0f));
+            int shippedMax = ModConfig.PileMaxPieces.Value;
+            List<PileDetection.Pile> tall = PileDetection.Find(columns, ModConfig.PileLinkMeters.Value,
+                ModConfig.PileMinPieces.Value, shippedMax, ModConfig.PileMaxExtentMeters.Value);
+            Equal(1, tall.Count, "three stacked columns side by side are one cairn at the shipped defaults");
+            if (tall.Count == 1)
+            {
+                Equal(24, tall[0].Pieces, "all 24 stones belong to it");
+                Check(Math.Abs(tall[0].Top.y - 7 * 0.35f) < 0.001f, "the light sits on the tallest column");
+            }
+            Equal(0, PileDetection.Find(columns, link, min, 12, extent).Count,
+                  "under the old cap of 12 the same columns were no cairn at all — the bug");
+            // One column alone, taller than the old cap.
+            var spire = new List<Vector3>();
+            for (int s = 0; s < 15; s++) spire.Add(new Vector3(0f, s * 0.35f, 0f));
+            Equal(1, PileDetection.Find(spire, ModConfig.PileLinkMeters.Value, ModConfig.PileMinPieces.Value,
+                shippedMax, ModConfig.PileMaxExtentMeters.Value).Count, "a single 15-stone column is a cairn");
+            // And the footprint rule still refuses a wide stone house at the new cap.
+            Equal(0, PileDetection.Find(house, ModConfig.PileLinkMeters.Value, ModConfig.PileMinPieces.Value,
+                shippedMax, ModConfig.PileMaxExtentMeters.Value).Count,
+                  "a 25-stone house is still not a cairn at the new cap: the footprint refuses it");
+
             Equal(0, PileDetection.Find(null, link, min, max, extent).Count, "null input is not a crash");
             Equal(0, PileDetection.Find(new List<Vector3>(), link, min, max, extent).Count, "no stones, no cairns");
             Equal(0, PileDetection.Find(stack, 0f, min, max, extent).Count, "a zero link radius finds nothing");
@@ -596,6 +624,7 @@ namespace Cairn.Tests
         // ---- config ledger ----------------------------------------------------------------
 
         private const string BeaconSlot = "4 - The light::BeaconMaxCount";
+        private const string PileMaxSlot = "3 - Cairn piles::PileMaxPieces";
 
         private static Dictionary<string, string> Ini(params string[] lines) => ConfigLedger.ParseIni(lines);
 
@@ -613,13 +642,25 @@ namespace Cairn.Tests
                 Equal("100", real.TryGetValue(BeaconSlot, out string v) ? v : null, "the parser reads BeaconMaxCount out of the real file");
                 Equal(0, ConfigLedger.ReadVersion(real), "a 0.9.1 file carries no stamp, so it is version 0");
 
+                Equal("12", real.TryGetValue(PileMaxSlot, out string pm) ? pm : null, "the real file holds PileMaxPieces at 12");
+
                 ConfigLedger.MigrationPlan p = ConfigLedger.Plan(real, 0);
-                Equal(1, p.ResetToDefault.Count, "the real 0.9.1 file plans exactly one move");
-                Check(p.ResetToDefault.Contains(BeaconSlot), "and it is BeaconMaxCount");
+                Equal(2, p.ResetToDefault.Count, "the real 0.9.1 file plans exactly two moves");
+                Check(p.ResetToDefault.Contains(BeaconSlot), "one is BeaconMaxCount");
+                Check(p.ResetToDefault.Contains(PileMaxSlot), "the other is PileMaxPieces");
                 Equal(0, p.Kept.Count, "nothing else in the real file is touched or reported");
-                Equal("config: version 0 -> 1: 1 value moved to its new default (4 - The light.BeaconMaxCount)",
-                      ConfigLedger.Describe(p), "the boot line names what moved");
+                Check(ConfigLedger.Describe(p).StartsWith("config: version 0 -> 2: 2 values moved to their new defaults"),
+                      "the boot line names the versions and the count: " + ConfigLedger.Describe(p));
+
+                // A 0.9.2 file (stamped 1) runs only the 0.10.0 rung.
+                ConfigLedger.MigrationPlan from1 = ConfigLedger.Plan(real, 1);
+                Equal(1, from1.ResetToDefault.Count, "a file stamped 1 plans only the rung it has not passed");
+                Check(from1.ResetToDefault.Contains(PileMaxSlot), "and that is PileMaxPieces");
             }
+
+            // An owner who chose their own pile cap keeps it.
+            Equal(0, ConfigLedger.Plan(Ini("[0 - Meta]", "ConfigVersion = 1", "[3 - Cairn piles]", "PileMaxPieces = 20"), 1)
+                         .ResetToDefault.Count, "a PileMaxPieces the owner set (20) is not moved");
 
             // An owner's own value is theirs.
             ConfigLedger.MigrationPlan mine = ConfigLedger.Plan(Ini("[4 - The light]", "BeaconMaxCount = 40"), 0);
@@ -677,6 +718,8 @@ namespace Cairn.Tests
             // The ledger and the bound config agree on where the stamp lives and what it binds as.
             Equal(0, ModConfig.ConfigVersion.Value, "ConfigVersion binds at 0, so an unstamped file reads as version 0");
             Equal(250, ModConfig.BeaconMaxCount.Value, "the new default the rung moves to is 250");
+            Equal(100, ModConfig.PileMaxPieces.Value, "the new default the 0.10.0 rung moves to is 100");
+            Equal(2, ConfigLedger.CurrentVersion, "0.10.0 is config version 2");
         }
 
         // ---- store ----------------------------------------------------------------------
