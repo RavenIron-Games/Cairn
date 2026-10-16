@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 
@@ -9,14 +9,14 @@ namespace RavenIron.Cairn.Core
     /// runs it in a second. Ported 2026-10-16 from FireFront's `Config/ConfigLedger.cs`, itself
     /// the family's shape (Wu'barrk's WingsoftheValkyrie, by way of Valkyrie's Cargo): a stamped
     /// layout version under `[0 - Meta]`, a rebase table keyed by the version it produces, and
-    /// the one rule that matters â€” a stored value still equal to an OLD default belongs to the
+    /// the one rule that matters — a stored value still equal to an OLD default belongs to the
     /// mod and moves to the new default; anything else is an admin's and is kept, by name, in
     /// the log.
     ///
     /// Why Cairn needs it now: BepInEx persists every bound value, so a changed default never
     /// reaches an install that already wrote the key. 0.9.2 raises BeaconMaxCount 100 -> 250
     /// because 100 was reached in a real playthrough, and without this every server that
-    /// already has a config file â€” the one that reported it included â€” would stay at 100.
+    /// already has a config file — the one that reported it included — would stay at 100.
     ///
     /// NO RETIREMENT MACHINERY, deliberately. FireFront's ledger can also drop keys a build no
     /// longer binds; Cairn has nothing to retire, and machinery with no rung reads as a feature
@@ -59,7 +59,7 @@ namespace RavenIron.Cairn.Core
             },
         };
 
-        /// <summary>One slot whose stored value was NOT an old default â€” real admin work, kept and named in the log.</summary>
+        /// <summary>One slot whose stored value was NOT an old default — real admin work, kept and named in the log.</summary>
         public struct KeptSlot
         {
             public string Slot;
@@ -96,7 +96,7 @@ namespace RavenIron.Cairn.Core
         ///
         /// ORDINAL AND CASE-SENSITIVE, because BepInEx is: `ConfigDefinition.Equals` is the
         /// two-argument `string.Equals` over a case-sensitive hash, so `beaconmaxcount` and
-        /// `BeaconMaxCount` are two different keys there â€” one binds, the other is an orphan.
+        /// `BeaconMaxCount` are two different keys there — one binds, the other is an orphan.
         /// All three sibling ports had this wrong until 2026-09-18, and in Ragnarok's Wrath it
         /// skipped a backfill and stamped, making a silent change permanent. The snapshot is the
         /// migration's whole model of the file, so it has to be BepInEx's model.
@@ -150,7 +150,7 @@ namespace RavenIron.Cairn.Core
             Plan(snapshot, fileVersion, CurrentVersion, Rebases);
 
         /// <summary>
-        /// The same against a caller's table â€” the whole implementation; the overload above is one
+        /// The same against a caller's table — the whole implementation; the overload above is one
         /// line of delegation, not a parallel path. Lets the harness reach rules one shipped rung
         /// cannot: two rungs naming one key, a rung the file has already passed, an empty table.
         /// </summary>
@@ -165,7 +165,7 @@ namespace RavenIron.Cairn.Core
             if (fileVersion >= toVersion) return plan;
 
             // A NEGATIVE stamp is a hand-edited or corrupt file and must not become a loop bound:
-            // unclamped, the window counts up from it on the boot thread â€” eighteen seconds for
+            // unclamped, the window counts up from it on the boot thread — eighteen seconds for
             // -2000000000, measured in the sibling repos. A file claiming to predate 0 IS version 0.
             int from = fileVersion < 0 ? 0 : fileVersion;
 
