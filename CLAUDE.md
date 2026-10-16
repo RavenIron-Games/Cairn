@@ -46,21 +46,53 @@ of that commit, is md5 `6252e456...`, 83,456 bytes. Smoke-tested in game on 1.0.
 sides; `cairn status` on the client showed role client with the ledger on the server; the
 server loaded 1 landmark and its sweeps kept it (0 changed, 0 pruned); no Cairn errors. No
 beacon or raven check is recorded for that run. Not tried on 1.0.16: mixed 0.9.0/0.9.1, a
-1.0.15 game with a 1.0.16 one, a second player, building a new cairn. **`main` does not have
-0.9.1 yet:** it stays at the 0.9.0 cut (`8d8fe34`) until `release/0.9.1-prep` is merged, with
-a merge commit so the tag stays in main's history.
+1.0.15 game with a 1.0.16 one, a second player, building a new cairn. `release/0.9.1-prep`
+was later merged to main as PR #6 (`f61a38b`).
 
-**Status: 0.9.0 live on the store** (since 2026-09-24) under team `RavenIronStudios`,
-categorised "Client & Server - must be installed on both". The 0.9.1 store upload is
-RavenIron's step, pending as of 2026-09-25. 0.7.0, the first release, was built, verified and
-shipped in a single day (published 2026-09-02/03).
+**CUT 2026-10-16: v0.10.0, LIVE ON HEXIUM the same day** (store API `date_updated`
+14:58:05Z, dependency `BepInExPack_Valheim-5.4.2351`). Merged to main as PR #7 (`0f3d50d`),
+whose tree is identical to `01a66bb`, the commit tested on Storm10. The ship zip was built by
+`tools\package.ps1` from a fresh clone of `0f3d50d`. Its DLL is md5 `b2ee3884...`, and
+revprobe binds it clean against Valheim 1.0.20. **No git tag and no GitHub release** for this
+one, by the owner's choice: the zip was the deliverable. It folds in three changes:
+- **0.9.2, never published on its own** (the store API answers 404 for it). A player on a
+  no-map world reported that new cairns stopped lighting. Past `BeaconMaxCount` (100), the
+  server sent the OLDEST cairns, so every new one stayed dark for joined players. It now sends
+  the ones nearest a player (`BeaconSelection`), warns once per session, and shows lit / sent /
+  cap in `cairn status`. The default rose to 250. Cairn's first CONFIG MIGRATION came with it,
+  ported from FireFront (`ConfigLedger` plans, `ConfigMigration` applies, `[0 - Meta]
+  ConfigVersion` stamp). Rung 1 moves `BeaconMaxCount` 100 to 250.
+- **Stones stack** (`StackableStones`, default on). See the stone-stacking row in Locked
+  decisions.
+- **Tall cairns light.** `PileMaxPieces` 12 to 100, config rung 2. Stacking had made the old
+  cap reject the cairns it made possible.
+
+Verified in game on Storm10 (Valheim 1.0.20 dedicated, network 41):
+- with 5 lit cairns and a cap of 3, a 0.9.1 client received the nearest three;
+- rung 1 moved 100 to 250, kept an owner's own value, and did nothing on the second boot;
+- rung 2 moved 12 to 100 live;
+- stone on stone held, a wall aimed at a stone showed red, a stack survived a zone reload;
+- three side-by-side columns lit as one cairn.
+
+Not tried:
+- mixed 0.9.x and 0.10.0 machines;
+- a stack owned by a machine without the flag;
+- uninstalling with stacks standing.
+
+**Valheim 1.0.20 is network version 41**, so 1.0.16/1.0.17 servers (network 40) refuse
+1.0.20 clients outright.
+
+**Status: 0.10.0 live on the store** (since 2026-10-16) under team `RavenIronStudios`,
+categorised "Client & Server - must be installed on both"; 0.9.1 is also on the store's
+version list. The owner does every Hexium upload. 0.7.0, the first release, was built,
+verified and shipped in a single day (published 2026-09-02/03).
 
 Stacked stones become a cairn, a cairn burns, and the light was seen from 420m down a chain
 of fifteen built by hand.
 
 Every task except the fog probe now has a live run behind it: the skeleton on all three
 roles, the ledger with its sweep, sign pairing, prune, unlight, drift carryover and v1-to-v2
-migration, and the beacon itself. Off-game 156/156 at 0.7.0 (206/206 at 0.9.0), and every
+migration, and the beacon itself. Off-game 156/156 at 0.7.0 (206/206 at 0.9.0, 270/270 at 0.10.0), and every
 load-bearing assertion was proven to fail without its fix.
 
 The beacon is fully verified, occlusion included: a ridge really does put a light out. The raven
@@ -109,6 +141,10 @@ Built:
 Cairn/                     plugin (net472) — role-aware single DLL
   Cairn.cs                 entry point; role detection, Harmony, system registration
   Config/ModConfig.cs      config surface; every system gets an on/off toggle
+  Config/ConfigMigration.cs  applies the ledger's plan to the real file; backup, read-back, safe save (0.9.2)
+  Core/ConfigLedger.cs     PURE: which stored values still hold an old default, per config version (0.9.2)
+  Core/BeaconSelection.cs  PURE: past the beacon cap, the cairns nearest a player (0.9.2)
+  Core/StoneStacking.cs    PURE: which placements the stacking fence refuses (0.10.0)
   Core/IWorldSystem.cs     the contract every system implements
   Core/CairnTick.cs        the ONLY Update in the mod; budgeted cursor + autosave
   Core/LandmarkKey.cs      a place, to the nearest metre
@@ -124,6 +160,7 @@ Cairn/                     plugin (net472) — role-aware single DLL
   Patches/Patch_Terminal.cs  the `cairn` console
   Patches/Patch_WorldLifecycle.cs  ZNet.OnDestroy: flush + reset per-world state (0.9.0)
   Patches/Patch_RoutedRpcGuard.cs  server drops client-sent beacon pushes (0.9.0)
+  Patches/Patch_StoneStacking.cs   stones hold stones up; only a stone goes on a stone (0.10.0)
 tests/CoreTests/           net10 harness; compiles the REAL source against stubs
 docs/design-doc.html       source of the published design document
 tools/fetch-libs.ps1       populates libs\ from a local Valheim install
