@@ -47,6 +47,7 @@ namespace Cairn.Tests
                 PileDetectionTests();
                 BeaconSelectionTests();
                 ConfigLedgerTests();
+                StoneStackingTests();
                 StoreTests();
                 PersistenceTests();
             }
@@ -555,6 +556,41 @@ namespace Cairn.Tests
                   "equal distances keep ledger order");
 
             Equal(0, BeaconSelection.Choose(spread, two, 0).Count, "a zero cap sends nothing rather than throwing");
+        }
+
+        // ---- stone stacking ---------------------------------------------------------------
+
+        private static void StoneStackingTests()
+        {
+            Section("StoneStacking");
+
+            // Names as the game actually hands them over: a placed piece carries Unity's
+            // "(Clone)" suffix, the build ghost carries the bare prefab name.
+            Equal("Placeable_Stone", StoneStacking.PrefabName("Placeable_Stone(Clone)"), "the instance suffix is stripped");
+            Equal("Placeable_Stone", StoneStacking.PrefabName("Placeable_Stone"), "a bare prefab name is unchanged");
+            Equal("", StoneStacking.PrefabName(null), "null is not a crash");
+            Check(StoneStacking.IsStone("Placeable_Stone(Clone)"), "a placed stone is a stone");
+            Check(!StoneStacking.IsStone("stone_pile(Clone)"), "stone_pile is not the stackable stone");
+            Check(!StoneStacking.IsStone("placeable_stone(Clone)"), "prefab names are matched exactly, case included");
+
+            // The point: a stone on a stone.
+            Check(!StoneStacking.Refuse(true, "Placeable_Stone", "Placeable_Stone(Clone)"), "a stone may go on a stone");
+
+            // The fence: nothing else on a stone.
+            Check(StoneStacking.Refuse(true, "wood_wall_half", "Placeable_Stone(Clone)"), "a wooden wall may NOT stand on a stone");
+            Check(StoneStacking.Refuse(true, "piece_workbench", "Placeable_Stone(Clone)"), "nor a workbench");
+            Check(StoneStacking.Refuse(true, "sign", "Placeable_Stone(Clone)"), "nor a sign — a cairn's sign stands BESIDE it, on the ground");
+
+            // Everything that is not 'onto a stone' is vanilla's business, untouched.
+            Check(!StoneStacking.Refuse(true, "wood_wall_half", "stone_floor_2x2(Clone)"), "building on other stone pieces is untouched");
+            Check(!StoneStacking.Refuse(true, "wood_wall_half", ""), "building on the ground is untouched");
+            Check(!StoneStacking.Refuse(true, "wood_wall_half", null), "no piece under the ray is untouched");
+            Check(!StoneStacking.Refuse(true, "Placeable_Stone", "wood_floor(Clone)"), "a stone on a floor is untouched");
+
+            // The switch.
+            Check(!StoneStacking.Refuse(false, "wood_wall_half", "Placeable_Stone(Clone)"),
+                  "with stacking OFF the fence stands down — vanilla's own flag refuses it anyway");
+            Equal(true, ModConfig.StackableStones.Value, "stacking is on by default");
         }
 
         // ---- config ledger ----------------------------------------------------------------

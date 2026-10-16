@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.10.0
+
+**Stones stack.** Vanilla never let a stone go on another stone. The hoe's single
+`Placeable_Stone` shows red when aimed at one, so a cairn could only be a ring on the ground.
+Now stones stack, and a stack stays standing.
+
+- **Only stones go on stones.** A wall, beam or anything else aimed at a stone still shows red, so
+  a single pebble can never become a foundation.
+- **Everyone needs this version, the server included.** The machine that owns a stack decides
+  whether it stands. On an older Cairn, or with Cairn removed, stacked stones may fall.
+- **It is a setting.** `StackableStones` in `[3 - Cairn piles]` is on by default. Set it to
+  `false` to leave the vanilla stone exactly as it was. It is read on each player's game and on
+  the server when the world loads, so change it everywhere and restart.
+- `cairn pieces` now reports, for every piece, whether something can be placed on it and why
+  not.
+
+Includes every 0.9.2 change below.
+
 ## 0.9.2
 
 One fix, on the server. Players' games do not need updating — a 0.9.1 game reads a 0.9.2

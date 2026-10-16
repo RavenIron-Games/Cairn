@@ -265,6 +265,7 @@ namespace RavenIron.Cairn.Patches
                 Dictionary<GameObject, List<string>> tools = MapPiecesToTools(prefabs);
 
                 var lines = new List<string>();
+                var details = new Dictionary<string, string>();
                 foreach (GameObject go in prefabs)
                 {
                     if (go == null || go.name == null) continue;
@@ -277,12 +278,20 @@ namespace RavenIron.Cairn.Patches
                         ? string.Join("/", t.ToArray())
                         : "no table";
 
-                    lines.Add($"  {go.name}  [{tool}]  {DescribeCost(piece)}  {DescribePlacement(piece)}");
+                    string row = $"  {go.name}  [{tool}]  {DescribeCost(piece)}  {DescribePlacement(piece)}";
+                    lines.Add(row);
+                    // The second line answers the question the first one cannot: can a piece
+                    // be placed ON one of these? Prefab names are unique, so the row is the key.
+                    details[row] = "      stack: " + DescribeStacking(go, piece);
                 }
 
                 lines.Sort(StringComparer.OrdinalIgnoreCase);
                 Say(args, $"cairn: {lines.Count} BUILDABLE piece(s) containing \"{filter}\"");
-                foreach (string l in lines) Say(args, l);
+                foreach (string l in lines)
+                {
+                    Say(args, l);
+                    if (details.TryGetValue(l, out string d)) Say(args, d);
+                }
             }
             catch (Exception ex)
             {
@@ -356,19 +365,140 @@ namespace RavenIron.Cairn.Patches
                 Type t = piece.GetType();
                 var flags = new List<string>(4);
 
-                if (Flag(piece, t, "m_groundPiece")) flags.Add("SNAPS-TO-GROUND");
-                if (Flag(piece, t, "m_groundOnly")) flags.Add("GROUND-ONLY");
-                if (Flag(piece, t, "m_cultivatedGroundOnly")) flags.Add("cultivated-only");
-                if (Flag(piece, t, "m_notOnFloor")) flags.Add("not-on-floor");
-                if (Flag(piece, t, "m_noInWater")) flags.Add("not-in-water");
-                if (Flag(piece, t, "m_allowAltGroundPlacement")) flags.Add("alt-ground-ok");
-                if (Flag(piece, t, "m_allowRotatedOverlap")) flags.Add("overlap-ok");
+                // EVERY true bool on the Piece, not a hand-picked seven. The first version
+                // listed seven flags, reported Placeable_Stone as "free-placement", and was
+                // right about all seven — while m_noClipping, which it never looked at, is
+                // one of the three things Player.UpdatePlacementGhost can refuse a stack on.
+                // A readout that checks a subset is a readout that says "fine" for the wrong
+                // reason. Iterating the type also survives Valheim adding flags, which 1.0
+                // did (m_allowedInDeepSnow, m_requireDeepSnow, m_vegetationGroundOnly).
+                foreach (FieldInfo f in t.GetFields(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    if (f.FieldType != typeof(bool)) continue;
+                    if (!(f.GetValue(piece) is bool b) || !b) continue;
+
+                    switch (f.Name)
+                    {
+                        // Defaults that are true on every piece and mean nothing here.
+                        case "m_enabled":
+                        case "m_canRotate":
+                        case "m_canBeRemoved":
+                            continue;
+                        // The ones that decide a stack, shouted.
+                        case "m_groundPiece": flags.Add("SNAPS-TO-GROUND"); break;
+                        case "m_groundOnly": flags.Add("GROUND-ONLY"); break;
+                        case "m_noClipping": flags.Add("NO-CLIPPING"); break;
+                        default:
+                            flags.Add(f.Name.StartsWith("m_") ? f.Name.Substring(2) : f.Name);
+                            break;
+                    }
+                }
 
                 return flags.Count > 0 ? string.Join(" ", flags.ToArray()) : "free-placement";
             }
             catch
             {
                 return "";
+            }
+        }
+
+        /// <summary>
+        /// Can a piece be placed ON one of these? Read straight off the prefab, one line.
+        ///
+        /// Player.UpdatePlacementGhost (1.0.15, decompiled 2026-09-21) can refuse a stone on a
+        /// stone in four ways, and none of them is visible from the Piece flags alone:
+        ///
+        ///   1. PieceRayTest throws away any hit whose collider has an attachedRigidbody, so a
+        ///      stone that carries a Rigidbody can NEVER be built on — the ghost simply
+        ///      vanishes when you aim at it (NoRayHits). Kinematic makes no difference.
+        ///   2. The hit collider's layer has to be in m_placeRayMask, or the ray passes
+        ///      through the stone to whatever is under it.
+        ///   3. If the piece underneath has a WearNTear with m_supports == false, the status
+        ///      is Invalid outright. m_supports is authored on the prefab, never computed.
+        ///   4. If the NEW piece has m_noClipping and its collider penetrates the one below
+        ///      by more than 0.2m, Invalid. Two rounded stones touching do exactly that.
+        ///
+        /// Each is prefab data, so each is unknowable off-game and settled by this line.
+        /// </summary>
+        private static string DescribeStacking(GameObject go, Component piece)
+        {
+            try
+            {
+                var blocks = new List<string>(3);
+                var notes = new List<string>(6);
+
+                // 1. Rigidbody anywhere on the prefab: every collider under it reports an
+                //    attachedRigidbody, and the placement ray refuses those.
+                Rigidbody[] bodies = go.GetComponentsInChildren<Rigidbody>(true);
+                if (bodies.Length > 0)
+                {
+                    notes.Add($"rigidbody=YES({(bodies[0].isKinematic ? "kinematic" : "dynamic")})");
+                    blocks.Add("rigidbody — the placement ray ignores it, ghost vanishes");
+                }
+                else notes.Add("rigidbody=no");
+
+                // 2. Collider layers against the placement mask. The names are Player.Awake's
+                //    as of 1.0.15; if this ever reports a vanilla stone as unhittable, the
+                //    mask moved and this list is what to re-read.
+                int placeMask = LayerMask.GetMask(
+                    "Default", "static_solid", "Default_small", "piece", "piece_nonsolid", "terrain", "vehicle");
+                Collider[] cols = go.GetComponentsInChildren<Collider>(true);
+                var layers = new List<string>(2);
+                int solid = 0;
+                bool offMask = false;
+                foreach (Collider c in cols)
+                {
+                    if (c == null || c.isTrigger) continue;
+                    solid++;
+                    string layer = LayerMask.LayerToName(c.gameObject.layer);
+                    if (!layers.Contains(layer)) layers.Add(layer);
+                    if (((1 << c.gameObject.layer) & placeMask) == 0) offMask = true;
+                }
+                notes.Add($"colliders={solid}({string.Join(",", layers.ToArray())})");
+                if (solid == 0) blocks.Add("no solid collider — nothing for the ray to hit");
+                else if (offMask) blocks.Add("collider layer outside the placement mask — ray passes through");
+
+                // 3. WearNTear.m_supports on the prefab.
+                Component wnt = go.GetComponent("WearNTear");
+                if (wnt == null) notes.Add("wearntear=none");
+                else
+                {
+                    Type wt = wnt.GetType();
+                    object sup = AccessTools.Field(wt, "m_supports")?.GetValue(wnt);
+                    object mat = AccessTools.Field(wt, "m_materialType")?.GetValue(wnt);
+                    bool supports = sup is bool sb && sb;
+                    notes.Add($"wearntear=yes supports={supports.ToString().ToLowerInvariant()} material={mat}");
+                    if (!supports) blocks.Add("supports=false — anything placed on it is Invalid");
+                }
+
+                // 4. The clipping test applies to the piece being PLACED, so it is a risk on
+                //    the stone going on top rather than a property of the one beneath.
+                if (Flag(piece, piece.GetType(), "m_noClipping"))
+                    notes.Add("RISK: noClipping — rounded stones penetrate >0.2m and go red");
+
+                // Snap points: none means the ghost sits by collider contact, which is what a
+                // loose pile wants. Reflected because GetSnapPoints reads public here and this
+                // file has been burned by that before.
+                try
+                {
+                    var snaps = new List<Transform>();
+                    // Two overloads exist (a static 4-arg one too), so the name alone is an
+                    // ambiguous match and would resolve to nothing.
+                    AccessTools.Method(piece.GetType(), "GetSnapPoints", new[] { typeof(List<Transform>) })
+                        ?.Invoke(piece, new object[] { snaps });
+                    notes.Add($"snaps={snaps.Count}");
+                }
+                catch { /* the count is a nicety; the verdict does not depend on it */ }
+
+                string verdict = blocks.Count == 0
+                    ? "STACKABLE by every rule the engine has"
+                    : "BLOCKED: " + string.Join("; ", blocks.ToArray());
+
+                return verdict + "  [" + string.Join("  ", notes.ToArray()) + "]";
+            }
+            catch (Exception ex)
+            {
+                return "could not read the prefab: " + ex.Message;
             }
         }
 

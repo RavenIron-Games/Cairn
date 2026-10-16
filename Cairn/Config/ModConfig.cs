@@ -42,6 +42,7 @@ namespace RavenIron.Cairn.Config
         public static ConfigEntry<float>  LandmarkPairMeters;
         public static ConfigEntry<float>  PileDriftMeters;
         public static ConfigEntry<int>    StonePileStoneCost;
+        public static ConfigEntry<bool>   StackableStones;
 
         // ---- The light ------------------------------------------------------------
         public static ConfigEntry<bool>  EnableBeacons;
@@ -200,6 +201,17 @@ namespace RavenIron.Cairn.Config
                     "applies to whoever sets it in their own config. It is not sent from the " +
                     "server, and setting it on a dedicated server changes nothing for players.",
                     new AcceptableValueRange<int>(0, 100)));
+
+            StackableStones = config.Bind(
+                "3 - Cairn piles", "StackableStones", true,
+                "Lets a Placeable_Stone (Hoe, 1 stone) be placed ON another one, so a cairn can be " +
+                "a real stack instead of a ring of pebbles on the ground. Vanilla refuses it: the " +
+                "stone is made non-supporting, which blocks anything being placed on it. With this " +
+                "on, the stone supports what is stacked on it, and ONLY another stone may be placed " +
+                "on one — no hut on a one-stone foundation. This changes a VANILLA piece, and says " +
+                "so in the log at start-up; false leaves it exactly as the game made it. " +
+                "EVERY PLAYER'S GAME: placement is checked by the player who places, so each " +
+                "player's own setting is what counts for them. Takes effect when a world loads.");
 
             EnableBeacons = config.Bind(
                 "4 - The light", "EnableBeacons", true,
