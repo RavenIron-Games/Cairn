@@ -45,6 +45,8 @@ namespace Cairn.Tests
                 DisplayTextTests();
                 HexColourTests();
                 PileDetectionTests();
+                BeaconSelectionTests();
+                ConfigLedgerTests();
                 StoreTests();
                 PersistenceTests();
             }
@@ -491,6 +493,154 @@ namespace Cairn.Tests
             // the axis most likely to move for the least meaningful reason.
             Equal(0, PileDetection.NearestKey(was, new List<LandmarkKey> { new LandmarkKey(52, 99, 18) }, 4f),
                   "a cairn that grew taller is still the same cairn");
+        }
+
+        // ---- beacon selection -------------------------------------------------------------
+
+        private static Landmark LitAt(float x, float z, string name = "") =>
+            new Landmark(LandmarkKey.FromPosition(new Vector3(x, 0f, z)), name, "", 0, 0,
+                         true, new Vector3(x, 0f, z));
+
+        private static void BeaconSelectionTests()
+        {
+            Section("BeaconSelection");
+
+            // THE REPORTED CASE (2026-10-16). A hundred old cairns far to the west, then a
+            // trail of new ones where the player is standing. 0.9.1 sent the first hundred in
+            // ledger order — all old — and every new cairn stayed dark.
+            var ledger = new List<Landmark>();
+            for (int i = 0; i < 100; i++) ledger.Add(LitAt(-5000f - i * 10f, 0f));
+            for (int i = 0; i < 5; i++) ledger.Add(LitAt(2000f + i * 30f, 0f, "new" + i));
+            var player = new List<Vector3> { new Vector3(2050f, 0f, 0f) };
+
+            List<Landmark> sent = BeaconSelection.Choose(ledger, player, 100);
+            Equal(100, sent.Count, "over the cap, exactly the cap is sent");
+            int newSent = 0;
+            foreach (Landmark l in sent) if (l.Name.StartsWith("new")) newSent++;
+            Equal(5, newSent, "every new cairn beside the player is sent (0.9.1 sent none)");
+
+            // Under the cap nothing changes: same set, same order.
+            var few = new List<Landmark> { LitAt(900f, 0f, "a"), LitAt(10f, 0f, "b"), LitAt(500f, 0f, "c") };
+            List<Landmark> same = BeaconSelection.Choose(few, player, 100);
+            Equal("a,b,c", string.Join(",", same.ConvertAll(l => l.Name)), "under the cap, ledger order is untouched");
+
+            // Exactly at the cap is still under it.
+            Equal(3, BeaconSelection.Choose(few, player, 3).Count, "at the cap, all are sent");
+
+            // Two players far apart each keep their own nearby cairns.
+            var spread = new List<Landmark> {
+                LitAt(0f, 0f, "west-near"), LitAt(30f, 0f, "west-mid"), LitAt(3000f, 0f, "middle"),
+                LitAt(6000f, 0f, "east-near"), LitAt(5970f, 0f, "east-mid"),
+            };
+            var two = new List<Vector3> { new Vector3(0f, 0f, 0f), new Vector3(6000f, 0f, 0f) };
+            List<Landmark> pick = BeaconSelection.Choose(spread, two, 4);
+            Check(!pick.Exists(l => l.Name == "middle"), "the cairn far from both players is the one dropped");
+            Equal(4, pick.Count, "two players, cap 4: four sent");
+
+            // Nobody online: nothing to rank for, ledger order up to the cap.
+            List<Landmark> nobody = BeaconSelection.Choose(spread, new List<Vector3>(), 2);
+            Equal("west-near,west-mid", string.Join(",", nobody.ConvertAll(l => l.Name)), "no players: first in ledger order");
+
+            // Height is not distance: a headland cairn 200m up beats a shore one 50m away horizontally.
+            var heights = new List<Landmark> {
+                new Landmark(new LandmarkKey(50, 0, 0), "shore", "", 0, 0, true, new Vector3(50f, 0f, 0f)),
+                new Landmark(new LandmarkKey(10, 200, 0), "headland", "", 0, 0, true, new Vector3(10f, 200f, 0f)),
+            };
+            Equal("headland", BeaconSelection.Choose(heights, new List<Vector3> { new Vector3(0f, 0f, 0f) }, 1)[0].Name,
+                  "distance is XZ-planar — a cairn's height does not push it out");
+
+            // Ties keep ledger order, so the chosen set does not flicker between broadcasts.
+            var ties = new List<Landmark> { LitAt(10f, 0f, "first"), LitAt(-10f, 0f, "second"), LitAt(0f, 10f, "third") };
+            Equal("first", BeaconSelection.Choose(ties, new List<Vector3> { new Vector3(0f, 0f, 0f) }, 1)[0].Name,
+                  "equal distances keep ledger order");
+
+            Equal(0, BeaconSelection.Choose(spread, two, 0).Count, "a zero cap sends nothing rather than throwing");
+        }
+
+        // ---- config ledger ----------------------------------------------------------------
+
+        private const string BeaconSlot = "4 - The light::BeaconMaxCount";
+
+        private static Dictionary<string, string> Ini(params string[] lines) => ConfigLedger.ParseIni(lines);
+
+        private static void ConfigLedgerTests()
+        {
+            Section("ConfigLedger");
+
+            // THE REAL FILE. Written by Cairn 0.9.1 itself on a dedicated server, unstamped, with
+            // BeaconMaxCount at the old shipped 100 — every existing install looks like this.
+            string fixture = Path.Combine(AppContext.BaseDirectory, "fixtures", "written-by-0.9.1.cfg");
+            Check(File.Exists(fixture), "the 0.9.1 fixture is copied beside the harness");
+            if (File.Exists(fixture))
+            {
+                Dictionary<string, string> real = ConfigLedger.ParseIni(File.ReadAllLines(fixture));
+                Equal("100", real.TryGetValue(BeaconSlot, out string v) ? v : null, "the parser reads BeaconMaxCount out of the real file");
+                Equal(0, ConfigLedger.ReadVersion(real), "a 0.9.1 file carries no stamp, so it is version 0");
+
+                ConfigLedger.MigrationPlan p = ConfigLedger.Plan(real, 0);
+                Equal(1, p.ResetToDefault.Count, "the real 0.9.1 file plans exactly one move");
+                Check(p.ResetToDefault.Contains(BeaconSlot), "and it is BeaconMaxCount");
+                Equal(0, p.Kept.Count, "nothing else in the real file is touched or reported");
+                Equal("config: version 0 -> 1: 1 value moved to its new default (4 - The light.BeaconMaxCount)",
+                      ConfigLedger.Describe(p), "the boot line names what moved");
+            }
+
+            // An owner's own value is theirs.
+            ConfigLedger.MigrationPlan mine = ConfigLedger.Plan(Ini("[4 - The light]", "BeaconMaxCount = 40"), 0);
+            Equal(0, mine.ResetToDefault.Count, "a value the owner set (40) is not moved");
+            Equal(1, mine.Kept.Count, "...and is reported as kept");
+            Check(ConfigLedger.Describe(mine).Contains("kept as yours (4 - The light.BeaconMaxCount=40)"),
+                  "the boot line names the kept value and what it holds");
+
+            // Already migrated: nothing to do, ever again.
+            Equal(0, ConfigLedger.Plan(Ini("[0 - Meta]", "ConfigVersion = 1", "[4 - The light]", "BeaconMaxCount = 100"),
+                                       1).ResetToDefault.Count,
+                  "a stamped file is never migrated twice, even if it holds 100 again");
+            Equal(1, ConfigLedger.ReadVersion(Ini("[0 - Meta]", "ConfigVersion = 1")), "the stamp is read from [0 - Meta]");
+            Equal(0, ConfigLedger.ReadVersion(Ini("[Meta]", "ConfigVersion = 1")),
+                  "a stamp in the wrong section does not count");
+            Equal(0, ConfigLedger.ReadVersion(Ini("[0 - Meta]", "ConfigVersion = banana")), "an unparseable stamp is version 0");
+
+            // A newer build's stamp: this build has nothing to do with it.
+            Equal(0, ConfigLedger.Plan(Ini("[0 - Meta]", "ConfigVersion = 7", "[4 - The light]", "BeaconMaxCount = 100"),
+                                       7).ResetToDefault.Count,
+                  "a file stamped by a NEWER build is left alone");
+
+            // A negative stamp is a version-0 file, not a loop bound.
+            Equal(1, ConfigLedger.Plan(Ini("[4 - The light]", "BeaconMaxCount = 100"), -2000000000).ResetToDefault.Count,
+                  "a negative stamp migrates as version 0, and does so instantly");
+
+            // BepInEx keys are ordinal and case-sensitive; the snapshot must be too.
+            Equal(0, ConfigLedger.Plan(Ini("[4 - The light]", "beaconmaxcount = 100"), 0).ResetToDefault.Count,
+                  "a mis-cased key is a different key, exactly as BepInEx treats it");
+            Equal(0, ConfigLedger.Plan(Ini("[4 - the light]", "BeaconMaxCount = 100"), 0).ResetToDefault.Count,
+                  "so is a mis-cased section");
+
+            // Whitespace and missing keys.
+            Equal(1, ConfigLedger.Plan(Ini("  [4 - The light]  ", "  BeaconMaxCount   =   100  "), 0).ResetToDefault.Count,
+                  "padding around the line is not part of the value");
+            Equal(0, ConfigLedger.Plan(Ini("[4 - The light]", "BeaconColour = FFAA55"), 0).ResetToDefault.Count,
+                  "a file without the key plans nothing for it");
+            Equal(0, ConfigLedger.Plan(new Dictionary<string, string>(), 0).ResetToDefault.Count,
+                  "an empty snapshot (first install) plans nothing");
+
+            // The table seam: one slot, one decision, even if two rungs name it.
+            var twice = new Dictionary<int, ConfigLedger.Rebase[]>
+            {
+                { 1, new[] { new ConfigLedger.Rebase { Section = "S", Key = "K", OldDefaults = new[] { "1" } } } },
+                { 2, new[] { new ConfigLedger.Rebase { Section = "S", Key = "K", OldDefaults = new[] { "1" } } } },
+            };
+            Equal(1, ConfigLedger.Plan(Ini("[S]", "K = 1"), 0, 2, twice).ResetToDefault.Count,
+                  "a key named on two rungs is moved once");
+            Equal(0, ConfigLedger.Plan(Ini("[S]", "K = 1"), 1, 2, new Dictionary<int, ConfigLedger.Rebase[]>
+                {
+                    { 1, new[] { new ConfigLedger.Rebase { Section = "S", Key = "K", OldDefaults = new[] { "1" } } } },
+                }).ResetToDefault.Count,
+                "a rung the file has already passed does not run");
+
+            // The ledger and the bound config agree on where the stamp lives and what it binds as.
+            Equal(0, ModConfig.ConfigVersion.Value, "ConfigVersion binds at 0, so an unstamped file reads as version 0");
+            Equal(250, ModConfig.BeaconMaxCount.Value, "the new default the rung moves to is 250");
         }
 
         // ---- store ----------------------------------------------------------------------

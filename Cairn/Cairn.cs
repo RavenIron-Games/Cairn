@@ -76,7 +76,11 @@ namespace RavenIron.Cairn
             Instance = this;
             Log = Logger;
 
+            // Snapshot the raw file BEFORE any bind (binding rewrites it), then move any value
+            // still at an old default and stamp the layout version. Never stops the mod loading.
+            ConfigMigration.Begin(base.Config);
             ModConfig.Bind(base.Config);
+            ConfigMigration.Finish(base.Config, ModConfig.ConfigVersion);
 
             _harmony = new Harmony(PluginId);
             _harmony.PatchAll();

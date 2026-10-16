@@ -535,12 +535,29 @@ namespace RavenIron.Cairn.Patches
                 $"  tick       : {(CairnTick.WorldSeen ? "running" : "not yet — no world")}, " +
                 $"{CairnTick.SystemCount.ToString(c)} system(s), " +
                 $"budget {ModConfig.TickBudgetMs.Value.ToString("0.##", c)}ms/frame");
-            Say(args, 
+            Say(args,
                 $"  enabled    : {ModConfig.Enabled.Value} (verbose={ModConfig.VerboseLogging.Value})");
+            Say(args,
+                $"  config     : layout {ModConfig.ConfigVersion.Value.ToString(c)} — {ConfigMigration.StatusLine()}");
             Say(args, 
                 $"  ledger     : {(Persistence.IsLoaded ? "loaded" : "not on this process")}, " +
                 $"{LandmarkStore.Count.ToString(c)} landmark(s)" +
                 (LandmarkStore.IsDirty ? ", unsaved changes" : ""));
+
+            // Lit vs sent. Only the authority broadcasts, so a pure client has nothing to say
+            // here — and says so, rather than printing a zero that reads like "none are lit".
+            int cap = ModConfig.BeaconMaxCount.Value;
+            if (!Persistence.IsLoaded)
+                Say(args, $"  broadcast  : the server's — on a client, `cairn beacons` shows what arrived");
+            else if (Net.LandmarkSync.LastLit < 0)
+                Say(args, $"  broadcast  : none sent yet (cap {cap.ToString(c)})");
+            else
+                Say(args,
+                    $"  broadcast  : {Net.LandmarkSync.LastLit.ToString(c)} lit, " +
+                    $"{Net.LandmarkSync.LastSent.ToString(c)} sent, cap {cap.ToString(c)}" +
+                    (Net.LandmarkSync.LastLit > Net.LandmarkSync.LastSent
+                        ? " — OVER THE CAP: only the cairns nearest a player reach clients"
+                        : ""));
         }
     }
 }
