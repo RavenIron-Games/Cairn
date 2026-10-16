@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.10.0
+## 0.10.0 — 2026-10-16
 
 **Stones stack.** Vanilla never let a stone go on another stone. The hoe's single
 `Placeable_Stone` shows red when aimed at one, so a cairn could only be a ring on the ground.
