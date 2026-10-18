@@ -48,6 +48,7 @@ namespace Cairn.Tests
                 BeaconSelectionTests();
                 ConfigLedgerTests();
                 StoneStackingTests();
+                NamedListingTests();
                 StoreTests();
                 PersistenceTests();
             }
@@ -587,6 +588,39 @@ namespace Cairn.Tests
         }
 
         // ---- stone stacking ---------------------------------------------------------------
+
+        private static void NamedListingTests()
+        {
+            Section("NamedListing");
+
+            var names = new List<string> { "Far Point", "", "Near Ford", "   ", "Mid Ridge", null };
+            var spots = new List<Vector3> {
+                new Vector3(300f, 0f, 0f), new Vector3(1f, 0f, 0f), new Vector3(10f, 50f, 0f),
+                new Vector3(2f, 0f, 0f), new Vector3(0f, 0f, 100f), new Vector3(3f, 0f, 0f)
+            };
+            List<int> order = NamedListing.NamedByDistance(names, spots, new Vector3(0f, 0f, 0f));
+            Equal(3, order.Count, "only the three named cairns are listed; blank, spaces and null are waymarks");
+            if (order.Count == 3)
+            {
+                Equal(2, order[0], "nearest first: Near Ford at 10 m (its 50 m height is ignored)");
+                Equal(4, order[1], "then Mid Ridge at 100 m");
+                Equal(0, order[2], "then Far Point at 300 m");
+            }
+
+            List<int> tie = NamedListing.NamedByDistance(
+                new List<string> { "B", "A" },
+                new List<Vector3> { new Vector3(5f, 0f, 0f), new Vector3(0f, 0f, 5f) },
+                new Vector3(0f, 0f, 0f));
+            Check(tie.Count == 2 && tie[0] == 0 && tie[1] == 1, "equal distances keep the order the server sent");
+
+            Equal(0, NamedListing.NamedByDistance(new List<string>(), new List<Vector3>(), new Vector3(0f, 0f, 0f)).Count,
+                  "nothing sent, nothing listed");
+            Equal(0, NamedListing.NamedByDistance(null, null, new Vector3(0f, 0f, 0f)).Count, "null input is not a crash");
+            Equal(1, NamedListing.NamedByDistance(new List<string> { "A", "B" }, new List<Vector3> { new Vector3(0f, 0f, 0f) },
+                  new Vector3(0f, 0f, 0f)).Count, "mismatched lengths list only the pairs that exist");
+            Check(Math.Abs(NamedListing.DistanceXZ(new Vector3(3f, 99f, 4f), new Vector3(0f, 0f, 0f)) - 5f) < 0.0001f,
+                  "distance is along the ground: 3-4-5, height ignored");
+        }
 
         private static void StoneStackingTests()
         {

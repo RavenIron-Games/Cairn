@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.10.3 — 2026-10-18
+
+- **`cairn landmarks` works when you play on a server.** It used to answer "no landmarks" to
+  every player on a dedicated server, because the full list lives on the server. It now lists
+  the named cairns near you, nearest first, with how far away each one is. In single player it
+  still lists every one.
+- The config file no longer says a light is seen "at most" 800 m away. 800 m is the default,
+  and `BeaconMaxDistanceMeters` changes it.
+
+Includes the clearer config and README wording from 0.10.1 and 0.10.2.
+
 ## 0.10.2 — 2026-10-18
 
 Plainer words in the config file and this page. Nothing else changes.
