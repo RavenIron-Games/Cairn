@@ -98,8 +98,12 @@ namespace RavenIron.Cairn.Config
 
             EnableLandmarks = config.Bind(
                 "2 - Landmarks", "EnableLandmarks", true,
-                "The sweep that turns named signs into landmarks. Off leaves the ledger frozen " +
-                "at whatever it already holds.");
+                "SERVER setting. The sweep that finds cairns: stacked stones AND the signs that " +
+                "name them. This is NOT a switch for names. Off means no new cairn is ever " +
+                "noticed, so no new cairn ever lights; the ones already found keep their light, " +
+                "frozen as they are. Leave it on. To do without names, turn off EnableRavenVoice " +
+                "(Hugin is the only thing in the game that says a name) or simply do not write " +
+                "on signs; an unnamed cairn lights exactly the same.");
 
             LandmarkRotationSeconds = config.Bind(
                 "2 - Landmarks", "LandmarkRotationSeconds", 20f,
