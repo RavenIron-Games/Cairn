@@ -28,13 +28,15 @@ server and every player need it. `StackableStones = false` turns it off.
 **It lights itself.** Within about twenty seconds a fire appears on the crown, and it can be seen
 from hundreds of metres away.
 
-**Name it, if you want.** Put a sign within six metres and write on it, and the cairn takes
-that name. There is no map to put it on, so it appears in exactly two places. The first is
-Hugin: stand at a named cairn and the raven may land and say it, but only while tutorials are
-on in the game settings (see **The raven** below). The second is the console, where
-`cairn landmarks` lists every named place. A cairn with no sign is still a lit waymark, lit
-exactly the same, and plenty of them should be. If you play with tutorials off, you can
-ignore names altogether.
+**Name it, if you want.** Put a sign within six metres of a cairn and write on it. The cairn
+takes that name. There is no map, so you see the name in only two places:
+
+- **Hugin the raven** may land at the cairn and say the name. He only does this while
+  **tutorials are turned on** in the game settings.
+- **The console command `cairn landmarks`** lists every named cairn.
+
+Names are optional. A cairn with no sign lights exactly the same. If you play with tutorials
+off, you can ignore names.
 
 Every one looks different because you built it, and uninstalling the mod leaves exactly what
 it appears to be: a pile of rocks with a sign on it. Stones stacked on stones may fall once the

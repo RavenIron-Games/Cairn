@@ -98,12 +98,13 @@ namespace RavenIron.Cairn.Config
 
             EnableLandmarks = config.Bind(
                 "2 - Landmarks", "EnableLandmarks", true,
-                "SERVER setting. The sweep that finds cairns: stacked stones AND the signs that " +
-                "name them. This is NOT a switch for names. Off means no new cairn is ever " +
-                "noticed, so no new cairn ever lights; the ones already found keep their light, " +
-                "frozen as they are. Leave it on. To do without names, turn off EnableRavenVoice " +
-                "(Hugin is the only thing in the game that says a name) or simply do not write " +
-                "on signs; an unnamed cairn lights exactly the same.");
+                "LEAVE THIS ON. It is how the mod finds cairns. Every few seconds the server looks " +
+                "for stacked stones, and for signs written on beside them. " +
+                "If you turn it off, new cairns are never found, so they never light. " +
+                "Cairns found before you turned it off keep their light. " +
+                "This is NOT the setting for names. To play without names, turn off " +
+                "EnableRavenVoice, or leave your signs blank. " +
+                "Set it on the server.");
 
             LandmarkRotationSeconds = config.Bind(
                 "2 - Landmarks", "LandmarkRotationSeconds", 20f,
@@ -172,11 +173,14 @@ namespace RavenIron.Cairn.Config
             LandmarkPairMeters = config.Bind(
                 "3 - Cairn piles", "LandmarkPairMeters", 6f,
                 new ConfigDescription(
-                    "How far from a pile a named sign may stand and still name it. A name is " +
-                    "spoken by Hugin when you stand at the cairn (only with game tutorials on) and " +
-                    "listed by `cairn landmarks`; it changes nothing about the light. Measured " +
-                    "XZ-planar: a sign set into a cairn's flank sits metres below its crown, and " +
-                    "a 3D check would put it out of reach for no reason a player could see.",
+                    "How close a sign must be to a cairn to give it a name, in metres. " +
+                    "Write on a sign this close to a cairn and the cairn takes that name. " +
+                    "You see the name in two places only. First, Hugin the raven may land at " +
+                    "the cairn and say it, but only while tutorials are turned on in the game " +
+                    "settings. Second, the console command `cairn landmarks` lists every name. " +
+                    "A name does not change the light. A cairn with no sign lights the same. " +
+                    "The distance is measured along the ground and ignores height, so a sign " +
+                    "low on the side of a tall cairn still counts.",
                     new AcceptableValueRange<float>(1f, 30f)));
 
             PileDriftMeters = config.Bind(
@@ -237,18 +241,17 @@ namespace RavenIron.Cairn.Config
             BeaconMaxCount = config.Bind(
                 "4 - The light", "BeaconMaxCount", 250,
                 new ConfigDescription(
-                    "SERVER setting. NOT a limit on how many cairns a world can have: build as many " +
-                    "as you like. This is how many lit cairns the server sends players at once, and " +
-                    "it always sends the ones nearest a player. Beacons are drawn only out to " +
-                    "BeaconMaxDistanceMeters (800m) and terrain hides many of those, so 250 covers " +
-                    "everything a player can actually see unless more than that stand near the " +
-                    "players. Past it, the farthest stay dark for clients until someone comes near " +
-                    "(the server log warns once when that happens, and `cairn status` " +
-                    "shows lit vs sent). Was 100 through 0.9.1, described as \"not a limit anyone " +
-                    "should reach\" — and a no-map waymark trail reached it, at which point every " +
-                    "NEW cairn stayed dark, because 0.9.1 kept the oldest. 500 is the ceiling: " +
-                    "clients refuse a larger push. A singleplayer game or a host draws every lit " +
-                    "cairn regardless; this only limits what is sent to joined players.",
+                    "This does NOT limit how many cairns you can build. Build as many as you like. " +
+                    "It is the most lit cairns the server sends to players at one time. " +
+                    "The server always sends the cairns nearest to a player first. " +
+                    "A light can be seen from at most 800 m away (BeaconMaxDistanceMeters), so the " +
+                    "default of 250 is plenty for any run. You do not need to raise it. " +
+                    "If more cairns stand near players than this number, the farthest ones stay " +
+                    "dark until someone walks closer. The server log warns you once if that " +
+                    "happens, and `cairn status` shows how many are lit and how many are sent. " +
+                    "The highest allowed value is 500. " +
+                    "Set it on the server. In single player, and for the player hosting a game, every " +
+                    "cairn lights whatever this says.",
                     new AcceptableValueRange<int>(1, 500)));
 
             BeaconMaxDistanceMeters = config.Bind(
