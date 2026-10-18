@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.10.2 — 2026-10-18
+
+Plainer words in the config file and this page. Nothing else changes.
+
+- `BeaconMaxCount`, `EnableLandmarks` and `LandmarkPairMeters` are now explained in short, plain
+  sentences, with the most important point first.
+- The section on naming a cairn is now a short list of the two places a name appears.
+
 ## 0.10.1 — 2026-10-18
 
 Clearer words, no change to how anything works. Thanks to the player who asked.
