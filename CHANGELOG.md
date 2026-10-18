@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.10.1 — 2026-10-18
+
+Clearer words, no change to how anything works. Thanks to the player who asked.
+
+- **`BeaconMaxCount` is not a limit on how many cairns you can build.** It is how many lit
+  cairns the server sends at once, and it always sends the ones nearest a player. Beacons are
+  only drawn out to 800 m, so the default of 250 covers everything you can actually see. There
+  is no need to raise it for a long run.
+- **`EnableLandmarks` is not a switch for names.** It runs the search that finds cairns, both the
+  stones and the signs. Turn it off and no new cairn ever lights. Leave it on.
+- **Where a name appears.** Write on a sign within 6 m of a cairn and the cairn takes that name.
+  Hugin says it when you stand there, but only while tutorials are on in the game settings, and
+  `cairn landmarks` lists every name. To play without names, turn off `EnableRavenVoice` or leave
+  your signs blank. Unnamed cairns light exactly the same.
+
+The new descriptions appear in your config file the first time you run 0.10.1. Settings you
+have chosen are not changed.
+
 ## 0.10.0 — 2026-10-16
 
 **Stones stack.** Vanilla never let a stone go on another stone. The hoe's single
