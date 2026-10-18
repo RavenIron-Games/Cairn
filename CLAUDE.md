@@ -99,11 +99,22 @@ on Hexium as of the tagging (the store API answers 404 for both); the owner uplo
 **The answer to "raise the 500 ceiling", for the next time it is asked:** each player's game
 refuses a push of more than 500 (`LandmarkSync.MaxBeaconsPerPush`), so raising it needs every
 player updated. Since 0.9.2 the push carries the cairns NEAREST a player, and beacons draw
-only to 800 m, so 250 already covers everything a player can see.
+only to 800 m by default, so 250 already covers everything a player can see.
+
+**CUT 2026-10-18: v0.10.3, the one to upload** (`2554ba1`, PR #14, DLL md5 `c1d827ab...`,
+tagged and on GitHub as a pre-release). Before upload, every promise in the 0.10.1/0.10.2 text
+was checked against the code, and one was false. The text said "`cairn landmarks` lists every
+name", but the command read only the ledger, so on a dedicated server it answered "no
+landmarks" to every joined player. On a pure client it now lists the named lit cairns the
+server sent, nearest first (`NamedListing`). It also stopped calling 800 m a maximum: it is
+`BeaconMaxDistanceMeters`' default. **Lesson: when docs start promising a console command,
+check which role the command actually works on.** Several here read the ledger and see nothing
+on a joined player's game. **Not yet run in game:** the client branch of `cairn landmarks`.
+0.10.1 and 0.10.2 are superseded and are not meant for the store.
 
 **Status: 0.10.0 live on the store** (since 2026-10-16) under team `RavenIronStudios`,
 categorised "Client & Server - must be installed on both"; 0.9.1 is also on the store's
-version list. 0.10.1 and 0.10.2 are cut and on GitHub, waiting for upload. The owner does
+version list. 0.10.3 is cut and on GitHub, waiting for upload. The owner does
 every Hexium upload. 0.7.0, the first release, was built,
 verified and shipped in a single day (published 2026-09-02/03).
 
