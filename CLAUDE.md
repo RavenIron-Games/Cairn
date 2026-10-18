@@ -53,8 +53,9 @@ was later merged to main as PR #6 (`f61a38b`).
 14:58:05Z, dependency `BepInExPack_Valheim-5.4.2351`). Merged to main as PR #7 (`0f3d50d`),
 whose tree is identical to `01a66bb`, the commit tested on Storm10. The ship zip was built by
 `tools\package.ps1` from a fresh clone of `0f3d50d`. Its DLL is md5 `b2ee3884...`, and
-revprobe binds it clean against Valheim 1.0.20. **No git tag and no GitHub release** for this
-one, by the owner's choice: the zip was the deliverable. It folds in three changes:
+revprobe binds it clean against Valheim 1.0.20. Tagged `v0.10.0` on `0f3d50d` and published
+as a GitHub pre-release with that zip on 2026-10-18, two days after the store upload. It folds
+in three changes:
 - **0.9.2, never published on its own** (the store API answers 404 for it). A player on a
   no-map world reported that new cairns stopped lighting. Past `BeaconMaxCount` (100), the
   server sent the OLDEST cairns, so every new one stayed dark for joined players. It now sends
@@ -82,9 +83,28 @@ Not tried:
 **Valheim 1.0.20 is network version 41**, so 1.0.16/1.0.17 servers (network 40) refuse
 1.0.20 clients outright.
 
+**CUT 2026-10-18: v0.10.1 and v0.10.2, text only.** A player on a no-map run asked for a
+`BeaconMaxCount` above 500 and could not tell where a sign's name appears. Neither needed
+code. The setting descriptions and the README were rewritten instead.
+- **0.10.1** (`434ac36`, PRs #9 and #10) says three things. `BeaconMaxCount` does not limit
+  how many cairns a world holds. `EnableLandmarks` is the cairn sweep, stones included, not a
+  names switch. A name appears only through Hugin (tutorials on) and `cairn landmarks`.
+  DLL md5 `4d516c73...`.
+- **0.10.2** (`da66184`, PRs #11 and #12) rewrites the same texts in plain short sentences
+  at the owner's request. DLL md5 `4efcd065...`.
+
+Both zips were built from a fresh clone of the merge and are revprobe-clean on 1.0.20. Both
+are tagged and published as GitHub pre-releases with their zips. Config version stays 2. Not
+on Hexium as of the tagging (the store API answers 404 for both); the owner uploads.
+**The answer to "raise the 500 ceiling", for the next time it is asked:** each player's game
+refuses a push of more than 500 (`LandmarkSync.MaxBeaconsPerPush`), so raising it needs every
+player updated. Since 0.9.2 the push carries the cairns NEAREST a player, and beacons draw
+only to 800 m, so 250 already covers everything a player can see.
+
 **Status: 0.10.0 live on the store** (since 2026-10-16) under team `RavenIronStudios`,
 categorised "Client & Server - must be installed on both"; 0.9.1 is also on the store's
-version list. The owner does every Hexium upload. 0.7.0, the first release, was built,
+version list. 0.10.1 and 0.10.2 are cut and on GitHub, waiting for upload. The owner does
+every Hexium upload. 0.7.0, the first release, was built,
 verified and shipped in a single day (published 2026-09-02/03).
 
 Stacked stones become a cairn, a cairn burns, and the light was seen from 420m down a chain
