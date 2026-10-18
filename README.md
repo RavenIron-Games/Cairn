@@ -33,7 +33,8 @@ takes that name. There is no map, so you see the name in only two places:
 
 - **Hugin the raven** may land at the cairn and say the name. He only does this while
   **tutorials are turned on** in the game settings.
-- **The console command `cairn landmarks`** lists every named cairn.
+- **The console command `cairn landmarks`** lists named cairns: every one in single player,
+  and the named cairns near you when you play on a server.
 
 Names are optional. A cairn with no sign lights exactly the same. If you play with tutorials
 off, you can ignore names.

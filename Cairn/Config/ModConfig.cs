@@ -177,7 +177,8 @@ namespace RavenIron.Cairn.Config
                     "Write on a sign this close to a cairn and the cairn takes that name. " +
                     "You see the name in two places only. First, Hugin the raven may land at " +
                     "the cairn and say it, but only while tutorials are turned on in the game " +
-                    "settings. Second, the console command `cairn landmarks` lists every name. " +
+                    "settings. Second, the console command `cairn landmarks` lists names: every one " +
+                    "in single player, and the ones near you when you play on a server. " +
                     "A name does not change the light. A cairn with no sign lights the same. " +
                     "The distance is measured along the ground and ignores height, so a sign " +
                     "low on the side of a tall cairn still counts.",
@@ -244,7 +245,7 @@ namespace RavenIron.Cairn.Config
                     "This does NOT limit how many cairns you can build. Build as many as you like. " +
                     "It is the most lit cairns the server sends to players at one time. " +
                     "The server always sends the cairns nearest to a player first. " +
-                    "A light can be seen from at most 800 m away (BeaconMaxDistanceMeters), so the " +
+                    "By default a light can be seen from up to 800 m away (BeaconMaxDistanceMeters), so the " +
                     "default of 250 is plenty for any run. You do not need to raise it. " +
                     "If more cairns stand near players than this number, the farthest ones stay " +
                     "dark until someone walks closer. The server log warns you once if that " +

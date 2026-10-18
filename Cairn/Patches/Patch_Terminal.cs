@@ -603,13 +603,49 @@ namespace RavenIron.Cairn.Patches
         }
 
         /// <summary>
-        /// Reads answer everywhere. On a pure client the ledger is simply empty, and saying so
-        /// is more useful than refusing: "0 landmarks" plus "authority=False" is a complete
-        /// explanation, where a refusal would only be half of one.
+        /// Reads answer everywhere. Where the ledger lives (single player, a host, the server's
+        /// own console) this lists every landmark. On a joined player's game, which has no
+        /// ledger, it lists the NAMED lit cairns the server has sent, nearest first (0.10.3):
+        /// until then it answered "no landmarks" to every player on a dedicated server, while
+        /// the README promised it listed every name.
         /// </summary>
         private static void Landmarks(Terminal.ConsoleEventArgs args)
         {
             var c = CultureInfo.InvariantCulture;
+
+            // A joined player's game has no ledger: it lives on the server. What this game DOES
+            // hold is the names of the lit cairns the server sends it, nearest a player first,
+            // which is what Hugin speaks from. List those, nearest first, rather than "none".
+            if (!Persistence.IsLoaded)
+            {
+                List<Net.LandmarkSync.Beacon> sent = Net.LandmarkSync.Current();
+                var names = new List<string>(sent.Count);
+                var spots = new List<Vector3>(sent.Count);
+                foreach (Net.LandmarkSync.Beacon b in sent) { names.Add(b.Name); spots.Add(b.Light); }
+
+                Player me = Player.m_localPlayer;
+                Vector3 here = me != null ? me.transform.position : Vector3.zero;
+                List<int> order = NamedListing.NamedByDistance(names, spots, here);
+
+                if (order.Count == 0)
+                {
+                    Say(args, sent.Count == 0
+                        ? "cairn: no named cairns yet. The server has not sent any lit cairns to this game."
+                        : $"cairn: none of the {sent.Count.ToString(c)} lit cairn(s) near you has a name. " +
+                          $"Write on a sign within {ModConfig.LandmarkPairMeters.Value.ToString("0.#", c)} m of a cairn to name it.");
+                    return;
+                }
+
+                Say(args, $"cairn: {order.Count.ToString(c)} named cairn(s) near you, nearest first " +
+                          "(the server sends the lit cairns nearest its players)");
+                foreach (int i in order)
+                {
+                    float d = NamedListing.DistanceXZ(spots[i], here);
+                    Say(args, $"  \"{names[i]}\"  {d.ToString("0", c)} m  at {sent[i].Key}");
+                }
+                return;
+            }
+
             List<Landmark> all = LandmarkStore.Snapshot();
 
             if (all.Count == 0)
