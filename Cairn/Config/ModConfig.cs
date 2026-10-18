@@ -98,8 +98,12 @@ namespace RavenIron.Cairn.Config
 
             EnableLandmarks = config.Bind(
                 "2 - Landmarks", "EnableLandmarks", true,
-                "The sweep that turns named signs into landmarks. Off leaves the ledger frozen " +
-                "at whatever it already holds.");
+                "SERVER setting. The sweep that finds cairns: stacked stones AND the signs that " +
+                "name them. This is NOT a switch for names. Off means no new cairn is ever " +
+                "noticed, so no new cairn ever lights; the ones already found keep their light, " +
+                "frozen as they are. Leave it on. To do without names, turn off EnableRavenVoice " +
+                "(Hugin is the only thing in the game that says a name) or simply do not write " +
+                "on signs; an unnamed cairn lights exactly the same.");
 
             LandmarkRotationSeconds = config.Bind(
                 "2 - Landmarks", "LandmarkRotationSeconds", 20f,
@@ -168,7 +172,9 @@ namespace RavenIron.Cairn.Config
             LandmarkPairMeters = config.Bind(
                 "3 - Cairn piles", "LandmarkPairMeters", 6f,
                 new ConfigDescription(
-                    "How far from a pile a named sign may stand and still name it. Measured " +
+                    "How far from a pile a named sign may stand and still name it. A name is " +
+                    "spoken by Hugin when you stand at the cairn (only with game tutorials on) and " +
+                    "listed by `cairn landmarks`; it changes nothing about the light. Measured " +
                     "XZ-planar: a sign set into a cairn's flank sits metres below its crown, and " +
                     "a 3D check would put it out of reach for no reason a player could see.",
                     new AcceptableValueRange<float>(1f, 30f)));
@@ -231,9 +237,13 @@ namespace RavenIron.Cairn.Config
             BeaconMaxCount = config.Bind(
                 "4 - The light", "BeaconMaxCount", 250,
                 new ConfigDescription(
-                    "SERVER setting. Most lit cairns carried in one broadcast; past it, the ones " +
-                    "nearest a player are sent and the rest stay dark for clients until someone " +
-                    "comes near (the server log warns once when that happens, and `cairn status` " +
+                    "SERVER setting. NOT a limit on how many cairns a world can have: build as many " +
+                    "as you like. This is how many lit cairns the server sends players at once, and " +
+                    "it always sends the ones nearest a player. Beacons are drawn only out to " +
+                    "BeaconMaxDistanceMeters (800m) and terrain hides many of those, so 250 covers " +
+                    "everything a player can actually see unless more than that stand near the " +
+                    "players. Past it, the farthest stay dark for clients until someone comes near " +
+                    "(the server log warns once when that happens, and `cairn status` " +
                     "shows lit vs sent). Was 100 through 0.9.1, described as \"not a limit anyone " +
                     "should reach\" — and a no-map waymark trail reached it, at which point every " +
                     "NEW cairn stayed dark, because 0.9.1 kept the oldest. 500 is the ceiling: " +
