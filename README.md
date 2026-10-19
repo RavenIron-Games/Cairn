@@ -67,6 +67,20 @@ nothing in the mod depends on him. He is a grace note, not a compass. `cairn rav
 of what keeps him away: the tutorials setting, your altitude, and how far the nearest named
 cairn is.
 
+## Your tombstone (optional, off by default)
+
+With no map, there is no death pin, and finding your body can end a run. Turn on
+`EnableTombstoneLights` and a **red light** burns over your tombstone after you die.
+
+- **Only you see the light over your own tombstone.** Other players see theirs, not yours.
+- **Hills and walls still hide it**, like a cairn's light. You walk toward a glow you can see,
+  not a marker.
+- **It goes out** once you empty the tombstone.
+
+Set it on the server. In single player, set it in your own game. Any player can hide the light
+in their own game with `ShowTombstoneLight = false`, and `TombstoneColour` changes the colour.
+Every player and the server need Cairn 0.11.0 or newer for it to work.
+
 ## What it does not do
 
 No map. No compass. No waypoints, no markers, no pins, no arrows, no HUD, no readout of any
@@ -100,6 +114,7 @@ explaining what it costs. The ones most worth knowing:
 | `BeaconOcclusion` | terrain hides beacons. Leave this on. |
 | `LandmarkRotationSeconds` | how quickly a new cairn is noticed (20s) |
 | `EnableRavenVoice` | the bird |
+| `EnableTombstoneLights` | a red light over your own tombstone (off) |
 
 ## Console
 

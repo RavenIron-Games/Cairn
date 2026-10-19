@@ -231,6 +231,15 @@ worth remembering and does not seed the world with points of interest. It notice
 players build and gives it weight. A world where nobody has built anything has no
 landmarks, and that is correct.
 
+**Amended 2026-10-19 by RavenIron: ONE exception, the tombstone light (0.11.0).** With
+`EnableTombstoneLights` on (server; default OFF), a dead player sees a red light over their own
+tombstone. It is the only light this mod makes without a player building it. It exists because a
+no-map run removes vanilla's death pin, and finding your body is the hardest moment in one. It
+stays inside rule A: terrain hides it, it is not a bearing, only the owner sees it, and it goes
+out when the tombstone is emptied. It is NOT a landmark. It never enters the ledger, has no name,
+and is never persisted. The exception is this one light, not a precedent for others: any further
+mod-authored light needs its own decision.
+
 ---
 
 ## Locked decisions — do not revisit without asking
@@ -250,7 +259,8 @@ landmarks, and that is correct.
 | Hugin / the Raven | **Optional flavour, additive only, never load-bearing.** Register static texts; never overwrite vanilla tutorial text; degrade to silence. It cannot be the navigation channel — see Known traps. |
 | Seasons / weather / `EnvMan` | **Read-only consumption. Never patched.** RW's rule 4 applies unchanged; Seasonality and Seasons own that ground. |
 | Terrain / materials / textures | **Never touched.** |
-| Player data (kills, deaths, playtime) | **None.** The Raven's Call's job, a separate mod, no data connection. |
+| Player data (kills, deaths, playtime) | **None.** The Raven's Call's job, a separate mod, no data connection. (The tombstone light reads where a tombstone IS, from the world, while it exists. It counts and keeps nothing about deaths.) |
+| Tombstone light | **Off by default; red; only the owner sees it** (`EnableTombstoneLights`, server; `ShowTombstoneLight` and `TombstoneColour`, each player's game; 0.11.0). Owner's call 2026-10-19, amending house rule B for this one light. `TombstoneSystem` sweeps the prefab named by `Player.m_tombstone` (read from the game; `Player_tombstone` on 1.0.20) and reads `ZDOVars.s_owner` (the dead player's `PlayerProfile.GetPlayerID()`, written by `TombStone.Setup`) and `s_timeOfDeath`. It sends them on a SEPARATE routed RPC, `com.raveniron.cairn.tombstones1`, so the beacon packet's shape is unchanged and an older game ignores the new name (vanilla drops unknown routed methods silently). Each game keeps only its own. Off, the server sends nothing, and a game's lights go stale and out after three missed pushes (never under 30 s). Keyed by owner + time of death so a floating tombstone keeps one light. The client-sent copy is dropped by `Patch_RoutedRpcGuard` like a beacon push. |
 | Relationship to Undertow | Undertow owns **water motion and nothing else**. Cairn owns signals. Read-only bridge if any, same shape as `WrathBridge`. |
 | Relationship to Ragnarok's Wrath | **Separate store.** RW's zone drift is what happened to land; Cairn's ledger is what people named. A landmark must never become a zone statistic. |
 | Persistence | **World-scoped sparse file keyed by world uid**, RW's `Persistence` shape, `FileSource.Local` explicit. ZDO custom keys rejected for the same reason as RW: a landmark is a coordinate, not an object. |
