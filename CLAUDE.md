@@ -112,9 +112,15 @@ check which role the command actually works on.** Several here read the ledger a
 on a joined player's game. **Not yet run in game:** the client branch of `cairn landmarks`.
 0.10.1 and 0.10.2 are superseded and are not meant for the store.
 
+**CUT 2026-10-19: v0.11.0, tombstone lights** (`996002a`, PR #16, DLL md5 `55702aa2...`,
+tagged and on GitHub as a pre-release). It is a red light over your own tombstone, off by
+default. House rule B was amended for it (see the rule and the Tombstone light row). It
+supersedes 0.10.3, which was never uploaded, and is the one to upload. Verified in game the
+same day on Storm10 (details in the Tombstone light row).
+
 **Status: 0.10.0 live on the store** (since 2026-10-16) under team `RavenIronStudios`,
 categorised "Client & Server - must be installed on both"; 0.9.1 is also on the store's
-version list. 0.10.3 is cut and on GitHub, waiting for upload. The owner does
+version list. 0.11.0 is cut and on GitHub, waiting for upload. The owner does
 every Hexium upload. 0.7.0, the first release, was built,
 verified and shipped in a single day (published 2026-09-02/03).
 
