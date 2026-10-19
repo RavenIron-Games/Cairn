@@ -61,6 +61,11 @@ namespace RavenIron.Cairn.Config
         public static ConfigEntry<float> RavenNameMeters;
         public static ConfigEntry<int>   RavenNameMaxLength;
 
+        // ---- Tombstones -----------------------------------------------------------
+        public static ConfigEntry<bool>   EnableTombstoneLights;
+        public static ConfigEntry<bool>   ShowTombstoneLight;
+        public static ConfigEntry<string> TombstoneColour;
+
         public static void Bind(ConfigFile config)
         {
             // Bound at 0 and stamped by ConfigMigration.Finish. NO AcceptableValueRange, on
@@ -329,6 +334,29 @@ namespace RavenIron.Cairn.Config
                     "the display decides what may be said, and that is the moderation question " +
                     "the scope doc left open being answered conservatively.",
                     new AcceptableValueRange<int>(8, 200)));
+
+            // ---- Tombstones (0.11.0) ---------------------------------------------------
+            // The ONE light this mod makes without a player building it: house rule B was
+            // amended for this by the owner on 2026-10-19, default off.
+
+            EnableTombstoneLights = config.Bind(
+                "6 - Tombstones", "EnableTombstoneLights", false,
+                "Off by default. Turn it on to put a red light over your tombstone after you " +
+                "die, so you can find your things on a world with no map. Only you see the light " +
+                "over your own tombstone. Hills and walls still hide it, like a cairn's light. It " +
+                "goes out once the tombstone is emptied. " +
+                "Set it on the server. In single player, set it in your own game.");
+
+            ShowTombstoneLight = config.Bind(
+                "6 - Tombstones", "ShowTombstoneLight", true,
+                "Draw the light over your own tombstone when the server has tombstone lights " +
+                "turned on. Set it to false to hide it in your own game only. " +
+                "Read by each player's own game.");
+
+            TombstoneColour = config.Bind(
+                "6 - Tombstones", "TombstoneColour", "FF2A2A",
+                "Colour of the tombstone light, as hex. The default is red, so it can never be " +
+                "mistaken for a cairn. Read by each player's own game.");
         }
     }
 }

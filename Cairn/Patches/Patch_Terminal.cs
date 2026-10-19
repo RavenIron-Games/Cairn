@@ -724,6 +724,29 @@ namespace RavenIron.Cairn.Patches
                     (Net.LandmarkSync.LastLit > Net.LandmarkSync.LastSent
                         ? " — OVER THE CAP: only the cairns nearest a player reach clients"
                         : ""));
+
+            // Tombstone lights (0.11.0). Says which side decided and what it saw, because a
+            // missing red light has four causes that look the same: off on the server, hidden in
+            // this game, nothing received, or a tombstone that is not this player's.
+            int mine = Net.TombstoneSync.Mine().Count;
+            string show = ModConfig.ShowTombstoneLight.Value ? "shown" : "HIDDEN in this game";
+            if (Persistence.IsLoaded)
+            {
+                string world = Systems.TombstoneSystem.LatestAt < 0f
+                    ? "not swept yet"
+                    : $"{Systems.TombstoneSystem.Latest.Count.ToString(c)} in the world";
+                Say(args, ModConfig.EnableTombstoneLights.Value
+                    ? $"  tombstones : lights ON — {world}, {mine.ToString(c)} yours ({show})"
+                    : "  tombstones : lights OFF (EnableTombstoneLights = false here)");
+            }
+            else
+            {
+                int got = Net.TombstoneSync.LastReceivedCount;
+                Say(args, got < 0
+                    ? "  tombstones : nothing received — the server has tombstone lights off, or is older than 0.11.0"
+                    : $"  tombstones : last push {got.ToString(c)} (all players), {mine.ToString(c)} yours ({show}), " +
+                      $"you are {Net.TombstoneSync.LocalPlayerId().ToString(c)}");
+            }
         }
     }
 }

@@ -118,6 +118,7 @@ namespace RavenIron.Cairn
         private static void RegisterSystems()
         {
             CairnTick.Register(new Systems.LandmarkSystem());
+            CairnTick.Register(new Systems.TombstoneSystem());
         }
 
         private void OnDestroy()

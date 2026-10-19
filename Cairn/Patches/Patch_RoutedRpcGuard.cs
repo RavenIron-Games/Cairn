@@ -30,6 +30,7 @@ namespace RavenIron.Cairn.Patches
     public static class Patch_RoutedRpcGuard
     {
         private static int _beaconHash;
+        private static int _tombstoneHash;
         private static bool _hashed;
         private static float _lastWarn = -999f;
         private static int _dropped;
@@ -46,6 +47,7 @@ namespace RavenIron.Cairn.Patches
             if (!_hashed)
             {
                 _beaconHash = LandmarkSync.RpcName.GetStableHashCode();
+                _tombstoneHash = TombstoneSync.RpcName.GetStableHashCode();
                 _hashed = true;
             }
 
@@ -60,7 +62,9 @@ namespace RavenIron.Cairn.Patches
                 pkg.ReadZDOID();
                 int methodHash = pkg.ReadInt();
 
-                if (methodHash != _beaconHash) return true;
+                // 0.11.0: tombstone pushes too. A client faking one could put a light over a
+                // "grave" anywhere, in every other player's game.
+                if (methodHash != _beaconHash && methodHash != _tombstoneHash) return true;
 
                 _dropped++;
                 float now = Time.realtimeSinceStartup;

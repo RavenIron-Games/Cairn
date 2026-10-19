@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.11.0
+
+**A red light over your tombstone, if you want one.** Off by default.
+
+- **Turn on `EnableTombstoneLights`** (on the server, or in your own game in single player),
+  and after you die a red light burns over your tombstone. It is for no-map runs, where there is
+  no death pin and finding your body can end the run.
+- **Only you see the light over your own tombstone.** Hills and walls still hide it, like a
+  cairn's light, and it goes out once you empty the tombstone.
+- **`ShowTombstoneLight = false`** hides it in your own game. **`TombstoneColour`** changes the
+  colour (red by default).
+- **`cairn status`** now says whether tombstone lights are on, and how many of the tombstones
+  it knows about are yours.
+- Every player and the server need 0.11.0 for the light. Nothing else changes for anyone who
+  leaves it off, and older games simply ignore it.
+
 ## 0.10.3 — 2026-10-18
 
 - **`cairn landmarks` works when you play on a server.** It used to answer "no landmarks" to

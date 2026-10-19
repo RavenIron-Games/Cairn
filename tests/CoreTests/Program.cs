@@ -49,6 +49,7 @@ namespace Cairn.Tests
                 ConfigLedgerTests();
                 StoneStackingTests();
                 NamedListingTests();
+                TombstoneLightsTests();
                 StoreTests();
                 PersistenceTests();
             }
@@ -588,6 +589,41 @@ namespace Cairn.Tests
         }
 
         // ---- stone stacking ---------------------------------------------------------------
+
+        private static void TombstoneLightsTests()
+        {
+            Section("TombstoneLights");
+
+            const long me = 4242L, them = 777L;
+            var all = new List<TombstoneLights.Grave>
+            {
+                new TombstoneLights.Grave { Owner = them, TimeOfDeath = 1, Position = new Vector3(1f, 0f, 1f) },
+                new TombstoneLights.Grave { Owner = me,   TimeOfDeath = 2, Position = new Vector3(2f, 0f, 2f) },
+                new TombstoneLights.Grave { Owner = 0L,   TimeOfDeath = 3, Position = new Vector3(3f, 0f, 3f) },
+                new TombstoneLights.Grave { Owner = me,   TimeOfDeath = 4, Position = new Vector3(4f, 0f, 4f) },
+            };
+
+            List<TombstoneLights.Grave> mine = TombstoneLights.Mine(all, me);
+            Equal(2, mine.Count, "a player sees only their own tombstones: two of four");
+            Check(mine.Count == 2 && mine[0].TimeOfDeath == 2 && mine[1].TimeOfDeath == 4,
+                  "both of mine, in the order the server sent them");
+            Equal(0, TombstoneLights.Mine(all, 0L).Count,
+                  "a game that does not know its player yet lights nobody's tombstone, not even an unowned one");
+            Equal(1, TombstoneLights.Mine(all, them).Count, "the other player sees only theirs");
+            Equal(0, TombstoneLights.Mine(null, me).Count, "null input is not a crash");
+
+            // Stale: the server sends nothing while the setting is off, so lights must go out.
+            Check(TombstoneLights.Stale(-1f, 100f, 5f), "nothing ever received is stale");
+            Check(!TombstoneLights.Stale(100f, 129f, 5f), "29 s after a push at a 5 s cadence is still fresh (30 s floor)");
+            Check(TombstoneLights.Stale(100f, 131f, 5f), "31 s after a push at a 5 s cadence is stale");
+            Check(!TombstoneLights.Stale(100f, 150f, 20f), "at a 20 s cadence, three missed pushes (60 s) are allowed");
+            Check(TombstoneLights.Stale(100f, 161f, 20f), "and 61 s is stale");
+
+            Equal(256, TombstoneLights.MaxPerPush, "a push carries at most 256 tombstones");
+            Equal(false, ModConfig.EnableTombstoneLights.Value, "tombstone lights are OFF by default (owner, 2026-10-19)");
+            Equal(true, ModConfig.ShowTombstoneLight.Value, "a player's game shows its own light when the server allows it");
+            Equal("FF2A2A", ModConfig.TombstoneColour.Value, "the default tombstone colour is red");
+        }
 
         private static void NamedListingTests()
         {

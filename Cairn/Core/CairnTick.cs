@@ -87,6 +87,8 @@ namespace RavenIron.Cairn.Core
             Persistence.Unload();
 
             Net.LandmarkSync.ResetForWorldChange();
+            Net.TombstoneSync.ResetForWorldChange();
+            Systems.TombstoneSystem.ResetForWorldChange();
             try { Visuals.Beacon.Instance?.ClearForWorldChange(); }
             catch (Exception ex) { Cairn.Log.LogWarning($"Beacon clear on world change failed: {ex.Message}"); }
 
@@ -95,6 +97,7 @@ namespace RavenIron.Cairn.Core
             _roleLogged = false;
             _lastSave = 0f;
             _lastBeaconSend = 0f;
+            _lastTombstoneSend = 0f;
             _cursor = 0;
             foreach (IWorldSystem system in _systems) _lastRun[system] = 0f;
 
@@ -133,6 +136,7 @@ namespace RavenIron.Cairn.Core
             // Both sides: a client must be listening before the first broadcast arrives, and
             // registration is cheap and idempotent once ZRoutedRpc exists.
             Net.LandmarkSync.EnsureRegistered();
+            Net.TombstoneSync.EnsureRegistered();
 
             // The ledger lives on the authority. A pure client renders what it is told and
             // simulates nothing.
@@ -151,6 +155,7 @@ namespace RavenIron.Cairn.Core
             // until the next restart loses it.
             MaybeAutosave(now);
             MaybeBroadcastBeacons(now);
+            MaybeBroadcastTombstones(now);
 
             if (_systems.Count == 0) return;
 
@@ -222,6 +227,25 @@ namespace RavenIron.Cairn.Core
 
             _lastBeaconSend = now;
             Net.LandmarkSync.Broadcast(ModConfig.BeaconMaxCount.Value);
+        }
+
+        private static float _lastTombstoneSend;
+
+        /// <summary>
+        /// Tombstones on the beacon cadence, and ONLY while tombstone lights are on. Off sends
+        /// nothing, which is how players' games learn to put their lights out (they go stale).
+        /// Waits for the first sweep, so a fresh server does not tell everyone "no tombstones".
+        /// </summary>
+        private static void MaybeBroadcastTombstones(float now)
+        {
+            if (!ModConfig.EnableTombstoneLights.Value) return;
+            if (Systems.TombstoneSystem.LatestAt < 0f) return;
+
+            float interval = ModConfig.BeaconSyncSeconds.Value;
+            if (now - _lastTombstoneSend < interval) return;
+
+            _lastTombstoneSend = now;
+            Net.TombstoneSync.Broadcast(Systems.TombstoneSystem.Latest);
         }
 
         private static void InitialiseSystems()

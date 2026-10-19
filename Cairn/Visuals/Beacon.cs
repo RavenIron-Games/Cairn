@@ -55,10 +55,49 @@ namespace RavenIron.Cairn.Visuals
             public Vector3 Position;
             public float Visibility;      // 0..1, smoothed — never pops
             public bool Blocked;
+            public bool Tomb;             // a tombstone light (0.11.0), drawn in its own colour
         }
 
-        private readonly Dictionary<LandmarkKey, Lit> _lit = new Dictionary<LandmarkKey, Lit>(16);
-        private readonly List<LandmarkKey> _scratch = new List<LandmarkKey>(16);
+        /// <summary>
+        /// One light: a cairn, keyed by its place, or a tombstone (0.11.0), keyed by its owner and
+        /// time of death so a floating tombstone keeps ONE light rather than a new one per metre.
+        /// </summary>
+        private struct LightKey : IEquatable<LightKey>
+        {
+            public bool Tomb;
+            public LandmarkKey Place;
+            public long Owner;
+            public long Died;
+
+            public static LightKey ForCairn(LandmarkKey k) => new LightKey { Place = k };
+
+            public static LightKey ForTomb(TombstoneLights.Grave g) => new LightKey
+            {
+                Tomb = true,
+                Owner = g.Owner,
+                Died = g.TimeOfDeath,
+                // A tombstone whose owner has not stamped a time of death yet is told apart by place.
+                Place = g.TimeOfDeath == 0L ? LandmarkKey.FromPosition(g.Position) : default(LandmarkKey),
+            };
+
+            public bool Equals(LightKey o) => Tomb == o.Tomb && Place == o.Place && Owner == o.Owner && Died == o.Died;
+            public override bool Equals(object obj) => obj is LightKey k && Equals(k);
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int h = Place.GetHashCode();
+                    h = h * 31 + Owner.GetHashCode();
+                    h = h * 31 + Died.GetHashCode();
+                    return Tomb ? ~h : h;
+                }
+            }
+
+            public override string ToString() => Tomb ? $"TOMBSTONE (died {Died})" : Place.ToString();
+        }
+
+        private readonly Dictionary<LightKey, Lit> _lit = new Dictionary<LightKey, Lit>(16);
+        private readonly List<LightKey> _scratch = new List<LightKey>(16);
 
         private Material _material;
         private Mesh _quad;
@@ -72,6 +111,12 @@ namespace RavenIron.Cairn.Visuals
         private static readonly Color DefaultEmber = new Color(1f, 0.72f, 0.35f);
         private Color _colour = DefaultEmber;
         private string _colourText;
+
+        /// <summary>Red: a tombstone light must never be mistaken for a cairn.</summary>
+        private static readonly Color DefaultTomb = new Color(1f, 0.165f, 0.165f);
+        private Color _tombColour = DefaultTomb;
+        private string _tombColourText;
+        private int _seenTombRevision = -1;
 
         /// <summary>The live renderer, so the console can ask it what it is doing.</summary>
         public static Beacon Instance { get; private set; }
@@ -94,7 +139,7 @@ namespace RavenIron.Cairn.Visuals
             Vector3 camPos = cam != null ? cam.transform.position : Vector3.zero;
             float maxDist = ModConfig.BeaconMaxDistanceMeters.Value;
 
-            foreach (KeyValuePair<LandmarkKey, Lit> kv in _lit)
+            foreach (KeyValuePair<LightKey, Lit> kv in _lit)
             {
                 Lit lit = kv.Value;
                 float dist = cam != null ? Vector3.Distance(camPos, lit.Position) : -1f;
@@ -116,7 +161,9 @@ namespace RavenIron.Cairn.Visuals
         {
             if (_failed) return;
 
-            if (!ModConfig.EnableBeacons.Value)
+            // Cairn lights and tombstone lights switch independently (0.11.0): a player may hide
+            // one and keep the other.
+            if (!ModConfig.EnableBeacons.Value && !ModConfig.ShowTombstoneLight.Value)
             {
                 if (_lit.Count > 0) ClearAll();
                 return;
@@ -128,9 +175,11 @@ namespace RavenIron.Cairn.Visuals
             try
             {
                 _sinceRebuild += Time.deltaTime;
-                if (_seenRevision != LandmarkSync.Revision || _sinceRebuild >= 5f)
+                if (_seenRevision != LandmarkSync.Revision || _seenTombRevision != TombstoneSync.Revision
+                    || _sinceRebuild >= 5f)
                 {
                     _seenRevision = LandmarkSync.Revision;
+                    _seenTombRevision = TombstoneSync.Revision;
                     _sinceRebuild = 0f;
                     Rebuild();
                 }
@@ -154,32 +203,53 @@ namespace RavenIron.Cairn.Visuals
 
         private void Rebuild()
         {
-            List<LandmarkSync.Beacon> want = LandmarkSync.Current();
+            var wanted = new HashSet<LightKey>();
+            float lift = ModConfig.BeaconHeightMeters.Value;
 
-            var wanted = new HashSet<LandmarkKey>();
-            foreach (LandmarkSync.Beacon b in want)
+            if (ModConfig.EnableBeacons.Value)
             {
-                wanted.Add(b.Key);
-
-                if (!_lit.TryGetValue(b.Key, out Lit lit))
+                foreach (LandmarkSync.Beacon b in LandmarkSync.Current())
                 {
-                    lit = Create();
-                    if (lit == null) return;    // material unavailable; Create logged it
-                    _lit[b.Key] = lit;
+                    LightKey key = LightKey.ForCairn(b.Key);
+                    if (!Place(key, b.Light + Vector3.up * lift, tomb: false, wanted)) return;
                 }
+            }
 
-                lit.Position = b.Light + Vector3.up * ModConfig.BeaconHeightMeters.Value;
+            if (ModConfig.ShowTombstoneLight.Value)
+            {
+                foreach (TombstoneLights.Grave g in TombstoneSync.Mine())
+                {
+                    LightKey key = LightKey.ForTomb(g);
+                    if (!Place(key, g.Position + Vector3.up * lift, tomb: true, wanted)) return;
+                }
             }
 
             _scratch.Clear();
-            foreach (KeyValuePair<LandmarkKey, Lit> kv in _lit)
+            foreach (KeyValuePair<LightKey, Lit> kv in _lit)
                 if (!wanted.Contains(kv.Key)) _scratch.Add(kv.Key);
 
-            foreach (LandmarkKey gone in _scratch)
+            foreach (LightKey gone in _scratch)
             {
                 Discard(_lit[gone]);
                 _lit.Remove(gone);
             }
+        }
+
+        /// <summary>Keep or make the light for one key. False when no material can be built.</summary>
+        private bool Place(LightKey key, Vector3 position, bool tomb, HashSet<LightKey> wanted)
+        {
+            wanted.Add(key);
+
+            if (!_lit.TryGetValue(key, out Lit lit))
+            {
+                lit = Create();
+                if (lit == null) return false;    // material unavailable; Create logged it
+                lit.Tomb = tomb;
+                _lit[key] = lit;
+            }
+
+            lit.Position = position;
+            return true;
         }
 
         private Lit Create()
@@ -219,12 +289,13 @@ namespace RavenIron.Cairn.Visuals
         {
             ClearAll();
             _seenRevision = -1;
+            _seenTombRevision = -1;
             _occlusionCursor = 0;
         }
 
         private void ClearAll()
         {
-            foreach (KeyValuePair<LandmarkKey, Lit> kv in _lit) Discard(kv.Value);
+            foreach (KeyValuePair<LightKey, Lit> kv in _lit) Discard(kv.Value);
             _lit.Clear();
         }
 
@@ -246,8 +317,9 @@ namespace RavenIron.Cairn.Visuals
             float fade = Mathf.Clamp01(Time.deltaTime * 4f);
 
             Color warm = ConfiguredColour();
+            Color red = TombColour();
 
-            foreach (KeyValuePair<LandmarkKey, Lit> kv in _lit)
+            foreach (KeyValuePair<LightKey, Lit> kv in _lit)
             {
                 Lit lit = kv.Value;
                 if (lit.Go == null) continue;
@@ -279,7 +351,7 @@ namespace RavenIron.Cairn.Visuals
                 t.rotation = Quaternion.LookRotation(lit.Position - camPos);   // billboard
                 t.localScale = new Vector3(size, size, 1f);
 
-                Color c = warm;
+                Color c = lit.Tomb ? red : warm;
                 c.a = lit.Visibility;
                 lit.Material.color = c;
             }
@@ -294,6 +366,25 @@ namespace RavenIron.Cairn.Visuals
         /// alternative is a beacon that silently draws black, which looks exactly like a
         /// beacon that is not drawing at all.
         /// </summary>
+        /// <summary>The tombstone light's colour, parsed only when the setting changes; red if it will not parse.</summary>
+        private Color TombColour()
+        {
+            string text = ModConfig.TombstoneColour.Value;
+            if (text == _tombColourText) return _tombColour;
+
+            _tombColourText = text;
+            if (HexColour.TryParse(text, out float r, out float g, out float b, out float _))
+            {
+                _tombColour = new Color(r, g, b);
+            }
+            else
+            {
+                _tombColour = DefaultTomb;
+                Cairn.Log.LogWarning($"Beacon: TombstoneColour '{text}' is not a hex colour; using red.");
+            }
+            return _tombColour;
+        }
+
         private Color ConfiguredColour()
         {
             string text = ModConfig.BeaconColour.Value;
@@ -326,7 +417,7 @@ namespace RavenIron.Cairn.Visuals
         {
             if (!ModConfig.BeaconOcclusion.Value)
             {
-                foreach (KeyValuePair<LandmarkKey, Lit> kv in _lit) kv.Value.Blocked = false;
+                foreach (KeyValuePair<LightKey, Lit> kv in _lit) kv.Value.Blocked = false;
                 return;
             }
 
@@ -350,10 +441,10 @@ namespace RavenIron.Cairn.Visuals
             if (_occlusionMask == 0 || _lit.Count == 0) return;
 
             _scratch.Clear();
-            foreach (KeyValuePair<LandmarkKey, Lit> kv in _lit) _scratch.Add(kv.Key);
+            foreach (KeyValuePair<LightKey, Lit> kv in _lit) _scratch.Add(kv.Key);
 
             if (_occlusionCursor >= _scratch.Count) _occlusionCursor = 0;
-            LandmarkKey key = _scratch[_occlusionCursor];
+            LightKey key = _scratch[_occlusionCursor];
             _occlusionCursor++;
 
             if (!_lit.TryGetValue(key, out Lit target)) return;
