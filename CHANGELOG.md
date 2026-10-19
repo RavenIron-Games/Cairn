@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.11.0
+## 0.11.0 — 2026-10-19
 
 **A red light over your tombstone, if you want one.** Off by default.
 
