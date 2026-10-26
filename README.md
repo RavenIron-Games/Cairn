@@ -1,6 +1,6 @@
 # Cairn
 
-A Valheim mod by [Raven Iron](https://ravenirongames.com/).
+A Valheim mod by [Raven Iron](https://wubarrk.rossgilsonlabs.dev).
 
 **Stack stones on a headland and they burn.**
 
@@ -122,7 +122,7 @@ back for patrons, and nothing ever will be.
 
 If you'd like to help cover server hosting and test hardware:
 
-- **Website** — <https://ravenirongames.com>
+- **Website** — <https://wubarrk.rossgilsonlabs.dev>
 - **Patreon** — <https://www.patreon.com/cw/RavenIronGames>
 - **Discord** — <https://discord.gg/AGKDEurAVa> — a channel per mod, and where the
   testing happens
