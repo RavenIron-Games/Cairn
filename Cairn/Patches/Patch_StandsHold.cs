@@ -16,8 +16,9 @@ namespace RavenIron.Cairn.Patches
     /// Two RESULT-DECORATING postfixes (house rule 1, amended): neither replaces logic.
     ///
     /// 1. `ItemStand.CanAttach` (private, patched by name; never called): may turn a refusal into a
-    ///    yes, and only for the one reason vanilla refuses a listed item — no "attach" model. The
-    ///    stand's own unsupported list and supported types still apply (<see cref="Holdable.CairnHolds"/>).
+    ///    yes, only for an item on the list, only on a listed stand, and never for an item on the
+    ///    stand's own never-this list (<see cref="Holdable.CairnHolds"/>). The stand's TYPE rule is
+    ///    passed over: no stand takes the material type, which is what a greydwarf eye is.
     ///    Each player's own game asks this, so a server's added items need the same list on players.
     ///
     /// 2. `ItemStand.SetVisualItem` (private): vanilla records the item, logs "Failed to get attach

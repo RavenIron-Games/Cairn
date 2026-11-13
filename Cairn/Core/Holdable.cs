@@ -20,8 +20,9 @@ namespace RavenIron.Cairn.Core
     /// AND THEN CAIRN (`StandsHoldListedItems`, on by default, the owner's call 2026-11-13): an
     /// item on the `HeldColours` list that fails ONLY rule 1 is let onto a stand named in
     /// `HolderPrefabs`, and Cairn draws a copy of the item's own model there
-    /// (<see cref="DrawnCopy"/>). Rules 2 and 3 still hold, so nothing a stand refuses for any other
-    /// reason gets on.
+    /// (<see cref="DrawnCopy"/>). Rule 2, the stand's own never-this list, still holds; rule 3, the
+    /// type, does not, because no stand accepts the material type and that is what most cheap
+    /// colourful things are. The owner's list is the gate.
     ///
     /// Every member read here is public in the real 1.0.21 assembly: `ItemStand.GetAttachPrefab`
     /// (static), the three lists, `ItemDrop.m_itemData.m_shared`, `ZNetScene.GetPrefab(string)` and
@@ -108,16 +109,45 @@ namespace RavenIron.Cairn.Core
         }
 
         /// <summary>
-        /// Refused by vanilla ONLY for want of a display model, and with a model of its own Cairn
-        /// could draw: what `cairn holdable more` lists, the candidates for HeldColours.
+        /// Refused by vanilla, but Cairn could put it on and draw it: no display model, a model of
+        /// its own, and not on the stand's explicit never-this list. The stand's TYPE rule is NOT
+        /// asked: on 2026-11-13 the first version did ask it, and every material (greydwarf eye,
+        /// resin, guck, crystal) stayed off, because neither stand accepts the material type at
+        /// all. Only listed items ever get this far (<see cref="CairnHolds"/>), so a list the owner
+        /// writes is the gate, not the type. What `cairn holdable more` lists.
         /// </summary>
         public static bool Drawable(ItemStand stand, GameObject itemPrefab)
         {
             if (stand == null || itemPrefab == null) return false;
-            if (ItemStand.GetAttachPrefab(itemPrefab) != null) return false;   // vanilla's own business
+            if (VanillaHolds(stand, itemPrefab)) return false;                  // vanilla's own business
             if (!HasModel(itemPrefab)) return false;                            // nothing to draw
             SharedOf s = Shared(itemPrefab);
-            return s != null && PassesStandRules(stand, s.Data);
+            return s != null && !NeverOn(stand, s.Data);
+        }
+
+        private static bool NeverOn(ItemStand stand, ItemDrop.ItemData.SharedData shared)
+        {
+            foreach (ItemDrop no in stand.m_unsupportedItems)
+                if (no != null && no.m_itemData.m_shared.m_name == shared.m_name) return true;
+            return false;
+        }
+
+        /// <summary>Every rule, for one item on one stand, for `cairn holdable why`.</summary>
+        public static string Explain(ItemStand stand, GameObject itemPrefab)
+        {
+            SharedOf s = Shared(itemPrefab);
+            if (s == null) return "not an item (no ItemDrop)";
+            bool supportedListed = false;
+            foreach (ItemDrop yes in stand.m_supportedItems)
+                if (yes != null && yes.m_itemData.m_shared.m_name == s.Data.m_name) supportedListed = true;
+
+            return $"display model: {(ItemStand.GetAttachPrefab(itemPrefab) != null ? "yes" : "NO")}; " +
+                   $"own model: {ModelRenderers(itemPrefab).Count} mesh(es); " +
+                   $"never-list: {(NeverOn(stand, s.Data) ? "ON IT" : "no")}; " +
+                   $"stand's item list: {(stand.m_supportedItems.Count == 0 ? "empty (any)" : supportedListed ? "lists it" : $"{stand.m_supportedItems.Count} items, not this")}; " +
+                   $"type {s.Data.m_itemType}: {(stand.m_supportedTypes.Contains(s.Data.m_itemType) ? "accepted" : "not accepted")} " +
+                   $"→ vanilla {(VanillaHolds(stand, itemPrefab) ? "HOLDS it" : "refuses")}, " +
+                   $"Cairn {(CairnHolds(stand, itemPrefab) ? "puts it on" : Drawable(stand, itemPrefab) ? "would put it on if listed" : "cannot")}";
         }
 
         public static bool CanHold(ItemStand stand, GameObject itemPrefab) =>
@@ -157,9 +187,19 @@ namespace RavenIron.Cairn.Core
                     if (list.Count > 0) return list;
                 }
             }
-            foreach (Renderer r in itemPrefab.GetComponentsInChildren<Renderer>(false))
-                if (r is MeshRenderer || r is SkinnedMeshRenderer) list.Add(r);
+            // includeInactive TRUE, then judged by each object's own switch: a prefab asset is not
+            // in a scene, so "active in hierarchy" is not a question it can answer reliably.
+            foreach (Renderer r in itemPrefab.GetComponentsInChildren<Renderer>(true))
+                if ((r is MeshRenderer || r is SkinnedMeshRenderer) && r.enabled && ActiveUpTo(r.transform, itemPrefab.transform))
+                    list.Add(r);
             return list;
+        }
+
+        private static bool ActiveUpTo(Transform t, Transform root)
+        {
+            for (; t != null && t != root; t = t.parent)
+                if (!t.gameObject.activeSelf) return false;
+            return true;
         }
 
         private static Mesh MeshOf(Renderer r)

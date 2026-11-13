@@ -158,6 +158,7 @@ namespace RavenIron.Cairn.Patches
             Say(args, "cairn pieces <text>  — only BUILDABLE pieces, with tool, cost and station");
             Say(args, "cairn holdable [text] — items an item stand will hold, for HeldColours");
             Say(args, "cairn holdable more  — items Cairn could put on a stand if you list them");
+            Say(args, "cairn holdable why <Item> — every rule a stand applies to one item, and the answer");
             Say(args, "cairn beacons        — every light this client knows, and why it is dark");
             Say(args, "cairn raven          — why Hugin is or is not saying anything");
             Say(args, "cairn save           — flush the ledger now (authority only)");
@@ -238,6 +239,11 @@ namespace RavenIron.Cairn.Patches
         private static void Holdable(Terminal.ConsoleEventArgs args)
         {
             string filter = args.Args.Length > 2 ? args.Args[2].ToLowerInvariant() : "";
+            if (filter == "why")
+            {
+                HoldableWhy(args, args.Args.Length > 3 ? args.Args[3] : "");
+                return;
+            }
             bool more = filter == "more";
             if (more) filter = args.Args.Length > 3 ? args.Args[3].ToLowerInvariant() : "";
             ObjectDB db = ObjectDB.instance;
@@ -294,6 +300,35 @@ namespace RavenIron.Cairn.Patches
                 : $"cairn: {lines.Count} item(s) an item stand will hold" +
                   (filter.Length > 0 ? $" matching \"{filter}\"" : "") + " (prefab name, game name, which stand)");
             foreach (string l in lines) Say(args, l);
+        }
+
+        /// <summary>
+        /// One item, every stand, every rule: which one keeps it off. The instrument for "it still
+        /// will not go on", so the next answer comes from the game rather than a guess.
+        /// </summary>
+        private static void HoldableWhy(Terminal.ConsoleEventArgs args, string itemName)
+        {
+            ObjectDB db = ObjectDB.instance;
+            if (db == null || ZNetScene.instance == null)
+            {
+                Say(args, "cairn: the game's item list is not loaded — join or start a world first.");
+                return;
+            }
+            if (itemName.Length == 0) { Say(args, "cairn: usage: cairn holdable why <ItemPrefab>, e.g. GreydwarfEye"); return; }
+
+            GameObject item = db.GetItemPrefab(itemName);
+            if (item == null)
+            {
+                // Prefab names are case-sensitive; offer the right spelling.
+                foreach (GameObject g in db.m_items)
+                    if (g != null && string.Equals(g.name, itemName, StringComparison.OrdinalIgnoreCase)) { item = g; break; }
+                if (item == null) { Say(args, $"cairn: no item named {itemName}. `cairn holdable more` and `cairn holdable` list names."); return; }
+            }
+
+            bool listed = Core.Holdable.Listed().ContainsKey(item.name);
+            Say(args, $"cairn: {item.name} — {(listed ? "on" : "NOT on")} HeldColours; StandsHoldListedItems = {ModConfig.StandsHoldListedItems.Value}");
+            foreach (KeyValuePair<string, ItemStand> s in Core.Holdable.Stands())
+                Say(args, $"  {s.Key}: {Core.Holdable.Explain(s.Value, item)}");
         }
 
         /// <summary>
