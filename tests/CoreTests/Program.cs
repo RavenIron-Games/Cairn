@@ -43,7 +43,6 @@ namespace Cairn.Tests
                 FormatParseTests();
                 SignReadingTests();
                 DisplayTextTests();
-                HexColourTests();
                 PileDetectionTests();
                 BeaconSelectionTests();
                 ConfigLedgerTests();
@@ -333,43 +332,6 @@ namespace Cairn.Tests
                   "and says it was cut");
         }
 
-        // ---- the beacon colour -------------------------------------------------------------
-
-        private static void HexColourTests()
-        {
-            Section("HexColour");
-
-            Check(HexColour.TryParse("FFB85A", out float r, out float g, out float b, out float a),
-                  "a plain six-digit hex parses");
-            Check(Math.Abs(r - 1f) < 0.001f, "red is full");
-            Check(Math.Abs(g - 0.722f) < 0.005f, "green is 0xB8");
-            Check(Math.Abs(b - 0.353f) < 0.005f, "blue is 0x5A");
-            Check(Math.Abs(a - 1f) < 0.001f, "alpha defaults to opaque");
-
-            Check(HexColour.TryParse("#FFB85A", out _, out _, out _, out _), "a leading hash is allowed");
-            Check(HexColour.TryParse("  #FFB85A  ", out _, out _, out _, out _), "surrounding space is allowed");
-            Check(HexColour.TryParse("ffb85a", out _, out _, out _, out _), "lower case is allowed");
-
-            // Shorthand, because people type it.
-            Check(HexColour.TryParse("F00", out r, out g, out b, out _), "three-digit shorthand parses");
-            Check(Math.Abs(r - 1f) < 0.001f && g < 0.001f && b < 0.001f, "and expands correctly");
-
-            Check(HexColour.TryParse("FFB85A80", out _, out _, out _, out a), "eight digits carry alpha");
-            Check(Math.Abs(a - 0.502f) < 0.005f, "and the alpha is read");
-
-            // The failures that matter: refusing beats painting with garbage.
-            Check(!HexColour.TryParse("", out _, out _, out _, out _), "empty is refused");
-            Check(!HexColour.TryParse(null, out _, out _, out _, out _), "null is refused");
-            Check(!HexColour.TryParse("FFBB", out _, out _, out _, out _), "four digits are refused");
-            Check(!HexColour.TryParse("GGGGGG", out _, out _, out _, out _), "non-hex letters are refused");
-            Check(!HexColour.TryParse("orange", out _, out _, out _, out _), "a colour name is refused");
-
-            // A refusal must not scribble on the caller's outputs.
-            r = 0.5f;
-            HexColour.TryParse("nonsense", out r, out _, out _, out _);
-            Check(Math.Abs(r) < 0.001f, "a refused parse zeroes rather than half-writing");
-        }
-
         // ---- pile detection --------------------------------------------------------------
 
         private static void PileDetectionTests()
@@ -622,7 +584,14 @@ namespace Cairn.Tests
             Equal(256, TombstoneLights.MaxPerPush, "a push carries at most 256 tombstones");
             Equal(false, ModConfig.EnableTombstoneLights.Value, "tombstone lights are OFF by default (owner, 2026-10-19)");
             Equal(true, ModConfig.ShowTombstoneLight.Value, "a player's game shows its own light when the server allows it");
-            Equal("FF2A2A", ModConfig.TombstoneColour.Value, "the default tombstone colour is red");
+            Color tomb = ModConfig.TombstoneColour.Value;
+            Check(Math.Abs(tomb.r - 1f) < 0.002f && Math.Abs(tomb.g - 42f / 255f) < 0.002f
+                  && Math.Abs(tomb.b - 42f / 255f) < 0.002f && Math.Abs(tomb.a - 1f) < 0.002f,
+                  "the default tombstone colour is red, FF2A2A, fully strong");
+            Color ember = ModConfig.BeaconColour.Value;
+            Check(Math.Abs(ember.r - 1f) < 0.002f && Math.Abs(ember.g - 184f / 255f) < 0.002f
+                  && Math.Abs(ember.b - 90f / 255f) < 0.002f && Math.Abs(ember.a - 1f) < 0.002f,
+                  "the default beacon colour is still firelight, FFB85A, fully strong");
         }
 
         private static void NamedListingTests()

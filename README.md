@@ -2,7 +2,7 @@
 # 🪨 Cairn
 
 ![CAIRN](https://img.shields.io/badge/CAIRN-STACK_STONES_AND_THEY_BURN-c9a227?style=for-the-badge&labelColor=1b1b1b)
-![VERSION](https://img.shields.io/badge/VERSION-0.11.1-8b1e1e?style=for-the-badge&labelColor=1b1b1b)
+![VERSION](https://img.shields.io/badge/VERSION-0.12.0-8b1e1e?style=for-the-badge&labelColor=1b1b1b)
 ![CLIENT & SERVER](https://img.shields.io/badge/CLIENT_%26_SERVER-SAME_VERSION_ON_BOTH-1f4e79?style=for-the-badge&labelColor=1b1b1b)
 
 > *Odin's ravens see the whole of Midgard and tell no one where anything is. So the first settlers piled stones on the headlands and set them alight, and a crew lost in the dusk could walk home by the fires their friends had left.*
@@ -15,13 +15,15 @@ It adds no pieces, no assets and nothing to your screen. It changes one vanilla 
 
 ---
 
-![NEW IN 0.11.1](https://img.shields.io/badge/NEW_IN_0.11.1-VALHEIM_1.0.21-8b1e1e?style=for-the-badge&labelColor=1b1b1b)
+![NEW IN 0.12.0](https://img.shields.io/badge/NEW_IN_0.12.0-PICK_YOUR_COLOURS-8b1e1e?style=for-the-badge&labelColor=1b1b1b)
 
-**This version is Cairn rebuilt for Valheim 1.0.21. Nothing else is new: cairns stack, light and keep their names exactly as they did.**
+**Pick the colour of the lights in game, with sliders, instead of typing hex.**
 
 | You | It |
 |---|---|
-| **Update the server and every player together** | Valheim 1.0.21 uses network version 41, so the server and every player move to it, and to this build, at the same time |
+| **Press F1 in game** (needs the BepInEx Configuration Manager mod) | `BeaconColour` and `TombstoneColour` show a colour swatch with red, green, blue and alpha sliders, and the lights change as you drag |
+| **Keep your old colours** | A colour you already set, like `4A9EFF`, carries over as it is |
+| **Only your own game changes** | Colours are read by each player's own game, so the server does not need this version for them |
 
 ---
 
@@ -73,7 +75,7 @@ It adds no pieces, no assets and nothing to your screen. It changes one vanilla 
 | 🔥 **Seen from far off** | a lit cairn can be seen from hundreds of metres away, 800 m by default |
 | 📏 **Holds its size at distance** | a fire on a far headland reads as a point of light the way a real one does, not as something that shrinks until it is gone |
 | ⛰️ **Hidden by terrain** | a ridge between you and a cairn puts it out, so you have to move to see it |
-| 🎨 **Your colour** | `BeaconColour` takes hex: `4A9EFF` for cold blue, `7CFF7C` for something stranger; the default is firelight |
+| 🎨 **Your colour** | Pick `BeaconColour` with sliders in the F1 Configuration Manager, or type hex: `4A9EFF` for cold blue, `7CFF7C` for something stranger; the default is firelight |
 | 🧱 **No limit on building** | build as many cairns as you like; the server always sends each player the lit cairns nearest them |
 
 <details>
@@ -170,7 +172,9 @@ On a server, set `EnableTombstoneLights = true` in the server's `BepInEx/config/
 <details>
 <summary>🎨 <b>Change the colour of the lights</b></summary>
 
-In your own `com.raveniron.cairn.cfg`, set `BeaconColour` under `[4 - The light]` to a hex colour: `RGB`, `RRGGBB` or `RRGGBBAA`, with or without a leading `#`. A value that will not read falls back to firelight and says so once in the log. `TombstoneColour` works the same way for your tombstone light.
+**In game:** with the BepInEx Configuration Manager mod installed, press F1, find Cairn, and drag the red, green, blue and alpha sliders for `BeaconColour` (cairns) or `TombstoneColour` (your tombstone). The lights change as you drag. Alpha sets how strong the light is; all the way down makes it invisible.
+
+**In the file:** in your own `com.raveniron.cairn.cfg`, set `BeaconColour` under `[4 - The light]` to a hex colour such as `4A9EFF`. Cairn writes it back as `RRGGBBAA` (`4A9EFFFF`); the last two digits are the alpha. A value that will not read is left at the default, and BepInEx says so in the log. `TombstoneColour`, under `[6 - Tombstones]`, works the same way.
 
 </details>
 

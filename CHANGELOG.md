@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.12.0
+
+**Pick the colour of the lights in game, with sliders.**
+
+- `BeaconColour` and `TombstoneColour` are now colour settings. With the BepInEx Configuration
+  Manager mod installed, press F1 and they show a colour swatch with red, green, blue and alpha
+  sliders. The lights change as you drag.
+- Alpha now sets how strong a light is. All the way down makes it invisible.
+- A colour you already set, like `4A9EFF`, carries over as it is. Cairn now writes it back with
+  the alpha on the end, as `4A9EFFFF`.
+- Colours are read by each player's own game, so the server does not need 0.12.0 for them.
+
 ## 0.11.1 — 2026-11-01
 
 Updated due to the Valheim 1.0.21 patch. Rebuilt and checked against Valheim 1.0.21 (network

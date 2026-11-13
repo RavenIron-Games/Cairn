@@ -107,15 +107,10 @@ namespace RavenIron.Cairn.Visuals
         private int _occlusionCursor;
         private int _occlusionMask = -1;
 
-        /// <summary>Firelight, and the fallback when a configured colour will not parse.</summary>
-        private static readonly Color DefaultEmber = new Color(1f, 0.72f, 0.35f);
-        private Color _colour = DefaultEmber;
-        private string _colourText;
-
-        /// <summary>Red: a tombstone light must never be mistaken for a cairn.</summary>
-        private static readonly Color DefaultTomb = new Color(1f, 0.165f, 0.165f);
-        private Color _tombColour = DefaultTomb;
-        private string _tombColourText;
+        // The colours last written to the log, so a change (from the F1 picker or the file) is
+        // logged once rather than every frame. Null until the first frame draws.
+        private Color? _loggedBeacon;
+        private Color? _loggedTomb;
         private int _seenTombRevision = -1;
 
         /// <summary>The live renderer, so the console can ask it what it is doing.</summary>
@@ -316,8 +311,12 @@ namespace RavenIron.Cairn.Visuals
             float maxSize = ModConfig.BeaconMaxSizeMeters.Value;
             float fade = Mathf.Clamp01(Time.deltaTime * 4f);
 
-            Color warm = ConfiguredColour();
-            Color red = TombColour();
+            // Colour settings are Unity colours since 0.12.0, read straight from config every
+            // frame, so a change in the F1 picker shows at once. Nothing to parse any more.
+            Color warm = ModConfig.BeaconColour.Value;
+            Color red = ModConfig.TombstoneColour.Value;
+            LogColourChange("BeaconColour", warm, ref _loggedBeacon);
+            LogColourChange("TombstoneColour", red, ref _loggedTomb);
 
             foreach (KeyValuePair<LightKey, Lit> kv in _lit)
             {
@@ -351,61 +350,23 @@ namespace RavenIron.Cairn.Visuals
                 t.rotation = Quaternion.LookRotation(lit.Position - camPos);   // billboard
                 t.localScale = new Vector3(size, size, 1f);
 
+                // The setting's own alpha is the light's strength; visibility fades it on top.
                 Color c = lit.Tomb ? red : warm;
-                c.a = lit.Visibility;
+                c.a = lit.Visibility * c.a;
                 lit.Material.color = c;
             }
         }
 
         /// <summary>
-        /// The beacon's colour, from config, re-read only when the string actually changes —
-        /// parsing hex sixteen times a second for a value that almost never moves would be
-        /// silly, and caching it without noticing edits would be worse.
-        ///
-        /// A value that will not parse falls back to the ember default and says so ONCE. The
-        /// alternative is a beacon that silently draws black, which looks exactly like a
-        /// beacon that is not drawing at all.
+        /// Log a colour once each time it changes, so a picker change or a file edit leaves one
+        /// line in the log rather than one per frame. A light that "will not change colour" is
+        /// otherwise impossible to tell apart from a setting that never arrived.
         /// </summary>
-        /// <summary>The tombstone light's colour, parsed only when the setting changes; red if it will not parse.</summary>
-        private Color TombColour()
+        private static void LogColourChange(string setting, Color now, ref Color? logged)
         {
-            string text = ModConfig.TombstoneColour.Value;
-            if (text == _tombColourText) return _tombColour;
-
-            _tombColourText = text;
-            if (HexColour.TryParse(text, out float r, out float g, out float b, out float _))
-            {
-                _tombColour = new Color(r, g, b);
-            }
-            else
-            {
-                _tombColour = DefaultTomb;
-                Cairn.Log.LogWarning($"Beacon: TombstoneColour '{text}' is not a hex colour; using red.");
-            }
-            return _tombColour;
-        }
-
-        private Color ConfiguredColour()
-        {
-            string text = ModConfig.BeaconColour.Value;
-            if (text == _colourText) return _colour;
-
-            _colourText = text;
-
-            if (HexColour.TryParse(text, out float r, out float g, out float b, out float _))
-            {
-                _colour = new Color(r, g, b);
-                Cairn.Log.LogInfo($"Beacon: colour set to #{text.TrimStart('#')}.");
-            }
-            else
-            {
-                _colour = DefaultEmber;
-                Cairn.Log.LogWarning(
-                    $"Beacon: '{text}' is not a hex colour (try FFB85A or #F80). " +
-                    "Falling back to the default ember rather than drawing black.");
-            }
-
-            return _colour;
+            if (logged.HasValue && logged.Value == now) return;
+            logged = now;
+            Cairn.Log.LogInfo($"Beacon: {setting} is #{ColorUtility.ToHtmlStringRGBA(now)}.");
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 using BepInEx.Configuration;
+using UnityEngine;
 
 namespace RavenIron.Cairn.Config
 {
@@ -54,7 +55,7 @@ namespace RavenIron.Cairn.Config
         public static ConfigEntry<float> BeaconMaxSizeMeters;
         public static ConfigEntry<float> BeaconHeightMeters;
         public static ConfigEntry<bool>   BeaconOcclusion;
-        public static ConfigEntry<string> BeaconColour;
+        public static ConfigEntry<Color>  BeaconColour;
 
         // ---- The raven ------------------------------------------------------------
         public static ConfigEntry<bool>  EnableRavenVoice;
@@ -64,7 +65,7 @@ namespace RavenIron.Cairn.Config
         // ---- Tombstones -----------------------------------------------------------
         public static ConfigEntry<bool>   EnableTombstoneLights;
         public static ConfigEntry<bool>   ShowTombstoneLight;
-        public static ConfigEntry<string> TombstoneColour;
+        public static ConfigEntry<Color>  TombstoneColour;
 
         public static void Bind(ConfigFile config)
         {
@@ -296,12 +297,16 @@ namespace RavenIron.Cairn.Config
                     "How far above the cairn's crown the light sits.",
                     new AcceptableValueRange<float>(0f, 10f)));
 
+            // A COLOUR, not text, since 0.12.0: the Configuration Manager (F1 in game) draws a
+            // colour swatch with red, green, blue and alpha sliders for any Color setting. BepInEx
+            // reads the old text values ("FFB85A") as colours unchanged, so no file needs migrating.
             BeaconColour = config.Bind(
-                "4 - The light", "BeaconColour", "FFB85A",
-                "Beacon colour as hex — RGB, RRGGBB or RRGGBBAA, with or without a leading #. " +
-                "The default is firelight. A value that will not parse falls back to that and " +
-                "says so once in the log, because a beacon silently drawing black looks exactly " +
-                "like a beacon that is not drawing at all.");
+                "4 - The light", "BeaconColour", new Color(255f / 255f, 184f / 255f, 90f / 255f, 1f),
+                "Colour of the light on top of a cairn. The default is firelight. " +
+                "In game, press F1 (the Configuration Manager) to pick it with sliders. In this " +
+                "file it is hex, RRGGBBAA, for example FFB85AFF. The last two digits (alpha) set " +
+                "how strong the light is: FF is full, 00 is invisible. " +
+                "Read by each player's own game, and a change shows at once.");
 
             BeaconOcclusion = config.Bind(
                 "4 - The light", "BeaconOcclusion", true,
@@ -354,9 +359,12 @@ namespace RavenIron.Cairn.Config
                 "Read by each player's own game.");
 
             TombstoneColour = config.Bind(
-                "6 - Tombstones", "TombstoneColour", "FF2A2A",
-                "Colour of the tombstone light, as hex. The default is red, so it can never be " +
-                "mistaken for a cairn. Read by each player's own game.");
+                "6 - Tombstones", "TombstoneColour", new Color(255f / 255f, 42f / 255f, 42f / 255f, 1f),
+                "Colour of the light over your tombstone. The default is red, so it can never be " +
+                "mistaken for a cairn. In game, press F1 (the Configuration Manager) to pick it " +
+                "with sliders. In this file it is hex, RRGGBBAA, for example FF2A2AFF; the last " +
+                "two digits (alpha) set how strong the light is. " +
+                "Read by each player's own game, and a change shows at once.");
         }
     }
 }
