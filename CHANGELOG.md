@@ -5,8 +5,9 @@
 **A cairn takes the colour of what it holds.**
 
 - **Put an item on an item stand at a cairn** and the cairn burns in that item's colour, for
-  everyone: a raspberry or a surtling core red, blueberries or a blue mushroom blue, a dandelion
-  or yellow mushroom yellow, a carrot orange, a thistle purple, a greydwarf trophy green. The
+  everyone: a greydwarf eye, blueberries or a blue mushroom blue, a freeze gland ice blue, a
+  raspberry, bloodbag or surtling core red, a carrot or resin orange, a dandelion, yellow mushroom
+  or honey yellow, guck or a greydwarf trophy green, a thistle purple, a crystal white. The
   defaults are cheap, everyday things on purpose: a cairn stands in the wild. The stand can sit on the stones or within 6 m (`LandmarkPairMeters`).
   Taking the item off returns the cairn to its sign's colour or the usual firelight, within a
   couple of seconds.
@@ -15,6 +16,10 @@
   **`HolderPrefabs`** lists the pieces that hold them (both item stands). Only items a stand will
   hold can work (vanilla wants a model made for it; a greydwarf eye has none): **`cairn holdable`**
   lists them, and the server log names any listed item no stand will take.
+- **A stand holds listed items vanilla refuses**, like a greydwarf eye, and Cairn draws the
+  item's own model on it (`StandsHoldListedItems`, on by default, read by each player's game).
+  Vanilla only puts items with a model made for a stand on one. `cairn holdable more` lists the
+  items this opens up. Players need the server's `HeldColours` list for an item added to it.
 - An item stand may now be placed on the stones, as a sign can. Building one still needs what
   vanilla asks for; `cairn pieces itemstand` now says which crafting station a piece needs.
 - When a cairn has both, the held item's colour wins over the sign's. `UseSignColours = false`

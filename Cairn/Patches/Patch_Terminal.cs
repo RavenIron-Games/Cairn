@@ -157,6 +157,7 @@ namespace RavenIron.Cairn.Patches
             Say(args, "cairn prefabs <text> — every prefab name containing <text>");
             Say(args, "cairn pieces <text>  — only BUILDABLE pieces, with tool, cost and station");
             Say(args, "cairn holdable [text] — items an item stand will hold, for HeldColours");
+            Say(args, "cairn holdable more  — items Cairn could put on a stand if you list them");
             Say(args, "cairn beacons        — every light this client knows, and why it is dark");
             Say(args, "cairn raven          — why Hugin is or is not saying anything");
             Say(args, "cairn save           — flush the ledger now (authority only)");
@@ -237,6 +238,8 @@ namespace RavenIron.Cairn.Patches
         private static void Holdable(Terminal.ConsoleEventArgs args)
         {
             string filter = args.Args.Length > 2 ? args.Args[2].ToLowerInvariant() : "";
+            bool more = filter == "more";
+            if (more) filter = args.Args.Length > 3 ? args.Args[3].ToLowerInvariant() : "";
             ObjectDB db = ObjectDB.instance;
             if (db == null || db.m_items == null || db.m_items.Count == 0 || ZNetScene.instance == null)
             {
@@ -262,15 +265,34 @@ namespace RavenIron.Cairn.Patches
                 if (filter.Length > 0 && !name.ToLowerInvariant().Contains(filter) && !shown.ToLowerInvariant().Contains(filter))
                     continue;
 
+                string colour = listed.TryGetValue(name, out string hex) ? $"  colour #{hex}" : "";
+                if (more)
+                {
+                    // Vanilla refuses it on every stand, but only for want of a display model.
+                    bool anyVanilla = false;
+                    var drawable = new List<string>(2);
+                    foreach (KeyValuePair<string, ItemStand> s in stands)
+                    {
+                        if (Core.Holdable.VanillaHolds(s.Value, item)) anyVanilla = true;
+                        else if (Core.Holdable.Drawable(s.Value, item)) drawable.Add(s.Key);
+                    }
+                    if (anyVanilla || drawable.Count == 0) continue;
+                    lines.Add($"  {name}  {shown}  [{string.Join("/", drawable.ToArray())}, if listed]{colour}");
+                    continue;
+                }
+
                 string by = Core.Holdable.HeldBy(stands, item);
                 if (by.Length == 0) continue;
-                string colour = listed.TryGetValue(name, out string hex) ? $"  colour #{hex}" : "";
                 lines.Add($"  {name}  {shown}  [{by}]{colour}");
             }
 
             lines.Sort(StringComparer.OrdinalIgnoreCase);
-            Say(args, $"cairn: {lines.Count} item(s) an item stand will hold" +
-                      (filter.Length > 0 ? $" matching \"{filter}\"" : "") + " (prefab name, game name, which stand)");
+            Say(args, more
+                ? $"cairn: {lines.Count} item(s) vanilla keeps off a stand only for want of a display model; " +
+                  "add one to HeldColours and Cairn lets it on and draws it" +
+                  (filter.Length > 0 ? $" (matching \"{filter}\")" : "")
+                : $"cairn: {lines.Count} item(s) an item stand will hold" +
+                  (filter.Length > 0 ? $" matching \"{filter}\"" : "") + " (prefab name, game name, which stand)");
             foreach (string l in lines) Say(args, l);
         }
 

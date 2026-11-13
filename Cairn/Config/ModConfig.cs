@@ -60,6 +60,7 @@ namespace RavenIron.Cairn.Config
         public static ConfigEntry<bool>   UseSignColours;
         public static ConfigEntry<string> HolderPrefabs;
         public static ConfigEntry<string> HeldColours;
+        public static ConfigEntry<bool>   StandsHoldListedItems;
 
         // ---- The raven ------------------------------------------------------------
         public static ConfigEntry<bool>  EnableRavenVoice;
@@ -341,13 +342,28 @@ namespace RavenIron.Cairn.Config
 
             HeldColours = config.Bind(
                 "4 - The light", "HeldColours",
-                "Raspberry=E83A3A,SurtlingCore=FF4020,Blueberries=3A6BFF,MushroomBlue=3A7BFF,Dandelion=FFD21F,MushroomYellow=FFE040,Carrot=FF8A1F,Thistle=A050FF,TrophyGreydwarf=5BD13A",
+                "Raspberry=E83A3A,Bloodbag=B0102A,SurtlingCore=FF4020,Carrot=FF8A1F,Resin=FF9A2A," +
+                "Dandelion=FFD21F,MushroomYellow=FFE040,Honey=FFC02A,Guck=7ACC3A,TrophyGreydwarf=5BD13A," +
+                "GreydwarfEye=4A9EFF,Blueberries=3A6BFF,MushroomBlue=3A7BFF,FreezeGland=A8E4FF," +
+                "Thistle=A050FF,Crystal=EAF4FF",
                 "Which held items colour a cairn, and how: ItemPrefab=RRGGBB (or RRGGBBAA), " +
                 "comma-separated. These are the items' PREFAB names, such as SurtlingCore, not the " +
-                "names shown in game. Only items an item stand will hold can work: the console command " +
-                "`cairn holdable` lists them, and the server log names any listed item that is unknown or that " +
-                "no stand will take when a world loads. An item not on the list leaves the cairn's colour alone. " +
-                "Set it on the server: it decides the colour, and every player sees the same one.");
+                "names shown in game. The defaults are cheap, everyday things on purpose: a cairn " +
+                "stands in the wild. `cairn holdable` lists every item a stand will hold, and the server " +
+                "log names any listed item that is unknown or that no stand will take when a world " +
+                "loads. An item not on the list leaves the cairn's colour alone. " +
+                "Set it on the server: it decides the colour, and every player sees the same one. " +
+                "Players need the same list in their own games for an item vanilla will not put on a " +
+                "stand (see StandsHoldListedItems).");
+
+            StandsHoldListedItems = config.Bind(
+                "4 - The light", "StandsHoldListedItems", true,
+                "Let an item stand hold an item on the HeldColours list even when vanilla will not, " +
+                "like a greydwarf eye, and draw the item's own model on the stand. Vanilla only lets a " +
+                "stand hold items with a model made for it. This changes what a VANILLA piece accepts, " +
+                "and only for listed items on the stands in HolderPrefabs. False leaves stands exactly " +
+                "as the game made them. Read by each player's own game: it decides what fits on a " +
+                "stand, and draws it.");
 
             BeaconOcclusion = config.Bind(
                 "4 - The light", "BeaconOcclusion", true,
