@@ -17,13 +17,15 @@ It adds no pieces, no assets and nothing to your screen. It changes one vanilla 
 
 ![NEW IN 0.12.0](https://img.shields.io/badge/NEW_IN_0.12.0-PICK_YOUR_COLOURS-8b1e1e?style=for-the-badge&labelColor=1b1b1b)
 
-**Pick the colour of the lights in game, with sliders, instead of typing hex.**
+**Pick the colour of the lights in game, with sliders, and give each cairn its own colour from its sign.**
 
 | You | It |
 |---|---|
 | **Press F1 in game** (needs the BepInEx Configuration Manager mod) | `BeaconColour` and `TombstoneColour` show a colour swatch with red, green, blue and alpha sliders, and the lights change as you drag |
+| **Write a colour on a cairn's sign** | Write the sign as `<color=#4A9EFF>Home</color>` and that cairn burns blue for everyone. The sign shows the word in blue too |
+| **Prefer your own colour everywhere?** | Set `UseSignColours = false` and every cairn uses your `BeaconColour`, whatever its sign says |
 | **Keep your old colours** | A colour you already set, like `4A9EFF`, carries over as it is |
-| **Only your own game changes** | Colours are read by each player's own game, so the server does not need this version for them |
+| **Only players' games need it** | Colours are worked out on each player's own game, so the server does not need this version for them |
 
 ---
 
@@ -176,6 +178,8 @@ On a server, set `EnableTombstoneLights = true` in the server's `BepInEx/config/
 
 **In the file:** in your own `com.raveniron.cairn.cfg`, set `BeaconColour` under `[4 - The light]` to a hex colour such as `4A9EFF`. Cairn writes it back as `RRGGBBAA` (`4A9EFFFF`); the last two digits are the alpha. A value that will not read is left at the default, and BepInEx says so in the log. `TombstoneColour`, under `[6 - Tombstones]`, works the same way.
 
+**On a cairn's sign:** write the sign's text inside a colour tag, for example `<color=#4A9EFF>Home</color>` or `<color=red>Red Cliff</color>`. That cairn's light takes the colour, for every player who has `UseSignColours` on (the default), and the sign shows the name in the same colour. Hex (`#RGB`, `#RRGGBB`, `#RRGGBBAA`) always works; the names the sign understands are red, lightblue, blue, grey, black, green, white, orange, purple and yellow. If a sign has more than one colour tag, the first one counts. Set `UseSignColours = false` to light every cairn in your own `BeaconColour` instead.
+
 </details>
 
 <details>
@@ -241,7 +245,7 @@ All safe to leave alone. They are in `BepInEx/config/com.raveniron.cairn.cfg`, a
 |---|---|
 | **1 - Core** | `VerboseLogging` |
 | **3 - Cairn piles** | `StackableStones` (each player's own copy decides their placing) · `StonePileStoneCost` (0 leaves the hammer's stone pile recipe alone; any other value is charged by your own game only) |
-| **4 - The light** | `EnableBeacons` · `BeaconColour` · `BeaconMaxDistanceMeters` (800 m) · `BeaconOcclusion` (terrain hides beacons; leave it on) · `BeaconAngularSize` · `BeaconMinSizeMeters` · `BeaconMaxSizeMeters` · `BeaconHeightMeters` |
+| **4 - The light** | `EnableBeacons` · `BeaconColour` · `UseSignColours` · `BeaconMaxDistanceMeters` (800 m) · `BeaconOcclusion` (terrain hides beacons; leave it on) · `BeaconAngularSize` · `BeaconMinSizeMeters` · `BeaconMaxSizeMeters` · `BeaconHeightMeters` |
 | **5 - The raven** | `EnableRavenVoice` · `RavenNameMeters` · `RavenNameMaxLength` |
 | **6 - Tombstones** | `ShowTombstoneLight` · `TombstoneColour` |
 

@@ -49,6 +49,7 @@ namespace Cairn.Tests
                 StoneStackingTests();
                 NamedListingTests();
                 TombstoneLightsTests();
+                SignColourTests();
                 StoreTests();
                 PersistenceTests();
             }
@@ -551,6 +552,40 @@ namespace Cairn.Tests
         }
 
         // ---- stone stacking ---------------------------------------------------------------
+
+        private static void SignColourTests()
+        {
+            Section("SignColour");
+            float r, g, b, a;
+
+            Check(SignColour.TryRead("<color=#4A9EFF>Home</color>", out r, out g, out b, out a), "a hex colour tag is read");
+            Check(Math.Abs(r - 0x4A / 255f) < 0.002f && Math.Abs(g - 0x9E / 255f) < 0.002f && Math.Abs(b - 1f) < 0.002f && Math.Abs(a - 1f) < 0.002f,
+                  "#4A9EFF is cold blue, fully strong");
+
+            Check(SignColour.TryRead("<color=#F80>Ford</color>", out r, out g, out b, out a)
+                  && Math.Abs(r - 1f) < 0.002f && Math.Abs(g - 0x88 / 255f) < 0.002f && b < 0.002f, "three-digit shorthand doubles each digit");
+            Check(SignColour.TryRead("<color=#FF000080>Half</color>", out _, out _, out _, out a) && Math.Abs(a - 0x80 / 255f) < 0.002f,
+                  "eight digits carry the alpha");
+            Check(SignColour.TryRead("<COLOR = \"#00ff00\">Quoted</COLOR>", out r, out g, out b, out _) && g > 0.99f && r < 0.01f,
+                  "upper case, spaces, quotes and lower-case hex are all fine");
+            Check(SignColour.TryRead("<color=red>Red Cliff</color>", out r, out g, out b, out _) && r > 0.99f && g < 0.01f,
+                  "a colour name the sign itself understands is read");
+            Check(SignColour.TryRead("Old <color=#00FF00>Green</color> <color=#FF0000>Red</color>", out r, out g, out _, out _) && g > 0.99f && r < 0.01f,
+                  "the FIRST colour tag wins");
+
+            Check(!SignColour.TryRead("Home", out _, out _, out _, out _), "a plain name has no colour");
+            Check(!SignColour.TryRead("", out _, out _, out _, out _), "an empty name has no colour");
+            Check(!SignColour.TryRead(null, out _, out _, out _, out _), "null is not a crash");
+            Check(!SignColour.TryRead("<color=#GGGGGG>Bad</color>", out _, out _, out _, out _), "bad hex is no colour");
+            Check(!SignColour.TryRead("<color=#FFFF>Four</color>", out _, out _, out _, out a) || Math.Abs(a - 1f) < 0.002f,
+                  "four-digit shorthand is RGBA, never a half-read");
+            Check(!SignColour.TryRead("<color=#12345>Five</color>", out _, out _, out _, out _), "five digits are refused");
+            Check(!SignColour.TryRead("<color=chartreuse>Odd</color>", out _, out _, out _, out _), "a name the sign cannot show is no colour");
+            Check(!SignColour.TryRead("<color=#FF0000 Unclosed", out _, out _, out _, out _), "an unclosed tag is no colour");
+            Check(!SignColour.TryRead("<colour=#FF0000>British</colour>", out _, out _, out _, out _), "only the tag the sign understands counts");
+
+            Equal(true, ModConfig.UseSignColours.Value, "sign colours are used by default; false forces your own colour everywhere");
+        }
 
         private static void TombstoneLightsTests()
         {

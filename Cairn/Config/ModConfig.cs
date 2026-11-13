@@ -56,6 +56,7 @@ namespace RavenIron.Cairn.Config
         public static ConfigEntry<float> BeaconHeightMeters;
         public static ConfigEntry<bool>   BeaconOcclusion;
         public static ConfigEntry<Color>  BeaconColour;
+        public static ConfigEntry<bool>   UseSignColours;
 
         // ---- The raven ------------------------------------------------------------
         public static ConfigEntry<bool>  EnableRavenVoice;
@@ -306,6 +307,14 @@ namespace RavenIron.Cairn.Config
                 "In game, press F1 (the Configuration Manager) to pick it with sliders. In this " +
                 "file it is hex, RRGGBBAA, for example FFB85AFF. The last two digits (alpha) set " +
                 "how strong the light is: FF is full, 00 is invisible. " +
+                "Read by each player's own game, and a change shows at once.");
+
+            UseSignColours = config.Bind(
+                "4 - The light", "UseSignColours", true,
+                "Light a named cairn in the colour its sign is written in. Write the sign as " +
+                "<color=#4A9EFF>Home</color> and that cairn burns blue, for everyone who has this " +
+                "on. Cairns with no colour on their sign use BeaconColour. " +
+                "Set this to false to use your own BeaconColour on EVERY cairn and ignore signs. " +
                 "Read by each player's own game, and a change shows at once.");
 
             BeaconOcclusion = config.Bind(

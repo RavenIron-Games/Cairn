@@ -2,8 +2,13 @@
 
 ## 0.12.0
 
-**Pick the colour of the lights in game, with sliders.**
+**Pick the colour of the lights in game, with sliders, and give each cairn its own colour.**
 
+- **A cairn takes the colour of its sign.** Write the sign as `<color=#4A9EFF>Home</color>` and
+  that cairn burns blue for everyone; the sign shows the name in blue too. Cairns whose sign has
+  no colour use your `BeaconColour`.
+- **`UseSignColours = false`** ignores sign colours in your own game, so every cairn uses your
+  `BeaconColour`.
 - `BeaconColour` and `TombstoneColour` are now colour settings. With the BepInEx Configuration
   Manager mod installed, press F1 and they show a colour swatch with red, green, blue and alpha
   sliders. The lights change as you drag.

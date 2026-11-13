@@ -32,6 +32,7 @@
     <Compile Include="..\..\Cairn\Core\StoneStacking.cs" />
     <Compile Include="..\..\Cairn\Core\NamedListing.cs" />
     <Compile Include="..\..\Cairn\Core\TombstoneLights.cs" />
+    <Compile Include="..\..\Cairn\Core\SignColour.cs" />
     <Compile Include="..\..\Cairn\Core\DisplayText.cs" />
     <Compile Include="..\..\Cairn\Core\Persistence.cs" />
     <Compile Include="..\..\Cairn\Core\ConfigLedger.cs" />

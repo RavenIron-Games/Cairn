@@ -56,6 +56,8 @@ namespace RavenIron.Cairn.Visuals
             public float Visibility;      // 0..1, smoothed — never pops
             public bool Blocked;
             public bool Tomb;             // a tombstone light (0.11.0), drawn in its own colour
+            public bool HasSign;          // the cairn's sign carries a colour (0.12.0)
+            public Color Sign;            // that colour, alpha included
         }
 
         /// <summary>
@@ -144,8 +146,13 @@ namespace RavenIron.Cairn.Visuals
                     dist > maxDist ? $"OUT OF RANGE (>{maxDist:F0}m)" :
                     lit.Visibility > 0.01f ? "lit" : "fading";
 
+                string colour = lit.HasSign
+                    ? (ModConfig.UseSignColours.Value
+                        ? $"  sign colour #{ColorUtility.ToHtmlStringRGBA(lit.Sign)}"
+                        : "  sign colour ignored (UseSignColours = false)")
+                    : "";
                 lines.Add(
-                    $"  {kv.Key}  {dist:F0}m  vis={lit.Visibility:F2}  {why}");
+                    $"  {kv.Key}  {dist:F0}m  vis={lit.Visibility:F2}  {why}{colour}");
             }
 
             if (_lit.Count == 0) lines.Add("  no beacons known — nothing has been synced to this client");
@@ -206,7 +213,12 @@ namespace RavenIron.Cairn.Visuals
                 foreach (LandmarkSync.Beacon b in LandmarkSync.Current())
                 {
                     LightKey key = LightKey.ForCairn(b.Key);
-                    if (!Place(key, b.Light + Vector3.up * lift, tomb: false, wanted)) return;
+                    Lit lit = Place(key, b.Light + Vector3.up * lift, tomb: false, wanted);
+                    if (lit == null) return;
+
+                    // The builder's colour, read from the sign text the beacon already carries.
+                    lit.HasSign = SignColour.TryRead(b.Name, out float r, out float g, out float bl, out float a);
+                    if (lit.HasSign) lit.Sign = new Color(r, g, bl, a);
                 }
             }
 
@@ -215,7 +227,7 @@ namespace RavenIron.Cairn.Visuals
                 foreach (TombstoneLights.Grave g in TombstoneSync.Mine())
                 {
                     LightKey key = LightKey.ForTomb(g);
-                    if (!Place(key, g.Position + Vector3.up * lift, tomb: true, wanted)) return;
+                    if (Place(key, g.Position + Vector3.up * lift, tomb: true, wanted) == null) return;
                 }
             }
 
@@ -230,21 +242,21 @@ namespace RavenIron.Cairn.Visuals
             }
         }
 
-        /// <summary>Keep or make the light for one key. False when no material can be built.</summary>
-        private bool Place(LightKey key, Vector3 position, bool tomb, HashSet<LightKey> wanted)
+        /// <summary>Keep or make the light for one key. Null when no material can be built.</summary>
+        private Lit Place(LightKey key, Vector3 position, bool tomb, HashSet<LightKey> wanted)
         {
             wanted.Add(key);
 
             if (!_lit.TryGetValue(key, out Lit lit))
             {
                 lit = Create();
-                if (lit == null) return false;    // material unavailable; Create logged it
+                if (lit == null) return null;    // material unavailable; Create logged it
                 lit.Tomb = tomb;
                 _lit[key] = lit;
             }
 
             lit.Position = position;
-            return true;
+            return lit;
         }
 
         private Lit Create()
@@ -315,6 +327,7 @@ namespace RavenIron.Cairn.Visuals
             // frame, so a change in the F1 picker shows at once. Nothing to parse any more.
             Color warm = ModConfig.BeaconColour.Value;
             Color red = ModConfig.TombstoneColour.Value;
+            bool useSigns = ModConfig.UseSignColours.Value;
             LogColourChange("BeaconColour", warm, ref _loggedBeacon);
             LogColourChange("TombstoneColour", red, ref _loggedTomb);
 
@@ -350,8 +363,10 @@ namespace RavenIron.Cairn.Visuals
                 t.rotation = Quaternion.LookRotation(lit.Position - camPos);   // billboard
                 t.localScale = new Vector3(size, size, 1f);
 
-                // The setting's own alpha is the light's strength; visibility fades it on top.
-                Color c = lit.Tomb ? red : warm;
+                // A tombstone is always the player's tombstone colour. A cairn takes its sign's
+                // colour when it has one and this player allows it (UseSignColours), else theirs.
+                // The colour's own alpha is the light's strength; visibility fades it on top.
+                Color c = lit.Tomb ? red : (useSigns && lit.HasSign ? lit.Sign : warm);
                 c.a = lit.Visibility * c.a;
                 lit.Material.color = c;
             }
