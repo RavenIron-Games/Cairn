@@ -1,151 +1,255 @@
-# Cairn
+<!-- README schema v2 -->
+# 🪨 Cairn
 
-A Valheim mod by [Raven Iron](https://ravenirongames.com/).
+![CAIRN](https://img.shields.io/badge/CAIRN-STACK_STONES_AND_THEY_BURN-c9a227?style=for-the-badge&labelColor=1b1b1b)
+![VERSION](https://img.shields.io/badge/VERSION-0.11.1-8b1e1e?style=for-the-badge&labelColor=1b1b1b)
+![CLIENT & SERVER](https://img.shields.io/badge/CLIENT_%26_SERVER-SAME_VERSION_ON_BOTH-1f4e79?style=for-the-badge&labelColor=1b1b1b)
 
-**Stack stones on a headland and they burn.**
+> *Odin's ravens see the whole of Midgard and tell no one where anything is. So the first settlers piled stones on the headlands and set them alight, and a crew lost in the dusk could walk home by the fires their friends had left.*
 
-On a world with no map, knowing where you are is knowledge — and it lives in players' heads
-and in screenshots pasted into Discord. Cairn moves it into the world, where it can be built,
-found, lit, and lost.
+### Stack four stones on a headland, and they burn.
 
-It adds no pieces, no assets, and nothing to your screen. It changes one vanilla piece:
-the hoe's stone, so stones stack.
+On a world with no map, knowing where you are is knowledge, and it lives in players' heads and in screenshots pasted into Discord. Cairn moves it into the world, where it can be built, found, lit and lost.
+
+It adds no pieces, no assets and nothing to your screen. It changes one vanilla piece: the hoe's stone, so stones stack.
 
 ---
 
-## Building a cairn
+![NEW IN 0.11.1](https://img.shields.io/badge/NEW_IN_0.11.1-VALHEIM_1.0.21-8b1e1e?style=for-the-badge&labelColor=1b1b1b)
 
-**Stack four stones.** `Placeable_Stone` is a vanilla Hoe piece costing one stone each, so a
-cairn is four stone and a minute's work. Pile them within four metres of each other; spread
-them out and it stays a scatter, because a cairn is narrow and a wall is wide, and that is how
-the mod tells them apart.
+**This version is Cairn rebuilt for Valheim 1.0.21. Nothing else is new: cairns stack, light and keep their names exactly as they did.**
 
-**Stones stack.** In vanilla a stone cannot go on another stone. With Cairn it can, so a
-cairn can stand tall rather than lie in a ring. Only stones go on stones: a wall or beam aimed
-at a stone still shows red. This is the one change Cairn makes to a vanilla piece, so the
-server and every player need it. `StackableStones = false` turns it off.
+| You | It |
+|---|---|
+| **Update the server and every player together** | Valheim 1.0.21 uses network version 41, so the server and every player move to it, and to this build, at the same time |
 
-**It lights itself.** Within about twenty seconds a fire appears on the crown, and it can be seen
-from hundreds of metres away.
+---
 
-**Name it, if you want.** Put a sign within six metres of a cairn and write on it. The cairn
-takes that name. There is no map, so you see the name in only two places:
+![BEFORE YOU INSTALL](https://img.shields.io/badge/BEFORE_YOU_INSTALL-READ_THIS-b8860b?style=for-the-badge&labelColor=1b1b1b)
 
-- **Hugin the raven** may land at the cairn and say the name. He only does this while
-  **tutorials are turned on** in the game settings.
-- **The console command `cairn landmarks`** lists named cairns: every one in single player,
-  and the named cairns near you when you play on a server.
+| | If… | Then… |
+|---|---|---|
+| 🤝 | you play on a **server** | install Cairn on the server **and** on every player, the same version. The server finds the cairns and keeps the list; each player's game draws the lights. |
+| 🪨 | you **stack stones** | every player needs Cairn, and the server too. The game that owns a stack decides whether it stands, and without Cairn stacked stones may fall. |
+| 🧹 | you ever **uninstall** | what stays is exactly what it looks like: a pile of rocks with a sign on it. Stones stacked on stones may fall, because vanilla does not let one stone hold up another. |
+| 🐦 | you want **Hugin to speak** | turn **tutorials on** in the game settings. With tutorials off, the raven never lands. |
+| 🗺️ | you also run a **map mod** | they ignore each other, though running both does rather blunt the point. |
 
-Names are optional. A cairn with no sign lights exactly the same. If you play with tutorials
-off, you can ignore names.
+---
 
-Every one looks different because you built it, and uninstalling the mod leaves exactly what
-it appears to be: a pile of rocks with a sign on it. Stones stacked on stones may fall once the
-mod is gone, because vanilla does not let one stone hold up another.
+![I](https://img.shields.io/badge/I-BUILD_A_CAIRN-c9a227?style=for-the-badge&labelColor=1b1b1b)
 
-## The light
+**Four stones and a minute's work.**
 
-It **holds its size at distance** rather than shrinking away — a fire on a far headland reads
-as a point of light the way a real one does, not as something that gets small until it is
-gone.
+| You | It |
+|---|---|
+| **Place four Stones with the Hoe** | one stone each; piled within four metres of each other they make a cairn |
+| **Stack them** | a stone may go on another stone, so a cairn can stand tall rather than lie in a ring |
+| **Spread them out** | it stays a scatter: a cairn is narrow and a wall is wide, and that is how Cairn tells them apart |
+| **Wait about twenty seconds** | a fire appears on the crown |
+| **Write on a sign within six metres** | the cairn takes that name |
 
-And it is **hidden by terrain.** A ridge between you and a cairn puts it out, so you have to
-move to see it. That is the difference between navigating and being told, and it is the reason
-this is a beacon and not a marker.
+<details>
+<summary>📖 <b>Read the saga</b> — what counts as a cairn</summary>
 
-Colour is yours: `BeaconColour` takes hex — `4A9EFF` for cold blue, `7CFF7C` for something
-stranger. The default is firelight.
+**A cairn is recognised, never provided.** Cairn adds no piece of its own. Every few seconds the server looks for stacked stones, and for written signs beside them. The hoe's single stone and the hammer's stone pile both count.
 
-## The raven
+**Narrow, not wide.** Stones that stand closer than 2.5 m join into one cairn, so three columns side by side are one cairn with one light, and a cairn may hold up to 100 stones. The footprint rule does the real work: a cluster wider than 4 m is a building, not a waymark, so a stone house can never become a landmark.
 
-Stand at a named cairn and Hugin may land and say its name.
+**Only stones go on stones.** A wall or beam aimed at a stone still shows red, so a single pebble can never become a foundation. This is the one change Cairn makes to a vanilla piece. `StackableStones = false` turns it off.
 
-He is fussy, and deliberately so — vanilla will not land the bird below 30 metres of altitude,
-with anything hostile within ten metres, during a world event, or while tutorials are turned
-off in the game settings. So he is silent exactly when you would most want him, which is why
-nothing in the mod depends on him. He is a grace note, not a compass. `cairn raven` shows most
-of what keeps him away: the tutorials setting, your altitude, and how far the nearest named
-cairn is.
+**Every one looks different,** because you built it.
 
-## Your tombstone (optional, off by default)
+</details>
 
-With no map, there is no death pin, and finding your body can end a run. Turn on
-`EnableTombstoneLights` and a **red light** burns over your tombstone after you die.
+---
 
-- **Only you see the light over your own tombstone.** Other players see theirs, not yours.
-- **Hills and walls still hide it**, like a cairn's light. You walk toward a glow you can see,
-  not a marker.
-- **It goes out** once you empty the tombstone.
+![II](https://img.shields.io/badge/II-THE_LIGHT-8b1e1e?style=for-the-badge&labelColor=1b1b1b)
 
-Set it on the server. In single player, set it in your own game. Any player can hide the light
-in their own game with `ShowTombstoneLight = false`, and `TombstoneColour` changes the colour.
-Every player and the server need Cairn 0.11.0 or newer for it to work.
-
-## What it does not do
-
-No map. No compass. No waypoints, no markers, no pins, no arrows, no HUD, no readout of any
-kind. If you learn where you are, you learn it by looking at the world.
-
-It adds **no prefabs** — a cairn is *recognised*, never provided — ships **no assets**, and
-leaves **vanilla recipes alone**.
-
-## Installing
-
-Install on the **server and the clients**. One DLL does all three roles: a dedicated server
-sweeps the world and owns the ledger, a client draws the lights and carries the raven's line,
-a listen host does both.
-
-Requires [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/).
-
-Landmarks are stored per world, beside the save, in a plain text file you can read.
-
-## Configuration
-
-Everything is in `BepInEx/config/com.raveniron.cairn.cfg`, and every value carries a note
-explaining what it costs. The ones most worth knowing:
+**A beacon you navigate by, not a marker that tells you where to go.**
 
 | | |
 |---|---|
-| `PileMinPieces` | how many stones make a cairn (4) — raise it if decorative stones start lighting up |
-| `PileMaxExtentMeters` | the footprint that separates a waymark from a building (4m) |
-| `LandmarkPairMeters` | how far a sign may stand from the cairn it names (6m) |
-| `BeaconColour` | hex, `RRGGBB` |
-| `BeaconMaxDistanceMeters` | how far a light carries (800m) |
-| `BeaconOcclusion` | terrain hides beacons. Leave this on. |
-| `LandmarkRotationSeconds` | how quickly a new cairn is noticed (20s) |
-| `EnableRavenVoice` | the bird |
-| `EnableTombstoneLights` | a red light over your own tombstone (off) |
+| 🔥 **Seen from far off** | a lit cairn can be seen from hundreds of metres away, 800 m by default |
+| 📏 **Holds its size at distance** | a fire on a far headland reads as a point of light the way a real one does, not as something that shrinks until it is gone |
+| ⛰️ **Hidden by terrain** | a ridge between you and a cairn puts it out, so you have to move to see it |
+| 🎨 **Your colour** | `BeaconColour` takes hex: `4A9EFF` for cold blue, `7CFF7C` for something stranger; the default is firelight |
+| 🧱 **No limit on building** | build as many cairns as you like; the server always sends each player the lit cairns nearest them |
 
-## Console
+<details>
+<summary>📖 <b>Read the saga</b> — why the hills hide it</summary>
 
-`cairn status` · `landmarks` · `beacons` · `raven` · `prefabs <text>` · `pieces <text>` · `save`
+**That is the difference between navigating and being told.** A glow that shines through a mountain is a waypoint marker in a costume. A light you lose behind a ridge and find again from the next rise is a beacon. Leave `BeaconOcclusion` on.
 
-Each reports **state rather than verdicts** — `beacons` says whether a light is out of range
-or hidden behind a hill, `raven` shows the tutorials setting, your altitude and how far the nearest named cairn is. They exist because guessing at
-each of those cost an afternoon.
+**The light is drawn on each player's game,** so its colour, size and reach are yours to set without changing anyone else's. The server only says which cairns are lit.
 
-## Compatibility
-
-Nothing is patched that another mod is likely to want. Environment and weather are read-only,
-so the season mods are untouched; no prefab is added, so no save is at risk; and nothing is
-written to `Minimap`, so a map mod and this one simply ignore each other — though running both
-does rather blunt the point.
+</details>
 
 ---
 
-**Design document** — the reasoning behind every decision, including the ones that were
-wrong: <https://claude.ai/code/artifact/a04abbae-14d5-4a21-9bdc-032e91da0936>
+![III](https://img.shields.io/badge/III-THE_RAVEN-5b2c83?style=for-the-badge&labelColor=1b1b1b)
+
+**Stand at a named cairn and Hugin may land and say its name.**
+
+| | |
+|---|---|
+| 🐦 **He speaks the name** | stand within about twelve metres of a named cairn and the raven may land there and say it |
+| 📜 **Names are optional** | a cairn with no sign lights exactly the same |
+| 🖥️ **The console knows them too** | `cairn landmarks` lists every named cairn in single player, and the named cairns near you, nearest first, on a server |
+
+<details>
+<summary>📖 <b>Read the saga</b> — why the raven is fussy</summary>
+
+**He is a grace note, not a compass.** Vanilla will not land the bird below 30 metres of altitude, with anything hostile within ten metres, during a world event, or while tutorials are turned off in the game settings. So he is silent exactly when you would most want him, which is why nothing in the mod depends on him.
+
+**`cairn raven` shows what keeps him away:** the tutorials setting, your altitude, and how far the nearest named cairn is.
+
+**To play without names,** turn off `EnableRavenVoice` or leave your signs blank.
+
+</details>
 
 ---
 
-## Support Raven Iron
+![IV](https://img.shields.io/badge/IV-YOUR_TOMBSTONE-1f4e79?style=for-the-badge&labelColor=1b1b1b)
 
-Every Raven Iron mod is free, and stays free — all of it, always. Nothing is held
-back for patrons, and nothing ever will be.
+**With no map there is no death pin. A light can bring you back to your body.** Optional, off by default.
 
-If you'd like to help cover server hosting and test hardware:
+| | |
+|---|---|
+| 🔴 **A red light over your tombstone** | turn on `EnableTombstoneLights`, and after you die a red light burns over your tombstone |
+| 👤 **Only yours** | only you see the light over your own tombstone; other players see theirs, not yours |
+| ⛰️ **Hills still hide it** | like a cairn's light: you walk toward a glow you can see, not a marker |
+| 🕯️ **It goes out** | once you empty the tombstone |
 
-- **Website** — <https://ravenirongames.com/>
-- **Patreon** — <https://www.patreon.com/cw/RavenIronGames>
-- **Discord** — <https://discord.gg/AGKDEurAVa> — a channel per mod, and where the
-  testing happens
+<details>
+<summary>📖 <b>Read the saga</b> — who sets what</summary>
+
+**Set it on the server.** In single player, set it in your own game. Every player and the server need this version of Cairn for the light to work.
+
+**Each player keeps a say.** `ShowTombstoneLight = false` hides the light in your own game, and `TombstoneColour` changes its colour (red by default, so it can never be mistaken for a cairn). `cairn status` says whether tombstone lights are on, and how many of the tombstones it knows about are yours.
+
+</details>
+
+---
+
+![V](https://img.shields.io/badge/V-NO_MAP%2C_NO_MARKERS-b8860b?style=for-the-badge&labelColor=1b1b1b)
+
+**If you learn where you are, you learn it by looking at the world.**
+
+| | |
+|---|---|
+| 🚫 **Nothing on your screen** | no map, no compass, no waypoints, no markers, no pins, no arrows, no HUD, no readout of any kind |
+| 📦 **Nothing added** | no prefabs, no assets, and vanilla recipes left alone |
+| 🪨 **Nothing left behind** | uninstall it and a cairn is a pile of rocks with a sign on it |
+
+---
+
+![THE TOOLBOX](https://img.shields.io/badge/THE_TOOLBOX-QUICK_START_%C2%B7_COMMANDS_%C2%B7_HOW--TO-1b1b1b?style=for-the-badge&labelColor=8b1e1e)
+
+**First ten minutes:** install on the server and every player → climb a headland → place four **Stones** with the **Hoe**, stacked or close together → wait about twenty seconds for the fire → put up a sign within six metres and write a name on it → with tutorials on, stand by it and listen for Hugin.
+
+Cairn adds no keys. Press `` ` `` to open the console; every command is `cairn <word>`, and each reports **state rather than verdicts**.
+
+| Command | |
+|---|---|
+| `cairn status` | what Cairn is doing on this machine, how many cairns are lit and sent, and the tombstone lights |
+| `cairn landmarks` | the named cairns: every one in single player, the ones near you on a server |
+| `cairn beacons` | each light, and whether it is out of range or hidden behind a hill |
+| `cairn raven` | the tutorials setting, your altitude, and how far the nearest named cairn is |
+| `cairn prefabs <text>` | the game's prefabs whose names contain the text |
+| `cairn pieces <text>` | the pieces whose names contain the text, and whether something can be placed on each |
+| `cairn save` | write the list of cairns now (on the server or the host) |
+
+<details>
+<summary>🔴 <b>Turn on tombstone lights</b></summary>
+
+On a server, set `EnableTombstoneLights = true` in the server's `BepInEx/config/com.raveniron.cairn.cfg` (section `[6 - Tombstones]`). In single player, set it in your own game's file. Every player needs this version of Cairn. A player who would rather not see it sets `ShowTombstoneLight = false` in their own file.
+
+</details>
+
+<details>
+<summary>🎨 <b>Change the colour of the lights</b></summary>
+
+In your own `com.raveniron.cairn.cfg`, set `BeaconColour` under `[4 - The light]` to a hex colour: `RGB`, `RRGGBB` or `RRGGBBAA`, with or without a leading `#`. A value that will not read falls back to firelight and says so once in the log. `TombstoneColour` works the same way for your tombstone light.
+
+</details>
+
+<details>
+<summary>📒 <b>Where the cairns are kept</b></summary>
+
+Landmarks are stored per world, beside the save, in a plain text file you can read. On a server the list lives on the server.
+
+</details>
+
+---
+
+![MULTIPLAYER](https://img.shields.io/badge/MULTIPLAYER-ONE_DLL%2C_EVERY_ROLE-1f4e79?style=for-the-badge&labelColor=1b1b1b)
+
+| Works for a player without Cairn | Needs Cairn on the server | Needs Cairn on both ends |
+|---|---|---|
+| a cairn is still a real pile of stones they can see and touch, but they see no light and hear no name | finding cairns and their names · the list of cairns, saved with the world · which lit cairns each player is sent · switching tombstone lights on | drawing the lights · Hugin saying a name · stacking stones · the tombstone light |
+
+**One DLL does every role.** A dedicated server sweeps the world and keeps the list, a player's game draws the lights and carries the raven's line, and a host does both. Keep the server and every player on the same version.
+
+---
+
+![COMPATIBILITY](https://img.shields.io/badge/COMPATIBILITY-PLAYS_WELL_WITH_OTHERS-2e5e3a?style=for-the-badge&labelColor=1b1b1b)
+
+**Nothing is patched that another mod is likely to want, and no prefab is added, so no save is at risk.**
+
+| Mod | |
+|---|---|
+| **Map mods** | Cairn writes nothing to the minimap, so the two simply ignore each other, though running both does rather blunt the point. |
+| **Season and weather mods** | Untouched: Cairn only reads the environment and the weather. |
+
+---
+
+![SETTINGS](https://img.shields.io/badge/SETTINGS-BEPINEX_CONFIG-b8860b?style=for-the-badge&labelColor=1b1b1b)
+
+All safe to leave alone. They are in `BepInEx/config/com.raveniron.cairn.cfg`, and every value carries a note explaining what it costs. Cairn does not send its settings from the server: each machine reads its own file, so the tables say whose copy counts. The file updates itself between versions: a value still at an old default moves to the new one, and a value you chose is kept.
+
+<details>
+<summary>🔒 <b>On the server</b> — the server's copy decides (in single player, your own)</summary>
+
+| Section | Setting | What it does |
+|---|---|---|
+| 1 - Core | `Enabled` | master switch; off on the server, nothing is found, kept or sent (each player's own copy switches off their lights and the raven) |
+| 1 - Core | `TickBudgetMs` · `AutosaveIntervalSeconds` | how much time per frame the server may spend, and how often the list of cairns is saved |
+| 2 - Landmarks | `EnableLandmarks` | **leave this on**: it is how the mod finds cairns; off, new cairns never light. It is not the setting for names |
+| 2 - Landmarks | `LandmarkRotationSeconds` | how quickly a new cairn is noticed (20 s) |
+| 2 - Landmarks | `SignPrefabs` | which pieces count as signs |
+| 3 - Cairn piles | `StonePrefabs` | which stone pieces a cairn can be built from |
+| 3 - Cairn piles | `PileMinPieces` · `PileMaxPieces` | how many stones make a cairn (4), and the most one may hold (100); raise the first if decorative stones start lighting up |
+| 3 - Cairn piles | `PileLinkMeters` · `PileMaxExtentMeters` | stones this close join one cairn (2.5 m); the footprint that separates a waymark from a building (4 m) |
+| 3 - Cairn piles | `LandmarkPairMeters` | how far a sign may stand from the cairn it names (6 m) |
+| 3 - Cairn piles | `PileDriftMeters` | how far an unnamed cairn may shift as you add stones and stay the same cairn |
+| 3 - Cairn piles | `StackableStones` | stones stack; set it the same on the server and every player, and restart |
+| 4 - The light | `EnableBeacons` | off on the server sends no lights to anyone |
+| 4 - The light | `BeaconSyncSeconds` · `BeaconMaxCount` | how often lit cairns are sent, and how many each player is sent at once, nearest first (250); not a limit on building |
+| 6 - Tombstones | `EnableTombstoneLights` | the red light over your tombstone (off) |
+
+</details>
+
+<details>
+<summary>🖥️ <b>In your own game</b> — yours alone</summary>
+
+| Section | Settings |
+|---|---|
+| **1 - Core** | `VerboseLogging` |
+| **3 - Cairn piles** | `StackableStones` (each player's own copy decides their placing) · `StonePileStoneCost` (0 leaves the hammer's stone pile recipe alone; any other value is charged by your own game only) |
+| **4 - The light** | `EnableBeacons` · `BeaconColour` · `BeaconMaxDistanceMeters` (800 m) · `BeaconOcclusion` (terrain hides beacons; leave it on) · `BeaconAngularSize` · `BeaconMinSizeMeters` · `BeaconMaxSizeMeters` · `BeaconHeightMeters` |
+| **5 - The raven** | `EnableRavenVoice` · `RavenNameMeters` · `RavenNameMaxLength` |
+| **6 - Tombstones** | `ShowTombstoneLight` · `TombstoneColour` |
+
+</details>
+
+---
+
+![CREDITS](https://img.shields.io/badge/CREDITS-THANK_YOU-1b1b1b?style=for-the-badge&labelColor=c9a227)
+
+**Needs:** [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/)
+
+- **Design document**: the reasoning behind every decision, including the ones that were wrong: <https://claude.ai/code/artifact/a04abbae-14d5-4a21-9bdc-032e91da0936>
+- **Support Raven Iron.** Every Raven Iron mod is free, and stays free: all of it, always. Nothing is held back for patrons, and nothing ever will be. To help cover server hosting and test hardware: the [website](https://ravenirongames.com/) · [Patreon](https://www.patreon.com/cw/RavenIronGames) · [Discord](https://discord.gg/AGKDEurAVa), a channel per mod and where the testing happens.
+
+*A Valheim mod by [Raven Iron](https://ravenirongames.com/).*
