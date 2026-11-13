@@ -111,8 +111,16 @@ namespace RavenIron.Cairn.Visuals
 
         // The colours last written to the log, so a change (from the F1 picker or the file) is
         // logged once rather than every frame. Null until the first frame draws.
-        private Color? _loggedBeacon;
-        private Color? _loggedTomb;
+        private readonly ColourLog _beaconLog = new ColourLog();
+        private readonly ColourLog _tombLog = new ColourLog();
+
+        /// <summary>What one colour setting last logged, and what it is settling on.</summary>
+        private sealed class ColourLog
+        {
+            public Color? Logged;     // last value written to the log
+            public Color? Pending;    // the value seen most recently
+            public float ChangedAt;   // when Pending last moved, realtime seconds
+        }
         private int _seenTombRevision = -1;
 
         /// <summary>The live renderer, so the console can ask it what it is doing.</summary>
@@ -328,8 +336,8 @@ namespace RavenIron.Cairn.Visuals
             Color warm = ModConfig.BeaconColour.Value;
             Color red = ModConfig.TombstoneColour.Value;
             bool useSigns = ModConfig.UseSignColours.Value;
-            LogColourChange("BeaconColour", warm, ref _loggedBeacon);
-            LogColourChange("TombstoneColour", red, ref _loggedTomb);
+            LogColourChange("BeaconColour", warm, _beaconLog);
+            LogColourChange("TombstoneColour", red, _tombLog);
 
             foreach (KeyValuePair<LightKey, Lit> kv in _lit)
             {
@@ -373,15 +381,37 @@ namespace RavenIron.Cairn.Visuals
         }
 
         /// <summary>
-        /// Log a colour once each time it changes, so a picker change or a file edit leaves one
-        /// line in the log rather than one per frame. A light that "will not change colour" is
-        /// otherwise impossible to tell apart from a setting that never arrived.
+        /// Log a colour setting once it has SETTLED, not on every frame it moves. Dragging an F1
+        /// slider passes through dozens of values, and logging each one buried the log (ten lines
+        /// for one drag in the 2026-11-13 test). The first value is logged at once, so the log
+        /// always says what a session started with; after that, a new value is logged only when
+        /// it has held still for a second. A light that "will not change colour" stays easy to
+        /// diagnose: the settled value is always there.
         /// </summary>
-        private static void LogColourChange(string setting, Color now, ref Color? logged)
+        private static void LogColourChange(string setting, Color now, ColourLog log)
         {
-            if (logged.HasValue && logged.Value == now) return;
-            logged = now;
-            Cairn.Log.LogInfo($"Beacon: {setting} is #{ColorUtility.ToHtmlStringRGBA(now)}.");
+            float t = Time.realtimeSinceStartup;
+
+            if (!log.Logged.HasValue)
+            {
+                log.Logged = now;
+                log.Pending = now;
+                Cairn.Log.LogInfo($"Beacon: {setting} is #{ColorUtility.ToHtmlStringRGBA(now)}.");
+                return;
+            }
+
+            if (log.Pending != now)
+            {
+                log.Pending = now;
+                log.ChangedAt = t;
+                return;
+            }
+
+            if (log.Logged != now && t - log.ChangedAt >= 1f)
+            {
+                log.Logged = now;
+                Cairn.Log.LogInfo($"Beacon: {setting} is now #{ColorUtility.ToHtmlStringRGBA(now)}.");
+            }
         }
 
         /// <summary>
