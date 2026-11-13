@@ -5,9 +5,9 @@
 **A cairn takes the colour of what it holds.**
 
 - **Put an item on an item stand at a cairn** and the cairn burns in that item's colour, for
-  everyone: a surtling core red, a blue mushroom blue, a dragon tear ice blue, a yellow mushroom
-  or dandelion yellow, the ancient gemstones green, purple and orange, a black core violet, a
-  raspberry deep red. The stand can sit on the stones or within 6 m (`LandmarkPairMeters`).
+  everyone: a raspberry or a surtling core red, blueberries or a blue mushroom blue, a dandelion
+  or yellow mushroom yellow, a carrot orange, a thistle purple, a greydwarf trophy green. The
+  defaults are cheap, everyday things on purpose: a cairn stands in the wild. The stand can sit on the stones or within 6 m (`LandmarkPairMeters`).
   Taking the item off returns the cairn to its sign's colour or the usual firelight, within a
   couple of seconds.
 - **`HeldColours`** (on the server) lists the items and their colours, as

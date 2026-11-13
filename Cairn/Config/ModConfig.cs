@@ -341,7 +341,7 @@ namespace RavenIron.Cairn.Config
 
             HeldColours = config.Bind(
                 "4 - The light", "HeldColours",
-                "SurtlingCore=FF4020,MushroomBlue=3A7BFF,DragonTear=9FE6FF,MushroomYellow=FFE040,Dandelion=FFD21F,AncientGemstoneGreen=3DDC6A,AncientGemstonePurple=A050FF,AncientGemstoneOrange=FF8A1F,BlackCore=8A3CFF,Raspberry=E0115F",
+                "Raspberry=E83A3A,SurtlingCore=FF4020,Blueberries=3A6BFF,MushroomBlue=3A7BFF,Dandelion=FFD21F,MushroomYellow=FFE040,Carrot=FF8A1F,Thistle=A050FF,TrophyGreydwarf=5BD13A",
                 "Which held items colour a cairn, and how: ItemPrefab=RRGGBB (or RRGGBBAA), " +
                 "comma-separated. These are the items' PREFAB names, such as SurtlingCore, not the " +
                 "names shown in game. Only items an item stand will hold can work: the console command " +

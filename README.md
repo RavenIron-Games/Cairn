@@ -22,7 +22,7 @@ It adds no pieces, no assets and nothing to your screen. It changes one vanilla 
 | You | It |
 |---|---|
 | **Set a surtling core on an item stand on the stones** | That cairn burns red, for everyone, within a couple of seconds |
-| **Use a blue mushroom** | Blue (on the flat stand). Dragon tear is ice blue, yellow mushroom or dandelion yellow, the ancient gemstones green, purple and orange, black core violet, raspberry deep red |
+| **Use what you forage** | Blueberries or a blue mushroom burn blue, a raspberry red, a dandelion or yellow mushroom yellow, a carrot orange, a thistle purple, a greydwarf trophy green. Cheap on purpose: it stands in the wild |
 | **Take the item off** | The cairn goes back to its sign's colour, or the usual firelight |
 | **Choose your own items** | `HeldColours` on the server lists them: `SurtlingCore=FF4020`, and so on. `cairn holdable` lists every item a stand will take |
 | **Find your tombstone** | Its light now sits 2.5 m above the stone instead of on it (`TombstoneHeightMeters`) |
