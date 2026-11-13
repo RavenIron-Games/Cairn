@@ -322,7 +322,7 @@ namespace RavenIron.Cairn.Systems
                 Cairn.Log.LogInfo(
                     $"[{Name}] quick check at ({spot.x:F0}, {spot.z:F0}): {stones.Count} stone(s), " +
                     $"{signPositions.Count} named sign(s) in {found.Count} nearby object(s) — " +
-                    $"{r.Piles} pile(s) here, {r.Changed} changed, {r.Pruned} pruned");
+                    $"{r.Piles} pile(s) here, {r.Changed} changed, {r.Pruned} pruned [{DateTime.Now:HH:mm:ss.fff}]");
             return changed;
         }
 
@@ -364,7 +364,7 @@ namespace RavenIron.Cairn.Systems
                 (leftToQuick > 0 ? $" ({leftToQuick} pile(s) left as a quick check just set them)" : "") +
                 (carried > 0 ? $", {carried} history carried across a drift" : "") +
                 (_rotationClean ? "" : ", PRUNING SKIPPED (a prefab failed this rotation)") +
-                tail);
+                tail + (ModConfig.VerboseLogging.Value ? $" [{DateTime.Now:HH:mm:ss.fff}]" : ""));
         }
     }
 }

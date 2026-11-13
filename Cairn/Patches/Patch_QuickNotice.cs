@@ -34,7 +34,7 @@ namespace RavenIron.Cairn.Patches
                     string prefab = piece.gameObject.name;
                     if (StoneStacking.IsListed(ModConfig.StonePrefabs.Value, prefab) ||
                         StoneStacking.IsListed(ModConfig.SignPrefabs.Value, prefab))
-                        CairnNotice.Notify(pos);
+                        CairnNotice.Notify(pos, "placed " + prefab);
                 }
                 catch (Exception ex)
                 {
@@ -50,7 +50,7 @@ namespace RavenIron.Cairn.Patches
             {
                 try
                 {
-                    if (__instance != null) CairnNotice.Notify(__instance.transform.position);
+                    if (__instance != null) CairnNotice.Notify(__instance.transform.position, "sign written");
                 }
                 catch (Exception ex)
                 {
@@ -78,7 +78,7 @@ namespace RavenIron.Cairn.Patches
                     string prefab = __instance.gameObject.name;
                     if (StoneStacking.IsListed(ModConfig.StonePrefabs.Value, prefab) ||
                         StoneStacking.IsListed(ModConfig.SignPrefabs.Value, prefab))
-                        CairnNotice.Notify(__instance.transform.position);
+                        CairnNotice.Notify(__instance.transform.position, "removed " + StoneStacking.PrefabName(prefab));
                 }
                 catch (Exception ex)
                 {

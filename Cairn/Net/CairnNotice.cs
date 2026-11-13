@@ -80,7 +80,7 @@ namespace RavenIron.Cairn.Net
         /// server. `ZNet.GetServerPeer` and `ZNetPeer.m_uid` are public; the routed RPC's own
         /// GetServerPeerID is private at runtime and is never named.
         /// </summary>
-        public static void Notify(Vector3 spot)
+        public static void Notify(Vector3 spot, string why = "change")
         {
             try
             {
@@ -88,6 +88,9 @@ namespace RavenIron.Cairn.Net
 
                 if (Cairn.IsSimulationAuthority())
                 {
+                    if (ModConfig.VerboseLogging.Value)
+                        Cairn.Log.LogInfo($"CairnNotice: {why} at ({spot.x:F0}, {spot.z:F0}) queued here " +
+                                          $"[{DateTime.Now:HH:mm:ss.fff}]");
                     Enqueue(spot, Time.realtimeSinceStartup);
                     return;
                 }
@@ -99,9 +102,18 @@ namespace RavenIron.Cairn.Net
 
                 float now = Time.realtimeSinceStartup;
                 if (now - _lastSentAt < SendGapSeconds &&
-                    Core.LedgerUpdate.DistanceXZ(spot, _lastSentSpot) <= MergeMeters) return;
+                    Core.LedgerUpdate.DistanceXZ(spot, _lastSentSpot) <= MergeMeters)
+                {
+                    if (ModConfig.VerboseLogging.Value)
+                        Cairn.Log.LogInfo($"CairnNotice: {why} at ({spot.x:F0}, {spot.z:F0}) held back (sent one here " +
+                                          $"{now - _lastSentAt:F2}s ago) [{DateTime.Now:HH:mm:ss.fff}]");
+                    return;
+                }
                 _lastSentSpot = spot;
                 _lastSentAt = now;
+                if (ModConfig.VerboseLogging.Value)
+                    Cairn.Log.LogInfo($"CairnNotice: {why} at ({spot.x:F0}, {spot.z:F0}) sent to the server " +
+                                      $"[{DateTime.Now:HH:mm:ss.fff}]");
 
                 rpc.InvokeRoutedRPC(server.m_uid, RpcName, spot);
             }
@@ -123,7 +135,16 @@ namespace RavenIron.Cairn.Net
                 _windowStart[sender] = now;
                 _windowCount[sender] = 0;
             }
-            if (++_windowCount[sender] > MaxPerSenderPerWindow) return;   // the sweep will still find it
+            if (++_windowCount[sender] > MaxPerSenderPerWindow)   // the sweep will still find it
+            {
+                if (ModConfig.VerboseLogging.Value)
+                    Cairn.Log.LogInfo($"CairnNotice: notice from {sender} at ({spot.x:F0}, {spot.z:F0}) DROPPED by the " +
+                                      $"per-sender limit [{DateTime.Now:HH:mm:ss.fff}]");
+                return;
+            }
+            if (ModConfig.VerboseLogging.Value)
+                Cairn.Log.LogInfo($"CairnNotice: notice from {sender} at ({spot.x:F0}, {spot.z:F0}) received " +
+                                  $"[{DateTime.Now:HH:mm:ss.fff}]");
 
             Enqueue(spot, now);
         }
