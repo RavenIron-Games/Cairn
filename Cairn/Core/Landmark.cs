@@ -39,6 +39,12 @@ namespace RavenIron.Cairn.Core
         /// </summary>
         public Vector3 Light;
 
+        /// <summary>
+        /// The colour of what the cairn holds (0.13.0): RRGGBBAA, or "" when it holds nothing
+        /// listed in `HeldColours`. Decided by the server; see <see cref="HeldColour"/>.
+        /// </summary>
+        public string Held = "";
+
         public Landmark() { }
 
         public Landmark(LandmarkKey key, string name, string author, long firstSeen, long lastSeen)
@@ -105,8 +111,12 @@ namespace RavenIron.Cairn.Core
         // ---- serialization --------------------------------------------------------------
 
         // Field counts, by format version. v1 had no pile: seven fields ending in the name.
+        // v3 (0.13.0) appends the held colour AFTER the name, so a 0.12.0 build reading a v3 file
+        // takes field 10 as the name exactly as before and never looks at field 11: rolling back
+        // costs the held colours until the next sweep, and nothing else.
         private const int V1Fields = 7;
         private const int V2Fields = 11;
+        private const int V3Fields = 12;
 
         /// <summary>
         /// Tab-separated, name last. Every free-text field is escaped, because a sign's text
@@ -132,7 +142,8 @@ namespace RavenIron.Cairn.Core
               .Append(Light.x.ToString("R", c)).Append('\t')
               .Append(Light.y.ToString("R", c)).Append('\t')
               .Append(Light.z.ToString("R", c)).Append('\t')
-              .Append(Escape(Name));
+              .Append(Escape(Name)).Append('\t')
+              .Append(Escape(Held ?? ""));
             return sb.ToString();
         }
 
@@ -175,6 +186,7 @@ namespace RavenIron.Cairn.Core
 
             landmark = new Landmark(key, Unescape(f[10]), author, first, last,
                                     hasPile, new Vector3(lx, ly, lz));
+            if (f.Length >= V3Fields) landmark.Held = HeldColour.Normalise(Unescape(f[11]));
             return true;
         }
 

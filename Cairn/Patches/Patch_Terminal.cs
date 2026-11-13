@@ -528,7 +528,12 @@ namespace RavenIron.Cairn.Patches
                     parts.Add($"{item.gameObject.name} x{amount}");
                 }
 
-                return parts.Count > 0 ? string.Join(", ", parts.ToArray()) : "free";
+                string cost = parts.Count > 0 ? string.Join(", ", parts.ToArray()) : "free";
+
+                // Which crafting station must be in range to build it (0.13.0): an item stand on
+                // a lonely headland is only buildable if this says "none".
+                var station = AccessTools.Field(piece.GetType(), "m_craftingStation")?.GetValue(piece) as Component;
+                return cost + (station != null ? $"  needs {station.gameObject.name} nearby" : "  needs no station");
             }
             catch
             {

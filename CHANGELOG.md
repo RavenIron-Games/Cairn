@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.13.0
+
+**A cairn takes the colour of what it holds.**
+
+- **Put an item on an item stand at a cairn** and the cairn burns in that item's colour, for
+  everyone: a surtling core red, a greydwarf eye blue, crystal white, ruby deep red, amber gold,
+  black core violet. The stand can sit on the stones or within 6 m (`LandmarkPairMeters`).
+  Taking the item off returns the cairn to its sign's colour or the usual firelight, within a
+  couple of seconds.
+- **`HeldColours`** (on the server) lists the items and their colours, as
+  `ItemPrefab=RRGGBB`. The server log names any item it does not recognise when a world loads.
+  **`HolderPrefabs`** lists the pieces that hold them (both item stands).
+- An item stand may now be placed on the stones, as a sign can. Building one still needs what
+  vanilla asks for; `cairn pieces itemstand` now says which crafting station a piece needs.
+- When a cairn has both, the held item's colour wins over the sign's. `UseSignColours = false`
+  ignores both in your own game.
+- **The tombstone light sits higher**: 2.5 m above the stone, where it used to sit on it.
+  `TombstoneHeightMeters` changes it, in your own game.
+- The server needs 0.13.0 to decide held colours. A player on 0.12.0 still sees every light,
+  just without the held colour; a 0.12.0 server simply sends none.
+
 ## 0.12.0
 
 **Pick the colour of the lights in game, with sliders, and give each cairn its own colour.**

@@ -50,7 +50,18 @@ namespace RavenIron.Cairn.Systems
         {
             public string Prefab;
             public bool IsSign;
+            public bool IsHolder;   // an item stand (0.13.0); never also a sign
         }
+
+        // Held item prefab hash → RRGGBBAA, from HeldColours. An item stand records what it holds
+        // as the hash of the item's prefab name (ItemStand.UpdateAttach, 1.0.21), so this is the
+        // whole lookup: no object is loaded and no item is read beyond one int.
+        private readonly Dictionary<int, string> _heldByHash = new Dictionary<int, string>(8);
+        private bool _heldNamesChecked;
+
+        // Holders found this rotation that hold a listed item, and its colour.
+        private readonly List<Vector3> _holderPositions = new List<Vector3>(16);
+        private readonly List<string> _holderColours = new List<string>(16);
 
         private readonly List<Target> _targets = new List<Target>(8);
         private int _cursor;
@@ -94,40 +105,94 @@ namespace RavenIron.Cairn.Systems
             _signPositions.Clear();
             _signNames.Clear();
             _signAuthors.Clear();
+            _holderPositions.Clear();
+            _holderColours.Clear();
             _foundCounts.Clear();
             _keptCounts.Clear();
             _rotationClean = true;
             _quickAreas.Clear();
 
             _targets.Clear();
-            AddTargets(ModConfig.SignPrefabs.Value, isSign: true);
-            AddTargets(ModConfig.StonePrefabs.Value, isSign: false);
+            AddTargets(ModConfig.SignPrefabs.Value, isSign: true, isHolder: false);
+            AddTargets(ModConfig.StonePrefabs.Value, isSign: false, isHolder: false);
+            AddTargets(ModConfig.HolderPrefabs.Value, isSign: false, isHolder: true);
 
             var signs = new List<string>();
             var stones = new List<string>();
+            var holders = new List<string>();
             _watchedHashes.Clear();
             foreach (Target t in _targets)
             {
-                (t.IsSign ? signs : stones).Add(t.Prefab);
+                (t.IsHolder ? holders : t.IsSign ? signs : stones).Add(t.Prefab);
                 _watchedHashes[t.Prefab.GetStableHashCode()] = t.Prefab;
             }
+
+            var rejected = new List<string>();
+            Dictionary<string, string> held = HeldColour.Parse(ModConfig.HeldColours.Value, rejected);
+            _heldByHash.Clear();
+            var heldShown = new List<string>(held.Count);
+            foreach (KeyValuePair<string, string> kv in held)
+            {
+                _heldByHash[kv.Key.GetStableHashCode()] = kv.Value;
+                heldShown.Add($"{kv.Key} #{kv.Value}");
+            }
+            _heldNamesChecked = false;
+            if (rejected.Count > 0)
+                Cairn.Log.LogWarning(
+                    $"[{Name}] HeldColours: could not read {string.Join("; ", rejected.ToArray())} — " +
+                    "each entry is ItemPrefab=RRGGBB or ItemPrefab=RRGGBBAA. Those entries colour nothing.");
 
             Cairn.Log.LogInfo(
                 $"[{Name}] sweeping every {IntervalSeconds:F1}s per prefab, {ModConfig.LandmarkRotationSeconds.Value:F0}s per rotation — " +
                 $"signs: {(signs.Count > 0 ? string.Join(", ", signs.ToArray()) : "none")}; " +
-                $"stone: {(stones.Count > 0 ? string.Join(", ", stones.ToArray()) : "none")}. " +
+                $"stone: {(stones.Count > 0 ? string.Join(", ", stones.ToArray()) : "none")}; " +
+                $"holders: {(holders.Count > 0 ? string.Join(", ", holders.ToArray()) : "none")}. " +
                 $"A pile is {ModConfig.PileMinPieces.Value}-{ModConfig.PileMaxPieces.Value} pieces " +
-                $"within {ModConfig.PileMaxExtentMeters.Value:F1}m of footprint; a sign names one " +
-                $"from {ModConfig.LandmarkPairMeters.Value:F0}m.");
+                $"within {ModConfig.PileMaxExtentMeters.Value:F1}m of footprint; a sign names one, and a " +
+                $"held item colours one, from {ModConfig.LandmarkPairMeters.Value:F0}m. " +
+                $"Held colours: {(heldShown.Count > 0 ? string.Join(", ", heldShown.ToArray()) : "none")}.");
         }
 
-        private void AddTargets(string csv, bool isSign)
+        private void AddTargets(string csv, bool isSign, bool isHolder)
         {
             foreach (string raw in (csv ?? "").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
             {
                 string prefab = raw.Trim();
-                if (prefab.Length > 0) _targets.Add(new Target { Prefab = prefab, IsSign = isSign });
+                if (prefab.Length > 0) _targets.Add(new Target { Prefab = prefab, IsSign = isSign, IsHolder = isHolder });
             }
+        }
+
+        /// <summary>
+        /// Once per world, when the game's item list exists: name every HeldColours entry that is
+        /// not an item in THIS game. A wrong prefab name costs a silent "never colours", which is
+        /// the kind of failure this mod always prints rather than leaves to be guessed at.
+        /// `ObjectDB.instance` and `GetItemPrefab(string)` are public in 1.0.21.
+        /// </summary>
+        private void CheckHeldNames()
+        {
+            if (_heldNamesChecked) return;
+            ObjectDB db = ObjectDB.instance;
+            if (db == null || db.m_items == null || db.m_items.Count == 0) return;   // not ready yet; try next tick
+            _heldNamesChecked = true;
+
+            var unknown = new List<string>();
+            foreach (string item in HeldColour.Parse(ModConfig.HeldColours.Value).Keys)
+                if (db.GetItemPrefab(item) == null) unknown.Add(item);
+
+            if (unknown.Count > 0)
+                Cairn.Log.LogWarning(
+                    $"[{Name}] HeldColours names {unknown.Count} item(s) this game does not have: " +
+                    $"{string.Join(", ", unknown.ToArray())}. Use the item's prefab name (e.g. SurtlingCore); " +
+                    "those entries colour nothing.");
+            else
+                Cairn.Log.LogInfo($"[{Name}] HeldColours: every listed item exists in this game.");
+        }
+
+        /// <summary>The colour of what one holder ZDO holds, or "" for nothing listed (or empty).</summary>
+        private string HeldColourOf(ZDO zdo)
+        {
+            int item = zdo.GetInt(ZDOVars.s_item);
+            return item != 0 && _heldByHash.TryGetValue(item, out string hex) ? hex : "";
         }
 
         public void Tick(float deltaSeconds)
@@ -144,6 +209,7 @@ namespace RavenIron.Cairn.Systems
             ZDOMan man = ZDOMan.instance;
             if (man == null) return;
 
+            CheckHeldNames();
             Target target = _targets[_cursor];
 
             try
@@ -171,7 +237,15 @@ namespace RavenIron.Cairn.Systems
                 if (zdo == null || !zdo.IsValid()) continue;
                 valid++;
 
-                if (target.IsSign)
+                if (target.IsHolder)
+                {
+                    string hex = HeldColourOf(zdo);
+                    if (hex.Length == 0) continue;   // empty, or holding something not listed
+                    _holderPositions.Add(zdo.GetPosition());
+                    _holderColours.Add(hex);
+                    kept++;
+                }
+                else if (target.IsSign)
                 {
                     string rawText = zdo.GetString(ZDOVars.s_text, "");
                     string rawAuthor = zdo.GetString(ZDOVars.s_author, "");
@@ -219,6 +293,7 @@ namespace RavenIron.Cairn.Systems
 
             LedgerUpdate.Result r = LedgerUpdate.Apply(
                 _stones, _signPositions, _signNames, _signAuthors,
+                _holderPositions, _holderColours,
                 p => !NearAny(p, fresh, QuickRadiusMeters),
                 allowPrune: _rotationClean,
                 nowUtcTicks: now);
@@ -231,6 +306,8 @@ namespace RavenIron.Cairn.Systems
             _signPositions.Clear();
             _signNames.Clear();
             _signAuthors.Clear();
+            _holderPositions.Clear();
+            _holderColours.Clear();
             _foundCounts.Clear();
             _keptCounts.Clear();
             _quickAreas.Clear();
@@ -282,8 +359,9 @@ namespace RavenIron.Cairn.Systems
 
             var stoneHashes = new HashSet<int>();
             var signHashes = new HashSet<int>();
+            var holderHashes = new HashSet<int>();
             foreach (Target t in _targets)
-                (t.IsSign ? signHashes : stoneHashes).Add(t.Prefab.GetStableHashCode());
+                (t.IsHolder ? holderHashes : t.IsSign ? signHashes : stoneHashes).Add(t.Prefab.GetStableHashCode());
 
             var found = new List<ZDO>(256);
             try
@@ -300,6 +378,8 @@ namespace RavenIron.Cairn.Systems
             var signPositions = new List<Vector3>(8);
             var signNames = new List<string>(8);
             var signAuthors = new List<string>(8);
+            var holderPositions = new List<Vector3>(4);
+            var holderColours = new List<string>(4);
 
             foreach (ZDO zdo in found)
             {
@@ -309,6 +389,13 @@ namespace RavenIron.Cairn.Systems
                 if (stoneHashes.Contains(prefab))
                 {
                     stones.Add(zdo.GetPosition());
+                }
+                else if (holderHashes.Contains(prefab))
+                {
+                    string hex = HeldColourOf(zdo);
+                    if (hex.Length == 0) continue;
+                    holderPositions.Add(zdo.GetPosition());
+                    holderColours.Add(hex);
                 }
                 else if (signHashes.Contains(prefab))
                 {
@@ -323,6 +410,7 @@ namespace RavenIron.Cairn.Systems
 
             LedgerUpdate.Result r = LedgerUpdate.Apply(
                 stones, signPositions, signNames, signAuthors,
+                holderPositions, holderColours,
                 p => LedgerUpdate.DistanceXZ(p, spot) <= QuickRadiusMeters,
                 allowPrune: true,
                 nowUtcTicks: DateTime.UtcNow.Ticks);
@@ -333,7 +421,8 @@ namespace RavenIron.Cairn.Systems
             if (changed || ModConfig.VerboseLogging.Value)
                 Cairn.Log.LogInfo(
                     $"[{Name}] quick check at ({spot.x:F0}, {spot.z:F0}): {stones.Count} stone(s), " +
-                    $"{signPositions.Count} named sign(s) in {found.Count} nearby object(s) — " +
+                    $"{signPositions.Count} named sign(s), {holderPositions.Count} held colour(s) " +
+                    $"in {found.Count} nearby object(s) — " +
                     $"{r.Piles} pile(s) here, {r.Changed} changed, {r.Pruned} pruned [{DateTime.Now:HH:mm:ss.fff}]");
             return changed;
         }
@@ -358,6 +447,7 @@ namespace RavenIron.Cairn.Systems
                 _keptCounts.TryGetValue(t.Prefab, out int kept);
                 parts.Add($"{t.Prefab} found={found} kept={kept}");
 
+                if (t.IsHolder) continue;   // stands are everywhere (trophies); they say nothing about cairns
                 if (t.IsSign) signsFound += found; else stonesFound += found;
             }
 

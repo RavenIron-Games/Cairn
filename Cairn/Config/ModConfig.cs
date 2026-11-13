@@ -58,6 +58,8 @@ namespace RavenIron.Cairn.Config
         public static ConfigEntry<bool>   BeaconOcclusion;
         public static ConfigEntry<Color>  BeaconColour;
         public static ConfigEntry<bool>   UseSignColours;
+        public static ConfigEntry<string> HolderPrefabs;
+        public static ConfigEntry<string> HeldColours;
 
         // ---- The raven ------------------------------------------------------------
         public static ConfigEntry<bool>  EnableRavenVoice;
@@ -68,6 +70,7 @@ namespace RavenIron.Cairn.Config
         public static ConfigEntry<bool>   EnableTombstoneLights;
         public static ConfigEntry<bool>   ShowTombstoneLight;
         public static ConfigEntry<Color>  TombstoneColour;
+        public static ConfigEntry<float>  TombstoneHeightMeters;
 
         public static void Bind(ConfigFile config)
         {
@@ -321,11 +324,29 @@ namespace RavenIron.Cairn.Config
 
             UseSignColours = config.Bind(
                 "4 - The light", "UseSignColours", true,
-                "Light a named cairn in the colour its sign is written in. Write the sign as " +
-                "<color=#4A9EFF>Home</color> and that cairn burns blue, for everyone who has this " +
-                "on. Cairns with no colour on their sign use BeaconColour. " +
-                "Set this to false to use your own BeaconColour on EVERY cairn and ignore signs. " +
+                "Light a cairn in the colour its builder gave it. Two ways to give one: write the " +
+                "sign as <color=#4A9EFF>Home</color>, or put an item listed in HeldColours on an " +
+                "item stand at the cairn (a surtling core burns red). The item wins when a cairn " +
+                "has both. Cairns with neither use BeaconColour. " +
+                "Set this to false to use your own BeaconColour on EVERY cairn and ignore both. " +
                 "Read by each player's own game, and a change shows at once.");
+
+            HolderPrefabs = config.Bind(
+                "4 - The light", "HolderPrefabs", "itemstandh,itemstand",
+                "Pieces that can hold an item to colour a cairn (0.13.0): the item stand, lying " +
+                "flat (itemstandh) or on a wall (itemstand). One within LandmarkPairMeters of a " +
+                "cairn, holding an item listed in HeldColours, gives that cairn the item's colour. " +
+                "These may also be placed ON the stones of a cairn when StackableStones is on. " +
+                "Set it on the server, and on each player's game for placing them on stones.");
+
+            HeldColours = config.Bind(
+                "4 - The light", "HeldColours",
+                "GreydwarfEye=4A9EFF,SurtlingCore=FF4020,Crystal=E8F4FF,Ruby=E0115F,Amber=FFBF1F,BlackCore=8A3CFF",
+                "Which held items colour a cairn, and how: ItemPrefab=RRGGBB (or RRGGBBAA), " +
+                "comma-separated. These are the items' PREFAB names, such as SurtlingCore, not the " +
+                "names shown in game. The server log names any it does not recognise when a world " +
+                "loads. An item not on the list leaves the cairn's colour alone. " +
+                "Set it on the server: it decides the colour, and every player sees the same one.");
 
             BeaconOcclusion = config.Bind(
                 "4 - The light", "BeaconOcclusion", true,
@@ -384,6 +405,15 @@ namespace RavenIron.Cairn.Config
                 "with sliders. In this file it is hex, RRGGBBAA, for example FF2A2AFF; the last " +
                 "two digits (alpha) set how strong the light is. " +
                 "Read by each player's own game, and a change shows at once.");
+
+            // Raised for a player's request, 2026-11-13: at the cairn's 1.2 m the glow sat on the
+            // tombstone itself.
+            TombstoneHeightMeters = config.Bind(
+                "6 - Tombstones", "TombstoneHeightMeters", 2.5f,
+                new ConfigDescription(
+                    "How far above your tombstone its light sits, in metres. " +
+                    "Read by each player's own game.",
+                    new AcceptableValueRange<float>(0f, 10f)));
         }
     }
 }

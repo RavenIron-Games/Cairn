@@ -15,6 +15,20 @@ It adds no pieces, no assets and nothing to your screen. It changes one vanilla 
 
 ---
 
+![NEW IN 0.13.0](https://img.shields.io/badge/NEW_IN_0.13.0-A_CAIRN_HOLDS_ITS_COLOUR-8b1e1e?style=for-the-badge&labelColor=1b1b1b)
+
+**Put an item on an item stand at a cairn, and the cairn burns in that item's colour.**
+
+| You | It |
+|---|---|
+| **Set a surtling core on an item stand on the stones** | That cairn burns red, for everyone, within a couple of seconds |
+| **Use a greydwarf eye** | Blue. Crystal is white, ruby deep red, amber gold, black core violet |
+| **Take the item off** | The cairn goes back to its sign's colour, or the usual firelight |
+| **Choose your own items** | `HeldColours` on the server lists them: `SurtlingCore=FF4020`, and so on |
+| **Find your tombstone** | Its light now sits 2.5 m above the stone instead of on it (`TombstoneHeightMeters`) |
+
+An item stand may go on the stones, like a sign. Building one needs whatever vanilla asks for; `cairn pieces itemstand` says exactly what that is in your game, crafting station included.
+
 ![NEW IN 0.12.0](https://img.shields.io/badge/NEW_IN_0.12.0-PICK_YOUR_COLOURS-8b1e1e?style=for-the-badge&labelColor=1b1b1b)
 
 **Pick the colour of the lights in game, with sliders, and give each cairn its own colour from its sign.**
@@ -178,6 +192,8 @@ On a server, set `EnableTombstoneLights = true` in the server's `BepInEx/config/
 
 **In the file:** in your own `com.raveniron.cairn.cfg`, set `BeaconColour` under `[4 - The light]` to a hex colour such as `4A9EFF`. Cairn writes it back as `RRGGBBAA` (`4A9EFFFF`); the last two digits are the alpha. A value that will not read is left at the default, and BepInEx says so in the log. `TombstoneColour`, under `[6 - Tombstones]`, works the same way.
 
+**On an item stand at the cairn:** put an item listed in `HeldColours` on an item stand (flat or on a wall) on the stones or within 6 m (`LandmarkPairMeters`). The cairn takes that item's colour for everyone, and the item wins over a sign's colour. The server decides it from its own `HeldColours` list, which uses the items' prefab names (`SurtlingCore`, `GreydwarfEye`); the server's log names any it does not recognise when a world loads.
+
 **On a cairn's sign:** write the sign's text inside a colour tag, for example `<color=#4A9EFF>Home</color>` or `<color=red>Red Cliff</color>`. That cairn's light takes the colour, for every player who has `UseSignColours` on (the default), and the sign shows the name in the same colour. Hex (`#RGB`, `#RRGGBB`, `#RRGGBBAA`) always works; the names the sign understands are red, lightblue, blue, grey, black, green, white, orange, purple and yellow. If a sign has more than one colour tag, the first one counts. Set `UseSignColours = false` to light every cairn in your own `BeaconColour` instead.
 
 </details>
@@ -227,6 +243,7 @@ All safe to leave alone. They are in `BepInEx/config/com.raveniron.cairn.cfg`, a
 | 2 - Landmarks | `QuickChecks` | placing, removing or knocking down a stone, or writing or removing a sign, updates its cairn in a couple of seconds; off, changes wait for the full search (on) |
 | 2 - Landmarks | `LandmarkRotationSeconds` | how often the whole world is searched for cairns, which catches anything a quick check missed (20 s) |
 | 2 - Landmarks | `SignPrefabs` | which pieces count as signs |
+| 4 - The light | `HeldColours` · `HolderPrefabs` | which held items colour a cairn and in what colour, and which pieces hold them (item stands) |
 | 3 - Cairn piles | `StonePrefabs` | which stone pieces a cairn can be built from |
 | 3 - Cairn piles | `PileMinPieces` · `PileMaxPieces` | how many stones make a cairn (4), and the most one may hold (100); raise the first if decorative stones start lighting up |
 | 3 - Cairn piles | `PileLinkMeters` · `PileMaxExtentMeters` | stones this close join one cairn (2.5 m); the footprint that separates a waymark from a building (4 m) |
@@ -248,7 +265,7 @@ All safe to leave alone. They are in `BepInEx/config/com.raveniron.cairn.cfg`, a
 | **3 - Cairn piles** | `StackableStones` (each player's own copy decides their placing) · `StonePileStoneCost` (0 leaves the hammer's stone pile recipe alone; any other value is charged by your own game only) |
 | **4 - The light** | `EnableBeacons` · `BeaconColour` · `UseSignColours` · `BeaconMaxDistanceMeters` (800 m) · `BeaconOcclusion` (terrain hides beacons; leave it on) · `BeaconAngularSize` · `BeaconMinSizeMeters` · `BeaconMaxSizeMeters` · `BeaconHeightMeters` |
 | **5 - The raven** | `EnableRavenVoice` · `RavenNameMeters` · `RavenNameMaxLength` |
-| **6 - Tombstones** | `ShowTombstoneLight` · `TombstoneColour` |
+| **6 - Tombstones** | `ShowTombstoneLight` · `TombstoneColour` · `TombstoneHeightMeters` (2.5 m) |
 
 </details>
 

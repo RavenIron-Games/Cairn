@@ -40,6 +40,16 @@ namespace RavenIron.Cairn.Core
             return TryNamed(value, out r, out g, out b);
         }
 
+        /// <summary>A bare hex colour, `RGB`, `RGBA`, `RRGGBB` or `RRGGBBAA`, with or without '#'.</summary>
+        public static bool TryReadHex(string hex, out float r, out float g, out float b, out float a)
+        {
+            r = g = b = 0f; a = 1f;
+            if (string.IsNullOrEmpty(hex)) return false;
+            hex = hex.Trim();
+            if (hex.StartsWith("#")) hex = hex.Substring(1);
+            return TryHex(hex, out r, out g, out b, out a);
+        }
+
         private static bool TryHex(string hex, out float r, out float g, out float b, out float a)
         {
             r = g = b = 0f; a = 1f;
