@@ -56,7 +56,7 @@ It adds no pieces, no assets and nothing to your screen. It changes one vanilla 
 <details>
 <summary>📖 <b>Read the saga</b> — what counts as a cairn</summary>
 
-**A cairn is recognised, never provided.** Cairn adds no piece of its own. Every few seconds the server looks for stacked stones, and for written signs beside them. When a player places a stone or writes a sign, their game tells the server where, and the server looks at just that spot a second later, so the fire comes on almost at once. The hoe's single stone and the hammer's stone pile both count.
+**A cairn is recognised, never provided.** Cairn adds no piece of its own. Every few seconds the server looks for stacked stones, and for written signs beside them. When a player places or removes a stone, or writes or removes a sign, their game tells the server where, and the server looks at just that spot a second later, so the fire comes on, takes its name or goes out almost at once. The hoe's single stone and the hammer's stone pile both count.
 
 **Narrow, not wide.** Stones that stand closer than 2.5 m join into one cairn, so three columns side by side are one cairn with one light, and a cairn may hold up to 100 stones. The footprint rule does the real work: a cluster wider than 4 m is a building, not a waymark, so a stone house can never become a landmark.
 
@@ -224,7 +224,7 @@ All safe to leave alone. They are in `BepInEx/config/com.raveniron.cairn.cfg`, a
 | 1 - Core | `Enabled` | master switch; off on the server, nothing is found, kept or sent (each player's own copy switches off their lights and the raven) |
 | 1 - Core | `TickBudgetMs` · `AutosaveIntervalSeconds` | how much time per frame the server may spend, and how often the list of cairns is saved |
 | 2 - Landmarks | `EnableLandmarks` | **leave this on**: it is how the mod finds cairns; off, new cairns never light. It is not the setting for names |
-| 2 - Landmarks | `QuickChecks` | a placed stone or written sign lights its cairn in a couple of seconds; off, new cairns wait for the full search (on) |
+| 2 - Landmarks | `QuickChecks` | placing or removing a stone, or writing or removing a sign, updates its cairn in a couple of seconds; off, changes wait for the full search (on) |
 | 2 - Landmarks | `LandmarkRotationSeconds` | how often the whole world is searched for cairns, which catches anything a quick check missed (20 s) |
 | 2 - Landmarks | `SignPrefabs` | which pieces count as signs |
 | 3 - Cairn piles | `StonePrefabs` | which stone pieces a cairn can be built from |

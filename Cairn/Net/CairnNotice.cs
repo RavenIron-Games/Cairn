@@ -6,7 +6,8 @@ using UnityEngine;
 namespace RavenIron.Cairn.Net
 {
     /// <summary>
-    /// Client → server: "a stone was just placed, or a sign written, HERE" (0.12.0).
+    /// Client → server: "a stone was just placed or removed, or a sign written or removed, HERE"
+    /// (0.12.0).
     ///
     /// The full world sweep notices a new cairn within about 20 seconds, and making it run more
     /// often would cost every server time on every lap. Instead the player's own game says where
@@ -33,6 +34,13 @@ namespace RavenIron.Cairn.Net
         private const int MaxPending = 64;
         private const float SenderWindowSeconds = 1f;
         private const int MaxPerSenderPerWindow = 4;
+        private const float SendGapSeconds = 0.25f;      // a sender's own repeats for one spot
+
+        // The last notice this game SENT. A stack that collapses destroys its stones over a few
+        // frames, each one a notice for the same spot; one message per spot every quarter second
+        // is enough, because the server pushes its check back a second on every notice it merges.
+        private static Vector3 _lastSentSpot;
+        private static float _lastSentAt = float.NegativeInfinity;
 
         private struct Pending
         {
@@ -88,6 +96,12 @@ namespace RavenIron.Cairn.Net
                 ZNet znet = ZNet.instance;
                 ZNetPeer server = znet != null ? znet.GetServerPeer() : null;
                 if (rpc == null || server == null) return;
+
+                float now = Time.realtimeSinceStartup;
+                if (now - _lastSentAt < SendGapSeconds &&
+                    Core.LedgerUpdate.DistanceXZ(spot, _lastSentSpot) <= MergeMeters) return;
+                _lastSentSpot = spot;
+                _lastSentAt = now;
 
                 rpc.InvokeRoutedRPC(server.m_uid, RpcName, spot);
             }
@@ -178,6 +192,7 @@ namespace RavenIron.Cairn.Net
             _pending.Clear();
             _windowStart.Clear();
             _windowCount.Clear();
+            _lastSentAt = float.NegativeInfinity;
             ChecksRun = 0;
             ChecksThatChanged = 0;
         }

@@ -16,9 +16,9 @@
 - A colour you already set, like `4A9EFF`, carries over as it is. Cairn now writes it back with
   the alpha on the end, as `4A9EFFFF`.
 - Colours are read by each player's own game, so the server does not need 0.12.0 for them.
-- **A new cairn lights in a couple of seconds**, not twenty. When you place a stone or write a
-  sign, your game tells the server where, and a second later the server looks at just that
-  spot. Nothing extra runs while nobody is building, and the full search every 20 seconds still
+- **A new cairn lights in a couple of seconds**, not twenty, and a cairn you take apart goes
+  dark as fast. When you place or remove a stone, or write or remove a sign, your game tells the
+  server where, and a second later the server looks at just that spot. Nothing extra runs while nobody is building, and the full search every 20 seconds still
   runs, so nothing is missed.
 - **`QuickChecks`** (on by default, set on the server) turns this off.
 - `cairn status` says how many quick checks have run and how many lit or changed a cairn.
