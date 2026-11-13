@@ -120,9 +120,24 @@ Tombstone light row). It superseded 0.10.3, which never went to the store: the s
 answers 404 for 0.10.1, 0.10.2 and 0.10.3, all of which 0.11.0 includes. Verified in game the
 same day on Storm10 (details in the Tombstone light row).
 
-**Status: 0.11.0 live on the store** (since 2026-10-19) under team `RavenIronStudios`,
+**CUT 2026-11-13: v0.12.0, LIVE ON HEXIUM the same day** (store API `date_created`
+20:44:58Z, dependency `BepInExPack_Valheim-5.4.2360`). Light colours as colour settings with
+sliders, a cairn taking its sign's colour, quick checks (a cairn lights or goes out about a
+second after the stone that decides it), and signs allowed on stones. It includes 0.11.1, the
+1.0.21 rebuild, which had lived only on the `release/0.11.1` branch. Merged to main as
+`8149073` (a local merge, then pushed; no PR), whose tree is identical to `e3e2c35`, the
+commit tested on Storm10. Tagged `v0.12.0` and on GitHub as a pre-release with the zip. The
+zip was built by `tools\package.ps1` from a fresh clone of `e3e2c35`: zip md5 `0efe4579...`,
+DLL md5 `07694b36...`, revprobe-clean on 1.0.21. **Checked after upload: the DLL Hexium
+serves is that same `07694b36...`** (revprobe-clean), and the GitHub asset is byte-identical
+to the local zip. Hexium's zip as a whole differs, because the store rewrites `manifest.json`
+on upload: 4-space indent, LF, no final newline, and `"dependencies": []`. The dependency
+lives in the store API instead, which is what mod managers read. Its 0.11.1 zip is the same,
+so this is how Hexium works, not a fault in this upload.
+
+**Status: 0.12.0 live on the store** (since 2026-11-13) under team `RavenIronStudios`,
 categorised "Client & Server - must be installed on both". The store's version list also
-holds 0.10.0 and 0.9.1. The owner does every Hexium upload.
+holds 0.11.1, 0.11.0, 0.10.0 and 0.9.1. The owner does every Hexium upload.
 **Next time anyone touches Cairn, finish the two open checks for tombstone lights.** Watch the
 light go out once the tombstone is emptied. Have a second player confirm they do NOT see it. 0.7.0, the first release, was built,
 verified and shipped in a single day (published 2026-09-02/03).
