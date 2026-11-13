@@ -1,6 +1,7 @@
 using System;
 using HarmonyLib;
 using RavenIron.Cairn.Config;
+using RavenIron.Cairn.Core;
 using RavenIron.Cairn.Net;
 using UnityEngine;
 
@@ -28,7 +29,8 @@ namespace RavenIron.Cairn.Patches
                     if (piece == null || __instance != Player.m_localPlayer) return;
 
                     string prefab = piece.gameObject.name;
-                    if (Listed(ModConfig.StonePrefabs.Value, prefab) || Listed(ModConfig.SignPrefabs.Value, prefab))
+                    if (StoneStacking.IsListed(ModConfig.StonePrefabs.Value, prefab) ||
+                        StoneStacking.IsListed(ModConfig.SignPrefabs.Value, prefab))
                         CairnNotice.Notify(pos);
                 }
                 catch (Exception ex)
@@ -52,15 +54,6 @@ namespace RavenIron.Cairn.Patches
                     Cairn.Log.LogWarning($"QuickNotice: sign notice failed: {ex.Message}");
                 }
             }
-        }
-
-        /// <summary>Is <paramref name="prefab"/> one of the comma-separated names? Ordinal, like the sweep.</summary>
-        private static bool Listed(string csv, string prefab)
-        {
-            if (string.IsNullOrEmpty(csv) || string.IsNullOrEmpty(prefab)) return false;
-            foreach (string raw in csv.Split(','))
-                if (string.Equals(raw.Trim(), prefab, StringComparison.Ordinal)) return true;
-            return false;
         }
     }
 }

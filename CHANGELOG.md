@@ -22,6 +22,9 @@
   runs, so nothing is missed.
 - **`QuickChecks`** (on by default, set on the server) turns this off.
 - `cairn status` says how many quick checks have run and how many lit or changed a cairn.
+- **A sign can go on the stones**, so a cairn can wear its name. Only signs (`SignPrefabs`):
+  walls, beams and everything else still cannot be built on a stone. Each player needs 0.12.0
+  to place one.
 - The quick light needs 0.12.0 on the server and on the player who builds. With an older
   server or an older player, cairns light within about twenty seconds, as before.
 

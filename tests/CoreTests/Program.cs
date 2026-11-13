@@ -682,7 +682,16 @@ namespace Cairn.Tests
             // The fence: nothing else on a stone.
             Check(StoneStacking.Refuse(true, "wood_wall_half", "Placeable_Stone(Clone)"), "a wooden wall may NOT stand on a stone");
             Check(StoneStacking.Refuse(true, "piece_workbench", "Placeable_Stone(Clone)"), "nor a workbench");
-            Check(StoneStacking.Refuse(true, "sign", "Placeable_Stone(Clone)"), "nor a sign — a cairn's sign stands BESIDE it, on the ground");
+            Check(StoneStacking.Refuse(true, "sign", "Placeable_Stone(Clone)"), "a sign is refused when no sign list is given");
+            string signs = ModConfig.SignPrefabs.Value;
+            Check(!StoneStacking.Refuse(true, "sign", "Placeable_Stone(Clone)", signs), "a sign MAY go on a stone (0.12.0)");
+            Check(!StoneStacking.Refuse(true, "sign_notext", "Placeable_Stone(Clone)", signs), "so may the plain sign");
+            Check(StoneStacking.Refuse(true, "wood_wall_half", "Placeable_Stone(Clone)", signs), "a wall still may not, sign list or no");
+            Check(StoneStacking.Refuse(true, "piece_workbench", "Placeable_Stone(Clone)", signs), "nor a workbench");
+            Check(StoneStacking.Refuse(true, "Sign", "Placeable_Stone(Clone)", signs), "prefab names are matched exactly, case included");
+            Check(StoneStacking.Refuse(true, "sign", "Placeable_Stone(Clone)", ""), "an empty sign list lets no sign through");
+            Check(StoneStacking.IsListed("sign, sign_notext", "sign_notext(Clone)"), "list entries are trimmed and the instance suffix stripped");
+            Check(!StoneStacking.IsListed("sign,sign_notext", "signpost"), "a name is matched whole, not as a prefix");
 
             // Everything that is not 'onto a stone' is vanilla's business, untouched.
             Check(!StoneStacking.Refuse(true, "wood_wall_half", "stone_floor_2x2(Clone)"), "building on other stone pieces is untouched");

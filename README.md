@@ -51,7 +51,7 @@ It adds no pieces, no assets and nothing to your screen. It changes one vanilla 
 | **Stack them** | a stone may go on another stone, so a cairn can stand tall rather than lie in a ring |
 | **Spread them out** | it stays a scatter: a cairn is narrow and a wall is wide, and that is how Cairn tells them apart |
 | **Wait a couple of seconds** | a fire appears on the crown |
-| **Write on a sign within six metres** | the cairn takes that name |
+| **Write on a sign within six metres** | the cairn takes that name. The sign can stand on the ground or hang on the stones themselves |
 
 <details>
 <summary>📖 <b>Read the saga</b> — what counts as a cairn</summary>
