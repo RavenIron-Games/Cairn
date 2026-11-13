@@ -341,11 +341,12 @@ namespace RavenIron.Cairn.Config
 
             HeldColours = config.Bind(
                 "4 - The light", "HeldColours",
-                "GreydwarfEye=4A9EFF,SurtlingCore=FF4020,Crystal=E8F4FF,Ruby=E0115F,Amber=FFBF1F,BlackCore=8A3CFF",
+                "SurtlingCore=FF4020,MushroomBlue=3A7BFF,DragonTear=9FE6FF,MushroomYellow=FFE040,Dandelion=FFD21F,AncientGemstoneGreen=3DDC6A,AncientGemstonePurple=A050FF,AncientGemstoneOrange=FF8A1F,BlackCore=8A3CFF,Raspberry=E0115F",
                 "Which held items colour a cairn, and how: ItemPrefab=RRGGBB (or RRGGBBAA), " +
                 "comma-separated. These are the items' PREFAB names, such as SurtlingCore, not the " +
-                "names shown in game. The server log names any it does not recognise when a world " +
-                "loads. An item not on the list leaves the cairn's colour alone. " +
+                "names shown in game. Only items an item stand will hold can work: the console command " +
+                "`cairn holdable` lists them, and the server log names any listed item that is unknown or that " +
+                "no stand will take when a world loads. An item not on the list leaves the cairn's colour alone. " +
                 "Set it on the server: it decides the colour, and every player sees the same one.");
 
             BeaconOcclusion = config.Bind(
