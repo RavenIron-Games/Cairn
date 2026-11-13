@@ -173,19 +173,41 @@ namespace RavenIron.Cairn.Systems
             if (_heldNamesChecked) return;
             ObjectDB db = ObjectDB.instance;
             if (db == null || db.m_items == null || db.m_items.Count == 0) return;   // not ready yet; try next tick
+            if (ZNetScene.instance == null) return;
             _heldNamesChecked = true;
 
-            var unknown = new List<string>();
-            foreach (string item in HeldColour.Parse(ModConfig.HeldColours.Value).Keys)
-                if (db.GetItemPrefab(item) == null) unknown.Add(item);
+            try
+            {
+                List<KeyValuePair<string, ItemStand>> stands = Holdable.Stands();
+                var unknown = new List<string>();
+                var unholdable = new List<string>();
+                var fine = new List<string>();
+                foreach (string item in HeldColour.Parse(ModConfig.HeldColours.Value).Keys)
+                {
+                    GameObject prefab = db.GetItemPrefab(item);
+                    if (prefab == null) { unknown.Add(item); continue; }
+                    string by = Holdable.HeldBy(stands, prefab);
+                    if (by.Length == 0) unholdable.Add(item); else fine.Add($"{item} ({by})");
+                }
 
-            if (unknown.Count > 0)
-                Cairn.Log.LogWarning(
-                    $"[{Name}] HeldColours names {unknown.Count} item(s) this game does not have: " +
-                    $"{string.Join(", ", unknown.ToArray())}. Use the item's prefab name (e.g. SurtlingCore); " +
-                    "those entries colour nothing.");
-            else
-                Cairn.Log.LogInfo($"[{Name}] HeldColours: every listed item exists in this game.");
+                if (unknown.Count > 0)
+                    Cairn.Log.LogWarning(
+                        $"[{Name}] HeldColours names {unknown.Count} item(s) this game does not have: " +
+                        $"{string.Join(", ", unknown.ToArray())}. Use the item's prefab name (e.g. SurtlingCore); " +
+                        "those entries colour nothing.");
+                if (unholdable.Count > 0)
+                    Cairn.Log.LogWarning(
+                        $"[{Name}] HeldColours names {unholdable.Count} item(s) no item stand will take in this game: " +
+                        $"{string.Join(", ", unholdable.ToArray())}. Vanilla only lets a stand hold an item with a " +
+                        "model made for it. `cairn holdable` lists the ones it will take.");
+                Cairn.Log.LogInfo(
+                    $"[{Name}] HeldColours: {fine.Count} item(s) can be held — " +
+                    $"{(fine.Count > 0 ? string.Join(", ", fine.ToArray()) : "none")}.");
+            }
+            catch (Exception ex)
+            {
+                Cairn.Log.LogWarning($"[{Name}] HeldColours check failed: {ex.Message}");
+            }
         }
 
         /// <summary>The colour of what one holder ZDO holds, or "" for nothing listed (or empty).</summary>
