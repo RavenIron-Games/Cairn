@@ -76,7 +76,7 @@ namespace RavenIron.Cairn.Patches
                             Cairn.Log.LogWarning(
                                 $"stone stacking ON: {StoneStacking.StonePrefab} now holds up what is stacked on it " +
                                 $"(vanilla: supports={_vanillaSupports.ToString().ToLowerInvariant()}), and only a stone " +
-                                "may be placed on a stone. This changes a VANILLA piece — set StackableStones = false " +
+                                "or a sign may be placed on a stone. This changes a VANILLA piece — set StackableStones = false " +
                                 "to leave it alone.");
                         else
                             Cairn.Log.LogInfo("stone stacking off: Placeable_Stone is left exactly as vanilla made it.");

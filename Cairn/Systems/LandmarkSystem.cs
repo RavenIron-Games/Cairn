@@ -213,7 +213,7 @@ namespace RavenIron.Cairn.Systems
 
             if (r.Changed > 0 || r.Pruned > 0) Net.LandmarkSync.RequestBroadcast();
 
-            LogRotation(r.Piles, r.Changed, r.Pruned, r.Carried);
+            LogRotation(r.Piles + r.Skipped, r.Skipped, r.Changed, r.Pruned, r.Carried);
 
             _stones.Clear();
             _signPositions.Clear();
@@ -335,7 +335,7 @@ namespace RavenIron.Cairn.Systems
         /// the log could not say which of those it was watching. One line per rotation is not
         /// noise; an unfalsifiable quiet is.
         /// </summary>
-        private void LogRotation(int pileCount, int changed, int pruned, int carried)
+        private void LogRotation(int pileCount, int leftToQuick, int changed, int pruned, int carried)
         {
             var parts = new List<string>(_foundCounts.Count);
             int signsFound = 0, stonesFound = 0;
@@ -361,6 +361,7 @@ namespace RavenIron.Cairn.Systems
             Cairn.Log.LogInfo(
                 $"[{Name}] sweep complete ({string.Join(", ", parts.ToArray())}) — " +
                 $"{pileCount} pile(s), {LandmarkStore.Count} landmark(s), {changed} changed, {pruned} pruned" +
+                (leftToQuick > 0 ? $" ({leftToQuick} pile(s) left as a quick check just set them)" : "") +
                 (carried > 0 ? $", {carried} history carried across a drift" : "") +
                 (_rotationClean ? "" : ", PRUNING SKIPPED (a prefab failed this rotation)") +
                 tail);

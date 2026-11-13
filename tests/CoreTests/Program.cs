@@ -852,6 +852,12 @@ namespace Cairn.Tests
             Equal(0, r.Pruned, "quick check: nothing out of scope is pruned");
             Check(LandmarkStore.TryGet(new LandmarkKey(100, 2, 0), out _), "the far cairn survives a quick check elsewhere");
 
+            // A sweep that leaves a spot to a quick check still COUNTS the piles it left there.
+            r = LedgerUpdate.Apply(stones, signPos, signName, signAuthor, p => p.x > 50f, true, 2500L);
+            Equal(1, r.Piles, "partial scope: the pile in scope is counted");
+            Equal(1, r.Skipped, "and the one left out is counted as skipped, not lost");
+            Equal(0, r.Changed + r.Pruned, "and nothing moved");
+
             // --- inside the scope, what is not seen is gone ----------------------------------
             r = LedgerUpdate.Apply(new List<Vector3>(), noSigns, none, none,
                 Near(new Vector3(100f, 0f, 0f), 24f), true, 3000L);

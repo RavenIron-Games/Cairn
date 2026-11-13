@@ -25,6 +25,7 @@ namespace RavenIron.Cairn.Core
         public struct Result
         {
             public int Piles;      // piles found in scope
+            public int Skipped;    // piles found OUTSIDE the scope, left exactly as they were
             public int Changed;    // ledger rows added or altered
             public int Pruned;     // rows removed
             public int Carried;    // histories carried across a crown drift
@@ -64,7 +65,7 @@ namespace RavenIron.Cairn.Core
                 // A sign claimed by a pile OUTSIDE the scope is still claimed: it must not be
                 // written as a named place with no light just because its pile was not in scope.
                 if (sign >= 0) claimedSign[sign] = true;
-                if (!inScope(pile.Top)) continue;
+                if (!inScope(pile.Top)) { result.Skipped++; continue; }
 
                 result.Piles++;
 
