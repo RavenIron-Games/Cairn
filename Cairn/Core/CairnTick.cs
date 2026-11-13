@@ -156,6 +156,7 @@ namespace RavenIron.Cairn.Core
             // console with no system registered at all, and an unsaved change is invisible
             // until the next restart loses it.
             MaybeAutosave(now);
+            Net.CairnNotice.EnsureWatching();
             Net.CairnNotice.Process(now);
             MaybeBroadcastBeacons(now);
             MaybeBroadcastTombstones(now);

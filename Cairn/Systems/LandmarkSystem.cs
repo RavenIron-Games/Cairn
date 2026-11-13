@@ -55,6 +55,13 @@ namespace RavenIron.Cairn.Systems
         private readonly List<Target> _targets = new List<Target>(8);
         private int _cursor;
 
+        // Every stone and sign prefab by its hash, so a destroyed object can be recognised with
+        // one lookup (CairnNotice.OnZdoDestroyed). Rebuilt with _targets.
+        private readonly Dictionary<int, string> _watchedHashes = new Dictionary<int, string>(8);
+
+        /// <summary>Is this prefab hash a stone or sign the sweep looks for? Names it if so.</summary>
+        public bool IsWatched(int prefabHash, out string prefab) => _watchedHashes.TryGetValue(prefabHash, out prefab);
+
         // GetAllZDOsWithPrefabIterative's resume state for the prefab currently mid-walk.
         private readonly List<ZDO> _found = new List<ZDO>(64);
         private int _sweepIndex;
@@ -98,7 +105,12 @@ namespace RavenIron.Cairn.Systems
 
             var signs = new List<string>();
             var stones = new List<string>();
-            foreach (Target t in _targets) (t.IsSign ? signs : stones).Add(t.Prefab);
+            _watchedHashes.Clear();
+            foreach (Target t in _targets)
+            {
+                (t.IsSign ? signs : stones).Add(t.Prefab);
+                _watchedHashes[t.Prefab.GetStableHashCode()] = t.Prefab;
+            }
 
             Cairn.Log.LogInfo(
                 $"[{Name}] sweeping every {IntervalSeconds:F1}s per prefab, {ModConfig.LandmarkRotationSeconds.Value:F0}s per rotation — " +

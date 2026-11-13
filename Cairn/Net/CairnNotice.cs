@@ -6,8 +6,9 @@ using UnityEngine;
 namespace RavenIron.Cairn.Net
 {
     /// <summary>
-    /// Client → server: "a stone was just placed or removed, or a sign written or removed, HERE"
-    /// (0.12.0).
+    /// Client → server: "a stone was just placed, or a sign written, HERE" (0.12.0). Removals
+    /// need no message: the authority watches vanilla's own record of destroyed objects
+    /// (<see cref="EnsureWatching"/>).
     ///
     /// The full world sweep notices a new cairn within about 20 seconds, and making it run more
     /// often would cost every server time on every lap. Instead the player's own game says where
@@ -149,21 +150,90 @@ namespace RavenIron.Cairn.Net
             Enqueue(spot, now);
         }
 
-        private static void Enqueue(Vector3 spot, float now)
+        private static ZDOMan _watchingOn;
+
+        /// <summary>
+        /// Authority, every frame: hear about every destroyed object from vanilla's own
+        /// `ZDOMan.m_onZDODestroyed` (public; vanilla's ZNetScene subscribes the same way, with
+        /// Delegate.Combine). It fires on the server for EVERY destroyed object, whoever destroyed
+        /// it and however — the hammer, damage, a stack falling once the stone under it is gone —
+        /// and on a single-player or hosted game for its own destroys too. So a removal needs no
+        /// message from the player at all, and a player on an older build is covered.
+        ///
+        /// It replaced a client-side postfix on `WearNTear.Destroy` (0.12.0, never shipped), which
+        /// on Storm10 sent ONE notice for four stones gone: the bottom two removed by hammer and
+        /// two that fell. Why the other three did not reach it was not found; the server's own
+        /// record of what was destroyed cannot miss one, so it stopped mattering.
+        /// </summary>
+        public static void EnsureWatching()
+        {
+            ZDOMan man = ZDOMan.instance;
+            if (man == null || ReferenceEquals(man, _watchingOn)) return;
+            StopWatching();
+            man.m_onZDODestroyed = (Action<ZDO>)Delegate.Combine(man.m_onZDODestroyed, new Action<ZDO>(OnZdoDestroyed));
+            _watchingOn = man;
+        }
+
+        private static void StopWatching()
+        {
+            if (_watchingOn == null) return;
+            try
+            {
+                _watchingOn.m_onZDODestroyed = (Action<ZDO>)Delegate.Remove(_watchingOn.m_onZDODestroyed, new Action<ZDO>(OnZdoDestroyed));
+            }
+            catch (Exception) { /* the old world's ZDOMan is on its way out anyway */ }
+            _watchingOn = null;
+        }
+
+        /// <summary>
+        /// Runs INSIDE vanilla's ZDOMan.HandleDestroyedZDO, before it unlinks the object, for every
+        /// object destroyed anywhere in the world. So it costs one dictionary lookup for anything
+        /// that is not a stone or a sign, and it must never throw: an exception here would abort
+        /// vanilla's own cleanup of that object (house rule 3).
+        /// </summary>
+        private static void OnZdoDestroyed(ZDO zdo)
+        {
+            try
+            {
+                if (zdo == null || !ModConfig.Enabled.Value || !ModConfig.QuickChecks.Value) return;
+                Systems.LandmarkSystem system = Systems.LandmarkSystem.Instance;
+                if (system == null || !system.IsWatched(zdo.GetPrefab(), out string prefab)) return;
+
+                Vector3 spot = zdo.GetPosition();
+                if (ModConfig.VerboseLogging.Value)
+                    Cairn.Log.LogInfo($"CairnNotice: {prefab} destroyed at ({spot.x:F0}, {spot.z:F0}) " +
+                                      $"[{DateTime.Now:HH:mm:ss.fff}]");
+                // The object is already gone from the world's record: there is nothing to wait for
+                // a second look at, so no retry.
+                Enqueue(spot, Time.realtimeSinceStartup, mayRetry: false);
+            }
+            catch (Exception ex)
+            {
+                Cairn.Log.LogWarning($"CairnNotice: removal watch failed: {ex.Message}");
+            }
+        }
+
+        private static void Enqueue(Vector3 spot, float now, bool mayRetry = true)
         {
             if (!ModConfig.QuickChecks.Value) return;
 
             // A pile is built a stone at a time: notices close together become ONE check, a second
-            // after the latest stone.
+            // after the latest stone. A removal merged into a pending placement keeps that
+            // placement's retry; a placement merged into anything earns one.
             for (int i = 0; i < _pending.Count; i++)
             {
                 if (Core.LedgerUpdate.DistanceXZ(_pending[i].Spot, spot) > MergeMeters) continue;
-                _pending[i] = new Pending { Spot = spot, Due = now + WaitSeconds, Retried = false };
+                _pending[i] = new Pending
+                {
+                    Spot = spot,
+                    Due = now + WaitSeconds,
+                    Retried = mayRetry ? false : _pending[i].Retried,
+                };
                 return;
             }
 
             if (_pending.Count >= MaxPending) return;
-            _pending.Add(new Pending { Spot = spot, Due = now + WaitSeconds });
+            _pending.Add(new Pending { Spot = spot, Due = now + WaitSeconds, Retried = !mayRetry });
         }
 
         /// <summary>
@@ -210,6 +280,7 @@ namespace RavenIron.Cairn.Net
 
         public static void ResetForWorldChange()
         {
+            StopWatching();
             _pending.Clear();
             _windowStart.Clear();
             _windowCount.Clear();
