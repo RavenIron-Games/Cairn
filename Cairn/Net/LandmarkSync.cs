@@ -94,6 +94,24 @@ namespace RavenIron.Cairn.Net
             }
         }
 
+        private static bool _broadcastRequested;
+
+        /// <summary>
+        /// The ledger just changed: send the lights NOW rather than at the next 5-second tick
+        /// (0.12.0), and let a host's or single player's own renderer redraw at once. Called by
+        /// the quick check and by a sweep that changed something.
+        /// </summary>
+        public static void RequestBroadcast()
+        {
+            _broadcastRequested = true;
+            if (Persistence.IsLoaded) Revision++;   // the authority's renderer reads the store directly
+        }
+
+        /// <summary>Is a send waiting? CairnTick sends, then clears it.</summary>
+        public static bool BroadcastRequested => _broadcastRequested;
+
+        public static void ClearBroadcastRequest() => _broadcastRequested = false;
+
         /// <summary>Lit cairns in the ledger at the last broadcast. -1 before the first.</summary>
         public static int LastLit { get; private set; } = -1;
 

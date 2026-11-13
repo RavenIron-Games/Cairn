@@ -18,7 +18,8 @@ namespace RavenIron.Cairn.Patches
     /// 2. THE FENCE. The flag alone lets ANY piece stand on a pebble and draw support from it —
     ///    a hut on a one-stone foundation, which is very likely why Iron Gate set it false. So
     ///    a postfix on `Player.UpdatePlacementGhost` refuses a placement vanilla judged valid when
-    ///    the ghost is not a stone and the piece under the crosshair is one. Rocks on rocks.
+    ///    the ghost is not a stone and the piece under the crosshair is one. Rocks on rocks —
+    ///    and, since 0.12.0, a sign (`SignPrefabs`) on a stone, so a cairn can wear its name.
     ///
     /// This edits a VANILLA piece's behaviour, on by default — an amended locked decision
     /// (owner, 2026-10-16), announced at boot and switchable with `StackableStones`. It must be
@@ -75,7 +76,7 @@ namespace RavenIron.Cairn.Patches
                             Cairn.Log.LogWarning(
                                 $"stone stacking ON: {StoneStacking.StonePrefab} now holds up what is stacked on it " +
                                 $"(vanilla: supports={_vanillaSupports.ToString().ToLowerInvariant()}), and only a stone " +
-                                "may be placed on a stone. This changes a VANILLA piece — set StackableStones = false " +
+                                "or a sign may be placed on a stone. This changes a VANILLA piece — set StackableStones = false " +
                                 "to leave it alone.");
                         else
                             Cairn.Log.LogInfo("stone stacking off: Placeable_Stone is left exactly as vanilla made it.");
@@ -156,7 +157,8 @@ namespace RavenIron.Cairn.Patches
                     if (!ray(__instance, out _, out _, out Piece target, out _, out _, water)) return;
                     if (target == null) return;
 
-                    if (!StoneStacking.Refuse(true, ___m_placementGhost.name, target.gameObject.name)) return;
+                    if (!StoneStacking.Refuse(true, ___m_placementGhost.name, target.gameObject.name,
+                                              ModConfig.SignPrefabs.Value)) return;
 
                     // TryPlacePiece re-runs this method and then switches on the status, so this one
                     // assignment blocks the click and shows vanilla's own "invalid placement" message.

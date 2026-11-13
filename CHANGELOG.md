@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.12.0
+
+**Pick the colour of the lights in game, with sliders, and give each cairn its own colour.**
+
+- **A cairn takes the colour of its sign.** Write the sign as `<color=#4A9EFF>Home</color>` and
+  that cairn burns blue for everyone; the sign shows the name in blue too. Cairns whose sign has
+  no colour use your `BeaconColour`.
+- **`UseSignColours = false`** ignores sign colours in your own game, so every cairn uses your
+  `BeaconColour`.
+- `BeaconColour` and `TombstoneColour` are now colour settings. With the BepInEx Configuration
+  Manager mod installed, press F1 and they show a colour swatch with red, green, blue and alpha
+  sliders. The lights change as you drag.
+- Alpha now sets how strong a light is. All the way down makes it invisible.
+- A colour you already set, like `4A9EFF`, carries over as it is. Cairn now writes it back with
+  the alpha on the end, as `4A9EFFFF`.
+- Colours are read by each player's own game, so the server does not need 0.12.0 for them.
+- **A new cairn lights in a couple of seconds**, not twenty, and a cairn you take apart goes
+  dark as fast. When you place a stone or write a sign, your game tells the server where; when
+  a stone or sign is removed, broken or falls, the server sees it go. A second later it looks at
+  just that spot. Nothing extra runs while nobody is building, and the full search every 20
+  seconds still runs, so nothing is missed.
+- **`QuickChecks`** (on by default, set on the server) turns this off.
+- `cairn status` says how many quick checks have run and how many lit or changed a cairn.
+- **A sign can go on the stones**, so a cairn can wear its name. Only signs (`SignPrefabs`):
+  walls, beams and everything else still cannot be built on a stone. Each player needs 0.12.0
+  to place one.
+- The quick light needs 0.12.0 on the server and on the player who builds. With an older
+  server or an older player, cairns light within about twenty seconds, as before.
+
+## 0.11.1 — 2026-11-01
+
+Updated due to the Valheim 1.0.21 patch. Rebuilt and checked against Valheim 1.0.21 (network
+version 41); no code changes beyond the version string. The BepInExPack dependency is now 5.4.2360,
+and the store page's website link is https://ravenirongames.com/.
+
 ## 0.11.0 — 2026-10-19
 
 **A red light over your tombstone, if you want one.** Off by default.

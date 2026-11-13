@@ -43,13 +43,14 @@ namespace Cairn.Tests
                 FormatParseTests();
                 SignReadingTests();
                 DisplayTextTests();
-                HexColourTests();
                 PileDetectionTests();
                 BeaconSelectionTests();
                 ConfigLedgerTests();
                 StoneStackingTests();
                 NamedListingTests();
                 TombstoneLightsTests();
+                SignColourTests();
+                LedgerUpdateTests();
                 StoreTests();
                 PersistenceTests();
             }
@@ -333,43 +334,6 @@ namespace Cairn.Tests
                   "and says it was cut");
         }
 
-        // ---- the beacon colour -------------------------------------------------------------
-
-        private static void HexColourTests()
-        {
-            Section("HexColour");
-
-            Check(HexColour.TryParse("FFB85A", out float r, out float g, out float b, out float a),
-                  "a plain six-digit hex parses");
-            Check(Math.Abs(r - 1f) < 0.001f, "red is full");
-            Check(Math.Abs(g - 0.722f) < 0.005f, "green is 0xB8");
-            Check(Math.Abs(b - 0.353f) < 0.005f, "blue is 0x5A");
-            Check(Math.Abs(a - 1f) < 0.001f, "alpha defaults to opaque");
-
-            Check(HexColour.TryParse("#FFB85A", out _, out _, out _, out _), "a leading hash is allowed");
-            Check(HexColour.TryParse("  #FFB85A  ", out _, out _, out _, out _), "surrounding space is allowed");
-            Check(HexColour.TryParse("ffb85a", out _, out _, out _, out _), "lower case is allowed");
-
-            // Shorthand, because people type it.
-            Check(HexColour.TryParse("F00", out r, out g, out b, out _), "three-digit shorthand parses");
-            Check(Math.Abs(r - 1f) < 0.001f && g < 0.001f && b < 0.001f, "and expands correctly");
-
-            Check(HexColour.TryParse("FFB85A80", out _, out _, out _, out a), "eight digits carry alpha");
-            Check(Math.Abs(a - 0.502f) < 0.005f, "and the alpha is read");
-
-            // The failures that matter: refusing beats painting with garbage.
-            Check(!HexColour.TryParse("", out _, out _, out _, out _), "empty is refused");
-            Check(!HexColour.TryParse(null, out _, out _, out _, out _), "null is refused");
-            Check(!HexColour.TryParse("FFBB", out _, out _, out _, out _), "four digits are refused");
-            Check(!HexColour.TryParse("GGGGGG", out _, out _, out _, out _), "non-hex letters are refused");
-            Check(!HexColour.TryParse("orange", out _, out _, out _, out _), "a colour name is refused");
-
-            // A refusal must not scribble on the caller's outputs.
-            r = 0.5f;
-            HexColour.TryParse("nonsense", out r, out _, out _, out _);
-            Check(Math.Abs(r) < 0.001f, "a refused parse zeroes rather than half-writing");
-        }
-
         // ---- pile detection --------------------------------------------------------------
 
         private static void PileDetectionTests()
@@ -590,6 +554,40 @@ namespace Cairn.Tests
 
         // ---- stone stacking ---------------------------------------------------------------
 
+        private static void SignColourTests()
+        {
+            Section("SignColour");
+            float r, g, b, a;
+
+            Check(SignColour.TryRead("<color=#4A9EFF>Home</color>", out r, out g, out b, out a), "a hex colour tag is read");
+            Check(Math.Abs(r - 0x4A / 255f) < 0.002f && Math.Abs(g - 0x9E / 255f) < 0.002f && Math.Abs(b - 1f) < 0.002f && Math.Abs(a - 1f) < 0.002f,
+                  "#4A9EFF is cold blue, fully strong");
+
+            Check(SignColour.TryRead("<color=#F80>Ford</color>", out r, out g, out b, out a)
+                  && Math.Abs(r - 1f) < 0.002f && Math.Abs(g - 0x88 / 255f) < 0.002f && b < 0.002f, "three-digit shorthand doubles each digit");
+            Check(SignColour.TryRead("<color=#FF000080>Half</color>", out _, out _, out _, out a) && Math.Abs(a - 0x80 / 255f) < 0.002f,
+                  "eight digits carry the alpha");
+            Check(SignColour.TryRead("<COLOR = \"#00ff00\">Quoted</COLOR>", out r, out g, out b, out _) && g > 0.99f && r < 0.01f,
+                  "upper case, spaces, quotes and lower-case hex are all fine");
+            Check(SignColour.TryRead("<color=red>Red Cliff</color>", out r, out g, out b, out _) && r > 0.99f && g < 0.01f,
+                  "a colour name the sign itself understands is read");
+            Check(SignColour.TryRead("Old <color=#00FF00>Green</color> <color=#FF0000>Red</color>", out r, out g, out _, out _) && g > 0.99f && r < 0.01f,
+                  "the FIRST colour tag wins");
+
+            Check(!SignColour.TryRead("Home", out _, out _, out _, out _), "a plain name has no colour");
+            Check(!SignColour.TryRead("", out _, out _, out _, out _), "an empty name has no colour");
+            Check(!SignColour.TryRead(null, out _, out _, out _, out _), "null is not a crash");
+            Check(!SignColour.TryRead("<color=#GGGGGG>Bad</color>", out _, out _, out _, out _), "bad hex is no colour");
+            Check(!SignColour.TryRead("<color=#FFFF>Four</color>", out _, out _, out _, out a) || Math.Abs(a - 1f) < 0.002f,
+                  "four-digit shorthand is RGBA, never a half-read");
+            Check(!SignColour.TryRead("<color=#12345>Five</color>", out _, out _, out _, out _), "five digits are refused");
+            Check(!SignColour.TryRead("<color=chartreuse>Odd</color>", out _, out _, out _, out _), "a name the sign cannot show is no colour");
+            Check(!SignColour.TryRead("<color=#FF0000 Unclosed", out _, out _, out _, out _), "an unclosed tag is no colour");
+            Check(!SignColour.TryRead("<colour=#FF0000>British</colour>", out _, out _, out _, out _), "only the tag the sign understands counts");
+
+            Equal(true, ModConfig.UseSignColours.Value, "sign colours are used by default; false forces your own colour everywhere");
+        }
+
         private static void TombstoneLightsTests()
         {
             Section("TombstoneLights");
@@ -622,7 +620,14 @@ namespace Cairn.Tests
             Equal(256, TombstoneLights.MaxPerPush, "a push carries at most 256 tombstones");
             Equal(false, ModConfig.EnableTombstoneLights.Value, "tombstone lights are OFF by default (owner, 2026-10-19)");
             Equal(true, ModConfig.ShowTombstoneLight.Value, "a player's game shows its own light when the server allows it");
-            Equal("FF2A2A", ModConfig.TombstoneColour.Value, "the default tombstone colour is red");
+            Color tomb = ModConfig.TombstoneColour.Value;
+            Check(Math.Abs(tomb.r - 1f) < 0.002f && Math.Abs(tomb.g - 42f / 255f) < 0.002f
+                  && Math.Abs(tomb.b - 42f / 255f) < 0.002f && Math.Abs(tomb.a - 1f) < 0.002f,
+                  "the default tombstone colour is red, FF2A2A, fully strong");
+            Color ember = ModConfig.BeaconColour.Value;
+            Check(Math.Abs(ember.r - 1f) < 0.002f && Math.Abs(ember.g - 184f / 255f) < 0.002f
+                  && Math.Abs(ember.b - 90f / 255f) < 0.002f && Math.Abs(ember.a - 1f) < 0.002f,
+                  "the default beacon colour is still firelight, FFB85A, fully strong");
         }
 
         private static void NamedListingTests()
@@ -677,7 +682,16 @@ namespace Cairn.Tests
             // The fence: nothing else on a stone.
             Check(StoneStacking.Refuse(true, "wood_wall_half", "Placeable_Stone(Clone)"), "a wooden wall may NOT stand on a stone");
             Check(StoneStacking.Refuse(true, "piece_workbench", "Placeable_Stone(Clone)"), "nor a workbench");
-            Check(StoneStacking.Refuse(true, "sign", "Placeable_Stone(Clone)"), "nor a sign — a cairn's sign stands BESIDE it, on the ground");
+            Check(StoneStacking.Refuse(true, "sign", "Placeable_Stone(Clone)"), "a sign is refused when no sign list is given");
+            string signs = ModConfig.SignPrefabs.Value;
+            Check(!StoneStacking.Refuse(true, "sign", "Placeable_Stone(Clone)", signs), "a sign MAY go on a stone (0.12.0)");
+            Check(!StoneStacking.Refuse(true, "sign_notext", "Placeable_Stone(Clone)", signs), "so may the plain sign");
+            Check(StoneStacking.Refuse(true, "wood_wall_half", "Placeable_Stone(Clone)", signs), "a wall still may not, sign list or no");
+            Check(StoneStacking.Refuse(true, "piece_workbench", "Placeable_Stone(Clone)", signs), "nor a workbench");
+            Check(StoneStacking.Refuse(true, "Sign", "Placeable_Stone(Clone)", signs), "prefab names are matched exactly, case included");
+            Check(StoneStacking.Refuse(true, "sign", "Placeable_Stone(Clone)", ""), "an empty sign list lets no sign through");
+            Check(StoneStacking.IsListed("sign, sign_notext", "sign_notext(Clone)"), "list entries are trimmed and the instance suffix stripped");
+            Check(!StoneStacking.IsListed("sign,sign_notext", "signpost"), "a name is matched whole, not as a prefix");
 
             // Everything that is not 'onto a stone' is vanilla's business, untouched.
             Check(!StoneStacking.Refuse(true, "wood_wall_half", "stone_floor_2x2(Clone)"), "building on other stone pieces is untouched");
@@ -790,6 +804,107 @@ namespace Cairn.Tests
             Equal(250, ModConfig.BeaconMaxCount.Value, "the new default the rung moves to is 250");
             Equal(100, ModConfig.PileMaxPieces.Value, "the new default the 0.10.0 rung moves to is 100");
             Equal(2, ConfigLedger.CurrentVersion, "0.10.0 is config version 2");
+        }
+
+        // ---- ledger update (the sweep's rules, and the quick check's scope) ------------------
+
+        /// <summary>Four stones straight up at (x, z): a cairn whose light sits at (x, 2.4, z).</summary>
+        private static List<Vector3> Column(float x, float z)
+        {
+            return new List<Vector3> {
+                new Vector3(x, 0f, z), new Vector3(x, 0.8f, z), new Vector3(x, 1.6f, z), new Vector3(x, 2.4f, z)
+            };
+        }
+
+        private static Func<Vector3, bool> Near(Vector3 spot, float r) => p => LedgerUpdate.DistanceXZ(p, spot) <= r;
+
+        private static void LedgerUpdateTests()
+        {
+            Section("LedgerUpdate");
+
+            var none = new List<string>();
+            var noSigns = new List<Vector3>();
+            Func<Vector3, bool> world = p => true;
+
+            // --- the whole world in scope: what the full sweep always did --------------------
+            LandmarkStore.Clear();
+            var stones = new List<Vector3>();
+            stones.AddRange(Column(0f, 0f));
+            stones.AddRange(Column(100f, 0f));
+            var signPos = new List<Vector3> { new Vector3(2f, 1f, 0f) };
+            var signName = new List<string> { "Two Rocks" };
+            var signAuthor = new List<string> { "host" };
+
+            LedgerUpdate.Result r = LedgerUpdate.Apply(stones, signPos, signName, signAuthor, world, true, 1000L);
+            Equal(2, r.Piles, "world scope: both piles found");
+            Equal(2, r.Changed, "world scope: both written");
+            Equal(2, LandmarkStore.Count, "two rows");
+            Check(LandmarkStore.TryGet(new LandmarkKey(2, 1, 0), out Landmark named) && named.Name == "Two Rocks" && named.HasPile,
+                  "the named cairn is keyed on its sign, and lit");
+            Check(LandmarkStore.TryGet(new LandmarkKey(100, 2, 0), out Landmark plain) && !plain.IsNamed && plain.HasPile,
+                  "the unnamed cairn is keyed on its crown, and lit");
+
+            // --- a quick check far from the second cairn must not touch it -------------------
+            // The quick check passes ONLY what it found near the spot. The far cairn is missing
+            // from that picture, and must survive because it is out of scope.
+            r = LedgerUpdate.Apply(Column(0f, 0f), signPos, signName, signAuthor,
+                Near(new Vector3(0f, 0f, 0f), 24f), true, 2000L);
+            Equal(0, r.Pruned, "quick check: nothing out of scope is pruned");
+            Check(LandmarkStore.TryGet(new LandmarkKey(100, 2, 0), out _), "the far cairn survives a quick check elsewhere");
+
+            // A sweep that leaves a spot to a quick check still COUNTS the piles it left there.
+            r = LedgerUpdate.Apply(stones, signPos, signName, signAuthor, p => p.x > 50f, true, 2500L);
+            Equal(1, r.Piles, "partial scope: the pile in scope is counted");
+            Equal(1, r.Skipped, "and the one left out is counted as skipped, not lost");
+            Equal(0, r.Changed + r.Pruned, "and nothing moved");
+
+            // --- inside the scope, what is not seen is gone ----------------------------------
+            r = LedgerUpdate.Apply(new List<Vector3>(), noSigns, none, none,
+                Near(new Vector3(100f, 0f, 0f), 24f), true, 3000L);
+            Equal(1, r.Pruned, "quick check: a cairn taken down in scope is pruned");
+            Check(!LandmarkStore.TryGet(new LandmarkKey(100, 2, 0), out _), "and its row is gone");
+            Check(LandmarkStore.TryGet(new LandmarkKey(2, 1, 0), out _), "the cairn elsewhere is untouched");
+
+            // --- no prune when the caller cannot vouch for its picture -----------------------
+            LandmarkStore.Clear();
+            LandmarkStore.Upsert(new LandmarkKey(50, 2, 0), "", SignReading.UnknownAuthor, true, new Vector3(50f, 2.4f, 0f), 1L);
+            r = LedgerUpdate.Apply(new List<Vector3>(), noSigns, none, none, world, false, 4000L);
+            Equal(0, r.Pruned, "allowPrune false prunes nothing");
+            Equal(1, LandmarkStore.Count, "the row stays");
+
+            // --- a sign claimed by a pile just outside the scope -----------------------------
+            // Pile at x=27 (out of a 24 m scope around the origin), its sign at x=22 (in scope,
+            // 5 m from the pile, inside the 6 m pairing reach). The sign belongs to that pile; it
+            // must not be written as a dark named place just because its pile was out of view.
+            LandmarkStore.Clear();
+            r = LedgerUpdate.Apply(Column(27f, 0f),
+                new List<Vector3> { new Vector3(22f, 1f, 0f) }, new List<string> { "Edge" }, new List<string> { "host" },
+                Near(new Vector3(0f, 0f, 0f), 24f), true, 5000L);
+            Equal(0, r.Changed, "a sign claimed by an out-of-scope pile writes nothing");
+            Equal(0, LandmarkStore.Count, "no dark named place appears");
+
+            // And an unclaimed named sign in scope IS a named place with no light.
+            r = LedgerUpdate.Apply(new List<Vector3>(),
+                new List<Vector3> { new Vector3(5f, 1f, 0f) }, new List<string> { "Lonely" }, new List<string> { "host" },
+                Near(new Vector3(0f, 0f, 0f), 24f), true, 6000L);
+            Check(LandmarkStore.TryGet(new LandmarkKey(5, 1, 0), out Landmark lonely) && lonely.IsNamed && !lonely.HasPile,
+                  "an unclaimed sign in scope is a named place with no light");
+
+            // --- a crown that drifts keeps its history, inside the scope ---------------------
+            LandmarkStore.Clear();
+            LandmarkStore.Upsert(new LandmarkKey(0, 2, 0), "", SignReading.UnknownAuthor, true, new Vector3(0f, 2.4f, 0f), 100L);
+            r = LedgerUpdate.Apply(Column(1f, 0f), noSigns, none, none, Near(new Vector3(0f, 0f, 0f), 24f), true, 7000L);
+            Equal(1, r.Carried, "a drifted crown carries its history");
+            Equal(1, r.Pruned, "and the old key is retired");
+            Check(LandmarkStore.TryGet(new LandmarkKey(1, 2, 0), out Landmark heir) && heir.FirstSeenUtcTicks == 100L,
+                  "the new row is as old as the cairn it replaced");
+
+            // --- the ledger is untouched when nothing changed --------------------------------
+            LandmarkStore.MarkClean();
+            r = LedgerUpdate.Apply(Column(1f, 0f), noSigns, none, none, Near(new Vector3(0f, 0f, 0f), 24f), true, 7000L);
+            Equal(0, r.Changed + r.Pruned + r.Carried, "a second identical check changes nothing");
+
+            LandmarkStore.Clear();
         }
 
         // ---- store ----------------------------------------------------------------------

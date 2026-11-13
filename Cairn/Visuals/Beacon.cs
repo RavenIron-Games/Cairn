@@ -56,6 +56,8 @@ namespace RavenIron.Cairn.Visuals
             public float Visibility;      // 0..1, smoothed — never pops
             public bool Blocked;
             public bool Tomb;             // a tombstone light (0.11.0), drawn in its own colour
+            public bool HasSign;          // the cairn's sign carries a colour (0.12.0)
+            public Color Sign;            // that colour, alpha included
         }
 
         /// <summary>
@@ -107,15 +109,18 @@ namespace RavenIron.Cairn.Visuals
         private int _occlusionCursor;
         private int _occlusionMask = -1;
 
-        /// <summary>Firelight, and the fallback when a configured colour will not parse.</summary>
-        private static readonly Color DefaultEmber = new Color(1f, 0.72f, 0.35f);
-        private Color _colour = DefaultEmber;
-        private string _colourText;
+        // The colours last written to the log, so a change (from the F1 picker or the file) is
+        // logged once rather than every frame. Null until the first frame draws.
+        private readonly ColourLog _beaconLog = new ColourLog();
+        private readonly ColourLog _tombLog = new ColourLog();
 
-        /// <summary>Red: a tombstone light must never be mistaken for a cairn.</summary>
-        private static readonly Color DefaultTomb = new Color(1f, 0.165f, 0.165f);
-        private Color _tombColour = DefaultTomb;
-        private string _tombColourText;
+        /// <summary>What one colour setting last logged, and what it is settling on.</summary>
+        private sealed class ColourLog
+        {
+            public Color? Logged;     // last value written to the log
+            public Color? Pending;    // the value seen most recently
+            public float ChangedAt;   // when Pending last moved, realtime seconds
+        }
         private int _seenTombRevision = -1;
 
         /// <summary>The live renderer, so the console can ask it what it is doing.</summary>
@@ -149,8 +154,13 @@ namespace RavenIron.Cairn.Visuals
                     dist > maxDist ? $"OUT OF RANGE (>{maxDist:F0}m)" :
                     lit.Visibility > 0.01f ? "lit" : "fading";
 
+                string colour = lit.HasSign
+                    ? (ModConfig.UseSignColours.Value
+                        ? $"  sign colour #{ColorUtility.ToHtmlStringRGBA(lit.Sign)}"
+                        : "  sign colour ignored (UseSignColours = false)")
+                    : "";
                 lines.Add(
-                    $"  {kv.Key}  {dist:F0}m  vis={lit.Visibility:F2}  {why}");
+                    $"  {kv.Key}  {dist:F0}m  vis={lit.Visibility:F2}  {why}{colour}");
             }
 
             if (_lit.Count == 0) lines.Add("  no beacons known — nothing has been synced to this client");
@@ -211,7 +221,12 @@ namespace RavenIron.Cairn.Visuals
                 foreach (LandmarkSync.Beacon b in LandmarkSync.Current())
                 {
                     LightKey key = LightKey.ForCairn(b.Key);
-                    if (!Place(key, b.Light + Vector3.up * lift, tomb: false, wanted)) return;
+                    Lit lit = Place(key, b.Light + Vector3.up * lift, tomb: false, wanted);
+                    if (lit == null) return;
+
+                    // The builder's colour, read from the sign text the beacon already carries.
+                    lit.HasSign = SignColour.TryRead(b.Name, out float r, out float g, out float bl, out float a);
+                    if (lit.HasSign) lit.Sign = new Color(r, g, bl, a);
                 }
             }
 
@@ -220,7 +235,7 @@ namespace RavenIron.Cairn.Visuals
                 foreach (TombstoneLights.Grave g in TombstoneSync.Mine())
                 {
                     LightKey key = LightKey.ForTomb(g);
-                    if (!Place(key, g.Position + Vector3.up * lift, tomb: true, wanted)) return;
+                    if (Place(key, g.Position + Vector3.up * lift, tomb: true, wanted) == null) return;
                 }
             }
 
@@ -235,21 +250,21 @@ namespace RavenIron.Cairn.Visuals
             }
         }
 
-        /// <summary>Keep or make the light for one key. False when no material can be built.</summary>
-        private bool Place(LightKey key, Vector3 position, bool tomb, HashSet<LightKey> wanted)
+        /// <summary>Keep or make the light for one key. Null when no material can be built.</summary>
+        private Lit Place(LightKey key, Vector3 position, bool tomb, HashSet<LightKey> wanted)
         {
             wanted.Add(key);
 
             if (!_lit.TryGetValue(key, out Lit lit))
             {
                 lit = Create();
-                if (lit == null) return false;    // material unavailable; Create logged it
+                if (lit == null) return null;    // material unavailable; Create logged it
                 lit.Tomb = tomb;
                 _lit[key] = lit;
             }
 
             lit.Position = position;
-            return true;
+            return lit;
         }
 
         private Lit Create()
@@ -316,8 +331,13 @@ namespace RavenIron.Cairn.Visuals
             float maxSize = ModConfig.BeaconMaxSizeMeters.Value;
             float fade = Mathf.Clamp01(Time.deltaTime * 4f);
 
-            Color warm = ConfiguredColour();
-            Color red = TombColour();
+            // Colour settings are Unity colours since 0.12.0, read straight from config every
+            // frame, so a change in the F1 picker shows at once. Nothing to parse any more.
+            Color warm = ModConfig.BeaconColour.Value;
+            Color red = ModConfig.TombstoneColour.Value;
+            bool useSigns = ModConfig.UseSignColours.Value;
+            LogColourChange("BeaconColour", warm, _beaconLog);
+            LogColourChange("TombstoneColour", red, _tombLog);
 
             foreach (KeyValuePair<LightKey, Lit> kv in _lit)
             {
@@ -351,61 +371,47 @@ namespace RavenIron.Cairn.Visuals
                 t.rotation = Quaternion.LookRotation(lit.Position - camPos);   // billboard
                 t.localScale = new Vector3(size, size, 1f);
 
-                Color c = lit.Tomb ? red : warm;
-                c.a = lit.Visibility;
+                // A tombstone is always the player's tombstone colour. A cairn takes its sign's
+                // colour when it has one and this player allows it (UseSignColours), else theirs.
+                // The colour's own alpha is the light's strength; visibility fades it on top.
+                Color c = lit.Tomb ? red : (useSigns && lit.HasSign ? lit.Sign : warm);
+                c.a = lit.Visibility * c.a;
                 lit.Material.color = c;
             }
         }
 
         /// <summary>
-        /// The beacon's colour, from config, re-read only when the string actually changes —
-        /// parsing hex sixteen times a second for a value that almost never moves would be
-        /// silly, and caching it without noticing edits would be worse.
-        ///
-        /// A value that will not parse falls back to the ember default and says so ONCE. The
-        /// alternative is a beacon that silently draws black, which looks exactly like a
-        /// beacon that is not drawing at all.
+        /// Log a colour setting once it has SETTLED, not on every frame it moves. Dragging an F1
+        /// slider passes through dozens of values, and logging each one buried the log (ten lines
+        /// for one drag in the 2026-11-13 test). The first value is logged at once, so the log
+        /// always says what a session started with; after that, a new value is logged only when
+        /// it has held still for a second. A light that "will not change colour" stays easy to
+        /// diagnose: the settled value is always there.
         /// </summary>
-        /// <summary>The tombstone light's colour, parsed only when the setting changes; red if it will not parse.</summary>
-        private Color TombColour()
+        private static void LogColourChange(string setting, Color now, ColourLog log)
         {
-            string text = ModConfig.TombstoneColour.Value;
-            if (text == _tombColourText) return _tombColour;
+            float t = Time.realtimeSinceStartup;
 
-            _tombColourText = text;
-            if (HexColour.TryParse(text, out float r, out float g, out float b, out float _))
+            if (!log.Logged.HasValue)
             {
-                _tombColour = new Color(r, g, b);
-            }
-            else
-            {
-                _tombColour = DefaultTomb;
-                Cairn.Log.LogWarning($"Beacon: TombstoneColour '{text}' is not a hex colour; using red.");
-            }
-            return _tombColour;
-        }
-
-        private Color ConfiguredColour()
-        {
-            string text = ModConfig.BeaconColour.Value;
-            if (text == _colourText) return _colour;
-
-            _colourText = text;
-
-            if (HexColour.TryParse(text, out float r, out float g, out float b, out float _))
-            {
-                _colour = new Color(r, g, b);
-                Cairn.Log.LogInfo($"Beacon: colour set to #{text.TrimStart('#')}.");
-            }
-            else
-            {
-                _colour = DefaultEmber;
-                Cairn.Log.LogWarning(
-                    $"Beacon: '{text}' is not a hex colour (try FFB85A or #F80). " +
-                    "Falling back to the default ember rather than drawing black.");
+                log.Logged = now;
+                log.Pending = now;
+                Cairn.Log.LogInfo($"Beacon: {setting} is #{ColorUtility.ToHtmlStringRGBA(now)}.");
+                return;
             }
 
-            return _colour;
+            if (log.Pending != now)
+            {
+                log.Pending = now;
+                log.ChangedAt = t;
+                return;
+            }
+
+            if (log.Logged != now && t - log.ChangedAt >= 1f)
+            {
+                log.Logged = now;
+                Cairn.Log.LogInfo($"Beacon: {setting} is now #{ColorUtility.ToHtmlStringRGBA(now)}.");
+            }
         }
 
         /// <summary>

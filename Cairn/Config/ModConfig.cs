@@ -1,4 +1,5 @@
 using BepInEx.Configuration;
+using UnityEngine;
 
 namespace RavenIron.Cairn.Config
 {
@@ -31,6 +32,7 @@ namespace RavenIron.Cairn.Config
         // ---- Landmarks ------------------------------------------------------------
         public static ConfigEntry<bool>   EnableLandmarks;
         public static ConfigEntry<float>  LandmarkRotationSeconds;
+        public static ConfigEntry<bool>   QuickChecks;
         public static ConfigEntry<string> SignPrefabs;
 
         // ---- Cairn piles ----------------------------------------------------------
@@ -54,7 +56,8 @@ namespace RavenIron.Cairn.Config
         public static ConfigEntry<float> BeaconMaxSizeMeters;
         public static ConfigEntry<float> BeaconHeightMeters;
         public static ConfigEntry<bool>   BeaconOcclusion;
-        public static ConfigEntry<string> BeaconColour;
+        public static ConfigEntry<Color>  BeaconColour;
+        public static ConfigEntry<bool>   UseSignColours;
 
         // ---- The raven ------------------------------------------------------------
         public static ConfigEntry<bool>  EnableRavenVoice;
@@ -64,7 +67,7 @@ namespace RavenIron.Cairn.Config
         // ---- Tombstones -----------------------------------------------------------
         public static ConfigEntry<bool>   EnableTombstoneLights;
         public static ConfigEntry<bool>   ShowTombstoneLight;
-        public static ConfigEntry<string> TombstoneColour;
+        public static ConfigEntry<Color>  TombstoneColour;
 
         public static void Bind(ConfigFile config)
         {
@@ -110,6 +113,15 @@ namespace RavenIron.Cairn.Config
                 "This is NOT the setting for names. To play without names, turn off " +
                 "EnableRavenVoice, or leave your signs blank. " +
                 "Set it on the server.");
+
+            QuickChecks = config.Bind(
+                "2 - Landmarks", "QuickChecks", true,
+                "Light a new cairn within a couple of seconds. When a player places a stone or " +
+                "writes on a sign, their game tells the server where, and the server checks just " +
+                "that spot instead of waiting for the next full search of the world. It costs " +
+                "nothing while nobody is building. Off means new cairns wait for the full search " +
+                "(LandmarkRotationSeconds), as before 0.12.0. " +
+                "Set it on the server; players need 0.12.0 or newer to send the notice.");
 
             LandmarkRotationSeconds = config.Bind(
                 "2 - Landmarks", "LandmarkRotationSeconds", 20f,
@@ -296,12 +308,24 @@ namespace RavenIron.Cairn.Config
                     "How far above the cairn's crown the light sits.",
                     new AcceptableValueRange<float>(0f, 10f)));
 
+            // A COLOUR, not text, since 0.12.0: the Configuration Manager (F1 in game) draws a
+            // colour swatch with red, green, blue and alpha sliders for any Color setting. BepInEx
+            // reads the old text values ("FFB85A") as colours unchanged, so no file needs migrating.
             BeaconColour = config.Bind(
-                "4 - The light", "BeaconColour", "FFB85A",
-                "Beacon colour as hex — RGB, RRGGBB or RRGGBBAA, with or without a leading #. " +
-                "The default is firelight. A value that will not parse falls back to that and " +
-                "says so once in the log, because a beacon silently drawing black looks exactly " +
-                "like a beacon that is not drawing at all.");
+                "4 - The light", "BeaconColour", new Color(255f / 255f, 184f / 255f, 90f / 255f, 1f),
+                "Colour of the light on top of a cairn. The default is firelight. " +
+                "In game, press F1 (the Configuration Manager) to pick it with sliders. In this " +
+                "file it is hex, RRGGBBAA, for example FFB85AFF. The last two digits (alpha) set " +
+                "how strong the light is: FF is full, 00 is invisible. " +
+                "Read by each player's own game, and a change shows at once.");
+
+            UseSignColours = config.Bind(
+                "4 - The light", "UseSignColours", true,
+                "Light a named cairn in the colour its sign is written in. Write the sign as " +
+                "<color=#4A9EFF>Home</color> and that cairn burns blue, for everyone who has this " +
+                "on. Cairns with no colour on their sign use BeaconColour. " +
+                "Set this to false to use your own BeaconColour on EVERY cairn and ignore signs. " +
+                "Read by each player's own game, and a change shows at once.");
 
             BeaconOcclusion = config.Bind(
                 "4 - The light", "BeaconOcclusion", true,
@@ -354,9 +378,12 @@ namespace RavenIron.Cairn.Config
                 "Read by each player's own game.");
 
             TombstoneColour = config.Bind(
-                "6 - Tombstones", "TombstoneColour", "FF2A2A",
-                "Colour of the tombstone light, as hex. The default is red, so it can never be " +
-                "mistaken for a cairn. Read by each player's own game.");
+                "6 - Tombstones", "TombstoneColour", new Color(255f / 255f, 42f / 255f, 42f / 255f, 1f),
+                "Colour of the light over your tombstone. The default is red, so it can never be " +
+                "mistaken for a cairn. In game, press F1 (the Configuration Manager) to pick it " +
+                "with sliders. In this file it is hex, RRGGBBAA, for example FF2A2AFF; the last " +
+                "two digits (alpha) set how strong the light is. " +
+                "Read by each player's own game, and a change shows at once.");
         }
     }
 }
