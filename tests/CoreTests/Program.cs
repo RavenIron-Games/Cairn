@@ -610,6 +610,33 @@ namespace Cairn.Tests
             Check(!SignColour.TryRead("<colour=#FF0000>British</colour>", out _, out _, out _, out _), "only the tag the sign understands counts");
 
             Equal(true, ModConfig.UseSignColours.Value, "sign colours are used by default; false forces your own colour everywhere");
+
+            // --- brackets (0.13.0): a colour word in [ ], anywhere on the sign -----------------
+            Check(SignColour.TryRead("[blue] Home", out r, out g, out b, out a) && b > 0.99f && r < 0.3f && Math.Abs(a - 1f) < 0.002f,
+                  "[blue] at the start colours the light blue");
+            Check(SignColour.TryRead("Old Ford [gold]", out r, out g, out b, out _) && r > 0.99f && g > 0.7f && b < 0.3f,
+                  "a bracket at the end works, and gold is a bracket word");
+            Check(SignColour.TryRead("[Light Blue] Lake", out _, out _, out b, out _) && b > 0.99f,
+                  "case and spaces inside the bracket are ignored");
+            Check(SignColour.TryRead("[light-blue] Lake", out _, out _, out _, out _), "so are hyphens");
+            Check(SignColour.TryRead("[north] Pass [teal]", out r, out g, out b, out _) && g > 0.7f && b > 0.6f && r < 0.2f,
+                  "a bracket that is not a colour is skipped for the next one");
+            Check(!SignColour.TryRead("Red Cliff", out _, out _, out _, out _), "a bare colour word is a name, never a colour");
+            Check(!SignColour.TryRead("Black Forest Camp", out _, out _, out _, out _), "so a camp is never put out by its name");
+            Check(!SignColour.TryRead("[black] Hole", out _, out _, out _, out _), "black is not a bracket word: a black light is no light");
+            Check(!SignColour.TryRead("[north] Pass", out _, out _, out _, out _), "an ordinary bracket colours nothing");
+            Check(!SignColour.TryRead("[blue Home", out _, out _, out _, out _), "an unclosed bracket colours nothing");
+            Check(SignColour.TryRead("<color=#FF0000>[blue] Both</color>", out r, out _, out b, out _) && r > 0.99f && b < 0.01f,
+                  "a colour tag wins over a bracket");
+            Check(SignColour.TryRead("<color=chartreuse>[green] Odd</color>", out r, out g, out _, out _) && g > 0.7f && r < 0.4f,
+                  "a tag the sign cannot read falls back to the bracket");
+            Check(!SignColour.TryRead("<color=chartreuse>Odd</color>", out _, out _, out _, out _),
+                  "and with no bracket it is still no colour, as before");
+
+            Equal("Home", DisplayText.ForSpeech("[blue] Home", 64), "the raven leaves a colour bracket out");
+            Equal("Old Ford", DisplayText.ForSpeech("Old Ford [Gold]", 64), "wherever it is");
+            Equal("[north] Pass", DisplayText.ForSpeech("[north] Pass [teal]", 64), "but keeps a bracket that is the builder's text");
+            Equal("Red Cliff", DisplayText.ForSpeech("Red Cliff", 64), "and a bare colour word is part of the name");
         }
 
         private static void TombstoneLightsTests()

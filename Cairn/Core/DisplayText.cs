@@ -47,6 +47,34 @@ namespace RavenIron.Cairn.Core
         }
 
         /// <summary>
+        /// Remove `[colour]` words (0.13.0): they are an instruction to the light, not part of the
+        /// name, so "[blue] Home" is said as "Home". Any other bracket — "[north]" — is the
+        /// builder's text and stays.
+        /// </summary>
+        public static string StripColourBrackets(string raw)
+        {
+            if (string.IsNullOrEmpty(raw) || raw.IndexOf('[') < 0) return raw ?? "";
+
+            var sb = new StringBuilder(raw.Length);
+            int i = 0;
+            while (i < raw.Length)
+            {
+                if (raw[i] == '[')
+                {
+                    int close = raw.IndexOf(']', i + 1);
+                    if (close > i && SignColour.IsBracketWord(raw.Substring(i + 1, close - i - 1)))
+                    {
+                        i = close + 1;
+                        continue;
+                    }
+                }
+                sb.Append(raw[i]);
+                i++;
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
         /// Index of the '&gt;' closing a well-formed tag starting at <paramref name="open"/>,
         /// or -1 when what follows is not a tag at all.
         /// </summary>
@@ -76,7 +104,7 @@ namespace RavenIron.Cairn.Core
         /// </summary>
         public static string ForSpeech(string storedName, int maxLength)
         {
-            string clean = Landmark.NormaliseName(StripRichText(storedName));
+            string clean = Landmark.NormaliseName(StripColourBrackets(StripRichText(storedName)));
             if (clean.Length <= maxLength) return clean;
 
             return clean.Substring(0, maxLength).TrimEnd() + "…";

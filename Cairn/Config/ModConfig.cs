@@ -325,8 +325,9 @@ namespace RavenIron.Cairn.Config
 
             UseSignColours = config.Bind(
                 "4 - The light", "UseSignColours", true,
-                "Light a cairn in the colour its builder gave it. Two ways to give one: write the " +
-                "sign as <color=#4A9EFF>Home</color>, or put an item listed in HeldColours on an " +
+                "Light a cairn in the colour its builder gave it. Three ways to give one: a colour word " +
+                "in square brackets on the sign, like [blue] Home; the sign written as " +
+                "<color=#4A9EFF>Home</color>; or an item listed in HeldColours on an " +
                 "item stand at the cairn (a surtling core burns red). The item wins when a cairn " +
                 "has both. Cairns with neither use BeaconColour. " +
                 "Set this to false to use your own BeaconColour on EVERY cairn and ignore both. " +

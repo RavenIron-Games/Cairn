@@ -24,6 +24,12 @@
   vanilla asks for; `cairn pieces itemstand` now says which crafting station a piece needs.
 - When a cairn has both, the held item's colour wins over the sign's. `UseSignColours = false`
   ignores both in your own game.
+- **A colour word in square brackets on a sign** colours the cairn: `[blue] Home`, `Old Ford [gold]`,
+  `[Light Blue] Lake`. Twenty words: red, crimson, pink, magenta, orange, amber, gold, yellow, lime,
+  green, teal, cyan, lightblue, blue, violet, purple, white, silver, grey and gray. Only brackets
+  count, so a sign reading Red Cliff keeps the usual light. The sign shows the words as typed;
+  Hugin leaves the bracket out of the name. A colour tag on the same sign still wins. Read by each
+  player's game.
 - **The tombstone light sits higher**: 2.5 m above the stone, where it used to sit on it.
   `TombstoneHeightMeters` changes it, in your own game.
 - The server needs 0.13.0 to decide held colours. A player on 0.12.0 still sees every light,
