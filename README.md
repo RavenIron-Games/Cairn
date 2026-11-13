@@ -50,13 +50,13 @@ It adds no pieces, no assets and nothing to your screen. It changes one vanilla 
 | **Place four Stones with the Hoe** | one stone each; piled within four metres of each other they make a cairn |
 | **Stack them** | a stone may go on another stone, so a cairn can stand tall rather than lie in a ring |
 | **Spread them out** | it stays a scatter: a cairn is narrow and a wall is wide, and that is how Cairn tells them apart |
-| **Wait about twenty seconds** | a fire appears on the crown |
+| **Wait a couple of seconds** | a fire appears on the crown |
 | **Write on a sign within six metres** | the cairn takes that name |
 
 <details>
 <summary>📖 <b>Read the saga</b> — what counts as a cairn</summary>
 
-**A cairn is recognised, never provided.** Cairn adds no piece of its own. Every few seconds the server looks for stacked stones, and for written signs beside them. The hoe's single stone and the hammer's stone pile both count.
+**A cairn is recognised, never provided.** Cairn adds no piece of its own. Every few seconds the server looks for stacked stones, and for written signs beside them. When a player places a stone or writes a sign, their game tells the server where, and the server looks at just that spot a second later, so the fire comes on almost at once. The hoe's single stone and the hammer's stone pile both count.
 
 **Narrow, not wide.** Stones that stand closer than 2.5 m join into one cairn, so three columns side by side are one cairn with one light, and a cairn may hold up to 100 stones. The footprint rule does the real work: a cluster wider than 4 m is a building, not a waymark, so a stone house can never become a landmark.
 
@@ -150,7 +150,7 @@ It adds no pieces, no assets and nothing to your screen. It changes one vanilla 
 
 ![THE TOOLBOX](https://img.shields.io/badge/THE_TOOLBOX-QUICK_START_%C2%B7_COMMANDS_%C2%B7_HOW--TO-1b1b1b?style=for-the-badge&labelColor=8b1e1e)
 
-**First ten minutes:** install on the server and every player → climb a headland → place four **Stones** with the **Hoe**, stacked or close together → wait about twenty seconds for the fire → put up a sign within six metres and write a name on it → with tutorials on, stand by it and listen for Hugin.
+**First ten minutes:** install on the server and every player → climb a headland → place four **Stones** with the **Hoe**, stacked or close together → wait a couple of seconds for the fire → put up a sign within six metres and write a name on it → with tutorials on, stand by it and listen for Hugin.
 
 Cairn adds no keys. Press `` ` `` to open the console; every command is `cairn <word>`, and each reports **state rather than verdicts**.
 
@@ -224,7 +224,8 @@ All safe to leave alone. They are in `BepInEx/config/com.raveniron.cairn.cfg`, a
 | 1 - Core | `Enabled` | master switch; off on the server, nothing is found, kept or sent (each player's own copy switches off their lights and the raven) |
 | 1 - Core | `TickBudgetMs` · `AutosaveIntervalSeconds` | how much time per frame the server may spend, and how often the list of cairns is saved |
 | 2 - Landmarks | `EnableLandmarks` | **leave this on**: it is how the mod finds cairns; off, new cairns never light. It is not the setting for names |
-| 2 - Landmarks | `LandmarkRotationSeconds` | how quickly a new cairn is noticed (20 s) |
+| 2 - Landmarks | `QuickChecks` | a placed stone or written sign lights its cairn in a couple of seconds; off, new cairns wait for the full search (on) |
+| 2 - Landmarks | `LandmarkRotationSeconds` | how often the whole world is searched for cairns, which catches anything a quick check missed (20 s) |
 | 2 - Landmarks | `SignPrefabs` | which pieces count as signs |
 | 3 - Cairn piles | `StonePrefabs` | which stone pieces a cairn can be built from |
 | 3 - Cairn piles | `PileMinPieces` · `PileMaxPieces` | how many stones make a cairn (4), and the most one may hold (100); raise the first if decorative stones start lighting up |

@@ -725,6 +725,13 @@ namespace RavenIron.Cairn.Patches
                         ? " — OVER THE CAP: only the cairns nearest a player reach clients"
                         : ""));
 
+            // Quick checks (0.12.0): a placed stone or written sign lights its cairn in seconds.
+            if (Persistence.IsLoaded)
+                Say(args, ModConfig.QuickChecks.Value
+                    ? $"  quick      : ON — {Net.CairnNotice.ChecksRun.ToString(c)} check(s) this session, " +
+                      $"{Net.CairnNotice.ChecksThatChanged.ToString(c)} changed a cairn"
+                    : "  quick      : OFF (QuickChecks = false) — new cairns wait for the full search");
+
             // Tombstone lights (0.11.0). Says which side decided and what it saw, because a
             // missing red light has four causes that look the same: off on the server, hidden in
             // this game, nothing received, or a tombstone that is not this player's.

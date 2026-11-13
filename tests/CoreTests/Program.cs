@@ -50,6 +50,7 @@ namespace Cairn.Tests
                 NamedListingTests();
                 TombstoneLightsTests();
                 SignColourTests();
+                LedgerUpdateTests();
                 StoreTests();
                 PersistenceTests();
             }
@@ -794,6 +795,101 @@ namespace Cairn.Tests
             Equal(250, ModConfig.BeaconMaxCount.Value, "the new default the rung moves to is 250");
             Equal(100, ModConfig.PileMaxPieces.Value, "the new default the 0.10.0 rung moves to is 100");
             Equal(2, ConfigLedger.CurrentVersion, "0.10.0 is config version 2");
+        }
+
+        // ---- ledger update (the sweep's rules, and the quick check's scope) ------------------
+
+        /// <summary>Four stones straight up at (x, z): a cairn whose light sits at (x, 2.4, z).</summary>
+        private static List<Vector3> Column(float x, float z)
+        {
+            return new List<Vector3> {
+                new Vector3(x, 0f, z), new Vector3(x, 0.8f, z), new Vector3(x, 1.6f, z), new Vector3(x, 2.4f, z)
+            };
+        }
+
+        private static Func<Vector3, bool> Near(Vector3 spot, float r) => p => LedgerUpdate.DistanceXZ(p, spot) <= r;
+
+        private static void LedgerUpdateTests()
+        {
+            Section("LedgerUpdate");
+
+            var none = new List<string>();
+            var noSigns = new List<Vector3>();
+            Func<Vector3, bool> world = p => true;
+
+            // --- the whole world in scope: what the full sweep always did --------------------
+            LandmarkStore.Clear();
+            var stones = new List<Vector3>();
+            stones.AddRange(Column(0f, 0f));
+            stones.AddRange(Column(100f, 0f));
+            var signPos = new List<Vector3> { new Vector3(2f, 1f, 0f) };
+            var signName = new List<string> { "Two Rocks" };
+            var signAuthor = new List<string> { "host" };
+
+            LedgerUpdate.Result r = LedgerUpdate.Apply(stones, signPos, signName, signAuthor, world, true, 1000L);
+            Equal(2, r.Piles, "world scope: both piles found");
+            Equal(2, r.Changed, "world scope: both written");
+            Equal(2, LandmarkStore.Count, "two rows");
+            Check(LandmarkStore.TryGet(new LandmarkKey(2, 1, 0), out Landmark named) && named.Name == "Two Rocks" && named.HasPile,
+                  "the named cairn is keyed on its sign, and lit");
+            Check(LandmarkStore.TryGet(new LandmarkKey(100, 2, 0), out Landmark plain) && !plain.IsNamed && plain.HasPile,
+                  "the unnamed cairn is keyed on its crown, and lit");
+
+            // --- a quick check far from the second cairn must not touch it -------------------
+            // The quick check passes ONLY what it found near the spot. The far cairn is missing
+            // from that picture, and must survive because it is out of scope.
+            r = LedgerUpdate.Apply(Column(0f, 0f), signPos, signName, signAuthor,
+                Near(new Vector3(0f, 0f, 0f), 24f), true, 2000L);
+            Equal(0, r.Pruned, "quick check: nothing out of scope is pruned");
+            Check(LandmarkStore.TryGet(new LandmarkKey(100, 2, 0), out _), "the far cairn survives a quick check elsewhere");
+
+            // --- inside the scope, what is not seen is gone ----------------------------------
+            r = LedgerUpdate.Apply(new List<Vector3>(), noSigns, none, none,
+                Near(new Vector3(100f, 0f, 0f), 24f), true, 3000L);
+            Equal(1, r.Pruned, "quick check: a cairn taken down in scope is pruned");
+            Check(!LandmarkStore.TryGet(new LandmarkKey(100, 2, 0), out _), "and its row is gone");
+            Check(LandmarkStore.TryGet(new LandmarkKey(2, 1, 0), out _), "the cairn elsewhere is untouched");
+
+            // --- no prune when the caller cannot vouch for its picture -----------------------
+            LandmarkStore.Clear();
+            LandmarkStore.Upsert(new LandmarkKey(50, 2, 0), "", SignReading.UnknownAuthor, true, new Vector3(50f, 2.4f, 0f), 1L);
+            r = LedgerUpdate.Apply(new List<Vector3>(), noSigns, none, none, world, false, 4000L);
+            Equal(0, r.Pruned, "allowPrune false prunes nothing");
+            Equal(1, LandmarkStore.Count, "the row stays");
+
+            // --- a sign claimed by a pile just outside the scope -----------------------------
+            // Pile at x=27 (out of a 24 m scope around the origin), its sign at x=22 (in scope,
+            // 5 m from the pile, inside the 6 m pairing reach). The sign belongs to that pile; it
+            // must not be written as a dark named place just because its pile was out of view.
+            LandmarkStore.Clear();
+            r = LedgerUpdate.Apply(Column(27f, 0f),
+                new List<Vector3> { new Vector3(22f, 1f, 0f) }, new List<string> { "Edge" }, new List<string> { "host" },
+                Near(new Vector3(0f, 0f, 0f), 24f), true, 5000L);
+            Equal(0, r.Changed, "a sign claimed by an out-of-scope pile writes nothing");
+            Equal(0, LandmarkStore.Count, "no dark named place appears");
+
+            // And an unclaimed named sign in scope IS a named place with no light.
+            r = LedgerUpdate.Apply(new List<Vector3>(),
+                new List<Vector3> { new Vector3(5f, 1f, 0f) }, new List<string> { "Lonely" }, new List<string> { "host" },
+                Near(new Vector3(0f, 0f, 0f), 24f), true, 6000L);
+            Check(LandmarkStore.TryGet(new LandmarkKey(5, 1, 0), out Landmark lonely) && lonely.IsNamed && !lonely.HasPile,
+                  "an unclaimed sign in scope is a named place with no light");
+
+            // --- a crown that drifts keeps its history, inside the scope ---------------------
+            LandmarkStore.Clear();
+            LandmarkStore.Upsert(new LandmarkKey(0, 2, 0), "", SignReading.UnknownAuthor, true, new Vector3(0f, 2.4f, 0f), 100L);
+            r = LedgerUpdate.Apply(Column(1f, 0f), noSigns, none, none, Near(new Vector3(0f, 0f, 0f), 24f), true, 7000L);
+            Equal(1, r.Carried, "a drifted crown carries its history");
+            Equal(1, r.Pruned, "and the old key is retired");
+            Check(LandmarkStore.TryGet(new LandmarkKey(1, 2, 0), out Landmark heir) && heir.FirstSeenUtcTicks == 100L,
+                  "the new row is as old as the cairn it replaced");
+
+            // --- the ledger is untouched when nothing changed --------------------------------
+            LandmarkStore.MarkClean();
+            r = LedgerUpdate.Apply(Column(1f, 0f), noSigns, none, none, Near(new Vector3(0f, 0f, 0f), 24f), true, 7000L);
+            Equal(0, r.Changed + r.Pruned + r.Carried, "a second identical check changes nothing");
+
+            LandmarkStore.Clear();
         }
 
         // ---- store ----------------------------------------------------------------------

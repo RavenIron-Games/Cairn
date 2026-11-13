@@ -88,6 +88,7 @@ namespace RavenIron.Cairn.Core
 
             Net.LandmarkSync.ResetForWorldChange();
             Net.TombstoneSync.ResetForWorldChange();
+            Net.CairnNotice.ResetForWorldChange();
             Systems.TombstoneSystem.ResetForWorldChange();
             try { Visuals.Beacon.Instance?.ClearForWorldChange(); }
             catch (Exception ex) { Cairn.Log.LogWarning($"Beacon clear on world change failed: {ex.Message}"); }
@@ -137,6 +138,7 @@ namespace RavenIron.Cairn.Core
             // registration is cheap and idempotent once ZRoutedRpc exists.
             Net.LandmarkSync.EnsureRegistered();
             Net.TombstoneSync.EnsureRegistered();
+            Net.CairnNotice.EnsureRegistered();
 
             // The ledger lives on the authority. A pure client renders what it is told and
             // simulates nothing.
@@ -154,6 +156,7 @@ namespace RavenIron.Cairn.Core
             // console with no system registered at all, and an unsaved change is invisible
             // until the next restart loses it.
             MaybeAutosave(now);
+            Net.CairnNotice.Process(now);
             MaybeBroadcastBeacons(now);
             MaybeBroadcastTombstones(now);
 
@@ -222,8 +225,12 @@ namespace RavenIron.Cairn.Core
         {
             if (!ModConfig.EnableBeacons.Value) return;
 
+            // A changed ledger is sent at once (0.12.0), never more than twice a second.
+            bool requested = Net.LandmarkSync.BroadcastRequested;
             float interval = ModConfig.BeaconSyncSeconds.Value;
-            if (now - _lastBeaconSend < interval) return;
+            if (requested && now - _lastBeaconSend < 0.5f) return;
+            if (!requested && now - _lastBeaconSend < interval) return;
+            Net.LandmarkSync.ClearBroadcastRequest();
 
             _lastBeaconSend = now;
             Net.LandmarkSync.Broadcast(ModConfig.BeaconMaxCount.Value);

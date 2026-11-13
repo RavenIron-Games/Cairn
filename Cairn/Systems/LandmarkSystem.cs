@@ -90,6 +90,7 @@ namespace RavenIron.Cairn.Systems
             _foundCounts.Clear();
             _keptCounts.Clear();
             _rotationClean = true;
+            _quickAreas.Clear();
 
             _targets.Clear();
             AddTargets(ModConfig.SignPrefabs.Value, isSign: true);
@@ -192,101 +193,27 @@ namespace RavenIron.Cairn.Systems
 
         /// <summary>
         /// Every prefab has been walked, so what was collected is the COMPLETE picture of the
-        /// world's stone and named signs — which is what makes both pairing and pruning safe.
+        /// world's stone and named signs, which is what makes both pairing and pruning safe.
+        ///
+        /// Since 0.12.0 the rules live in <see cref="LedgerUpdate.Apply"/>, shared with the quick
+        /// check. The scope here is the whole world EXCEPT the spots a quick check refreshed while
+        /// this rotation was running: this rotation's picture of those spots may predate the stone
+        /// that was just placed, and applying it would put the new light out until the next lap.
         /// </summary>
         private void CompleteRotation()
         {
             long now = DateTime.UtcNow.Ticks;
+            var fresh = new List<Vector3>(_quickAreas);
 
-            List<PileDetection.Pile> piles = PileDetection.Find(
-                _stones,
-                ModConfig.PileLinkMeters.Value,
-                ModConfig.PileMinPieces.Value,
-                ModConfig.PileMaxPieces.Value,
-                ModConfig.PileMaxExtentMeters.Value);
+            LedgerUpdate.Result r = LedgerUpdate.Apply(
+                _stones, _signPositions, _signNames, _signAuthors,
+                p => !NearAny(p, fresh, QuickRadiusMeters),
+                allowPrune: _rotationClean,
+                nowUtcTicks: now);
 
-            var seen = new HashSet<LandmarkKey>();
-            var claimedSign = new bool[_signPositions.Count];
+            if (r.Changed > 0 || r.Pruned > 0) Net.LandmarkSync.RequestBroadcast();
 
-            // Keys of cairns seen this rotation that no sign named. Only these can inherit a
-            // drifting cairn's history, because only these are identified by a moving crown.
-            var newUnnamedPiles = new List<LandmarkKey>(8);
-            int changed = 0;
-
-            float pairMeters = ModConfig.LandmarkPairMeters.Value;
-
-            // Each sign names at most one pile — the nearest one. Two cairns within reach of
-            // one sign used to both claim it, collapse into one landmark, and fight over its
-            // light on every sweep.
-            var pileTops = new List<Vector3>(piles.Count);
-            foreach (PileDetection.Pile pile in piles) pileTops.Add(pile.Top);
-            int[] signFor = PileDetection.PairSigns(pileTops, _signPositions, pairMeters);
-
-            for (int p = 0; p < piles.Count; p++)
-            {
-                PileDetection.Pile pile = piles[p];
-                int sign = signFor[p];
-
-                // A named sign is the landmark's identity when one is in reach, so building a
-                // cairn around a sign that was ALREADY a landmark flips its light on rather
-                // than founding a second place a metre away. The sign does not move; the
-                // pile's centroid does.
-                LandmarkKey key = sign >= 0
-                    ? LandmarkKey.FromPosition(_signPositions[sign])
-                    : LandmarkKey.FromPosition(pile.Top);
-
-                string name = sign >= 0 ? _signNames[sign] : "";
-                string author = sign >= 0 ? _signAuthors[sign] : SignReading.UnknownAuthor;
-                if (sign >= 0) claimedSign[sign] = true;
-
-                if (LandmarkStore.Upsert(key, name, author, true, pile.Top, now)) changed++;
-                seen.Add(key);
-                if (sign < 0) newUnnamedPiles.Add(key);
-            }
-
-            // Named signs no pile has claimed: a place with a name and no light.
-            for (int i = 0; i < _signPositions.Count; i++)
-            {
-                if (claimedSign[i]) continue;
-
-                LandmarkKey key = LandmarkKey.FromPosition(_signPositions[i]);
-                if (seen.Contains(key)) continue;
-
-                if (LandmarkStore.Upsert(key, _signNames[i], _signAuthors[i], false, default, now)) changed++;
-                seen.Add(key);
-            }
-
-            int pruned = 0, carried = 0;
-            if (_rotationClean)
-            {
-                float drift = ModConfig.PileDriftMeters.Value;
-
-                foreach (Landmark landmark in LandmarkStore.Snapshot())
-                {
-                    if (seen.Contains(landmark.Key)) continue;
-
-                    // An unnamed cairn is identified by its own crown, and a crown is a
-                    // computed centroid — add a stone and it shifts. When it shifts far enough
-                    // to round to a new key, this row is about to be pruned and its history
-                    // belongs to the row replacing it. Verified live on 2026-09-02: a cairn
-                    // drifted 0.8m, crossed a metre boundary, and was re-founded with its
-                    // FirstSeen erased.
-                    //
-                    // Named landmarks never take this path — they are keyed on a sign, and
-                    // signs do not move.
-                    if (drift > 0f && !landmark.IsNamed && landmark.HasPile)
-                    {
-                        int heir = PileDetection.NearestKey(landmark.Key, newUnnamedPiles, drift);
-                        if (heir >= 0 &&
-                            LandmarkStore.CarryHistory(newUnnamedPiles[heir], landmark.FirstSeenUtcTicks))
-                            carried++;
-                    }
-
-                    if (LandmarkStore.Remove(landmark.Key)) pruned++;   // Snapshot is a copy
-                }
-            }
-
-            LogRotation(piles.Count, changed, pruned, carried);
+            LogRotation(r.Piles, r.Changed, r.Pruned, r.Carried);
 
             _stones.Clear();
             _signPositions.Clear();
@@ -294,7 +221,109 @@ namespace RavenIron.Cairn.Systems
             _signAuthors.Clear();
             _foundCounts.Clear();
             _keptCounts.Clear();
+            _quickAreas.Clear();
             _rotationClean = true;
+        }
+
+        // ---- the quick check (0.12.0) -----------------------------------------------------
+
+        /// <summary>
+        /// How far from a placed stone or written sign the quick check updates cairns. Inside it
+        /// the picture is complete (see QuickCheck), so rows there may be written and pruned.
+        /// </summary>
+        public const float QuickRadiusMeters = 24f;
+
+        /// <summary>Spots quick-checked since the current rotation began; the rotation leaves them alone.</summary>
+        private readonly List<Vector3> _quickAreas = new List<Vector3>(8);
+
+        /// <summary>The live system, so the quick-check queue can reach it. Null before the first world.</summary>
+        public static LandmarkSystem Instance { get; private set; }
+
+        public LandmarkSystem() { Instance = this; }
+
+        private static bool NearAny(Vector3 p, List<Vector3> spots, float radius)
+        {
+            for (int i = 0; i < spots.Count; i++)
+                if (LedgerUpdate.DistanceXZ(p, spots[i]) <= radius) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Update the cairns around one spot NOW, without searching the world.
+        ///
+        /// Reads only the 3x3 zones around the spot (`ZDOMan.FindSectorObjects` with a one-zone
+        /// classic radius, about 192 m square; public in 1.0.21), keeps the stone and sign
+        /// prefabs, and applies the usual rules to cairns within <see cref="QuickRadiusMeters"/>.
+        /// That inner circle sits at least 40 m inside the zones read, so every stone and sign
+        /// that can affect a cairn there was seen: a pile is under 4 m across, a sign names it
+        /// from 6 m, and a chain long enough to reach the zone edge is a wall, refused anyway.
+        ///
+        /// Returns true when the ledger changed, so the caller can send the light at once.
+        /// </summary>
+        public bool QuickCheck(Vector3 spot)
+        {
+            if (_targets.Count == 0) return false;
+            Game game = Game.instance;
+            if (game != null && game.IsShuttingDown()) return false;
+            ZDOMan man = ZDOMan.instance;
+            if (man == null || ZoneSystem.instance == null) return false;
+
+            var stoneHashes = new HashSet<int>();
+            var signHashes = new HashSet<int>();
+            foreach (Target t in _targets)
+                (t.IsSign ? signHashes : stoneHashes).Add(t.Prefab.GetStableHashCode());
+
+            var found = new List<ZDO>(256);
+            try
+            {
+                man.FindSectorObjects(ZoneSystem.GetZone(spot), new SimulationDistance(1, 0, classic: true), found);
+            }
+            catch (Exception ex)
+            {
+                Cairn.Log.LogWarning($"[{Name}] quick check failed near {spot}: {ex.Message}");
+                return false;
+            }
+
+            var stones = new List<Vector3>(64);
+            var signPositions = new List<Vector3>(8);
+            var signNames = new List<string>(8);
+            var signAuthors = new List<string>(8);
+
+            foreach (ZDO zdo in found)
+            {
+                if (zdo == null || !zdo.IsValid()) continue;
+                int prefab = zdo.GetPrefab();
+
+                if (stoneHashes.Contains(prefab))
+                {
+                    stones.Add(zdo.GetPosition());
+                }
+                else if (signHashes.Contains(prefab))
+                {
+                    if (!SignReading.TryRead(zdo.GetString(ZDOVars.s_text, ""), zdo.GetString(ZDOVars.s_author, ""),
+                                             out string name, out string author))
+                        continue;
+                    signPositions.Add(zdo.GetPosition());
+                    signNames.Add(name);
+                    signAuthors.Add(author);
+                }
+            }
+
+            LedgerUpdate.Result r = LedgerUpdate.Apply(
+                stones, signPositions, signNames, signAuthors,
+                p => LedgerUpdate.DistanceXZ(p, spot) <= QuickRadiusMeters,
+                allowPrune: true,
+                nowUtcTicks: DateTime.UtcNow.Ticks);
+
+            _quickAreas.Add(spot);
+
+            bool changed = r.Changed > 0 || r.Pruned > 0;
+            if (changed || ModConfig.VerboseLogging.Value)
+                Cairn.Log.LogInfo(
+                    $"[{Name}] quick check at ({spot.x:F0}, {spot.z:F0}): {stones.Count} stone(s), " +
+                    $"{signPositions.Count} named sign(s) in {found.Count} nearby object(s) — " +
+                    $"{r.Piles} pile(s) here, {r.Changed} changed, {r.Pruned} pruned");
+            return changed;
         }
 
         /// <summary>

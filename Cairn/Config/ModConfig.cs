@@ -32,6 +32,7 @@ namespace RavenIron.Cairn.Config
         // ---- Landmarks ------------------------------------------------------------
         public static ConfigEntry<bool>   EnableLandmarks;
         public static ConfigEntry<float>  LandmarkRotationSeconds;
+        public static ConfigEntry<bool>   QuickChecks;
         public static ConfigEntry<string> SignPrefabs;
 
         // ---- Cairn piles ----------------------------------------------------------
@@ -112,6 +113,15 @@ namespace RavenIron.Cairn.Config
                 "This is NOT the setting for names. To play without names, turn off " +
                 "EnableRavenVoice, or leave your signs blank. " +
                 "Set it on the server.");
+
+            QuickChecks = config.Bind(
+                "2 - Landmarks", "QuickChecks", true,
+                "Light a new cairn within a couple of seconds. When a player places a stone or " +
+                "writes on a sign, their game tells the server where, and the server checks just " +
+                "that spot instead of waiting for the next full search of the world. It costs " +
+                "nothing while nobody is building. Off means new cairns wait for the full search " +
+                "(LandmarkRotationSeconds), as before 0.12.0. " +
+                "Set it on the server; players need 0.12.0 or newer to send the notice.");
 
             LandmarkRotationSeconds = config.Bind(
                 "2 - Landmarks", "LandmarkRotationSeconds", 20f,

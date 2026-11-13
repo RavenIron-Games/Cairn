@@ -28,6 +28,7 @@
     <Compile Include="..\..\Cairn\Core\LandmarkStore.cs" />
     <Compile Include="..\..\Cairn\Core\SignReading.cs" />
     <Compile Include="..\..\Cairn\Core\PileDetection.cs" />
+    <Compile Include="..\..\Cairn\Core\LedgerUpdate.cs" />
     <Compile Include="..\..\Cairn\Core\BeaconSelection.cs" />
     <Compile Include="..\..\Cairn\Core\StoneStacking.cs" />
     <Compile Include="..\..\Cairn\Core\NamedListing.cs" />
