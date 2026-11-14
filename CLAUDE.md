@@ -135,8 +135,10 @@ on upload: 4-space indent, LF, no final newline, and `"dependencies": []`. The d
 lives in the store API instead, which is what mod managers read. Its 0.11.1 zip is the same,
 so this is how Hexium works, not a fault in this upload.
 
-**PACKAGED 2026-11-14: v0.13.1, an item stand costs 2 wood and needs no workbench** (branch
-`feature/stand-cost`, local only). Drazik asked for no support under a held item; dropping the
+**CUT 2026-11-14: v0.13.1, an item stand costs 2 wood and needs no workbench, LIVE ON BOTH STORES
+the same day** (Hexium 17:47:53Z, Thunderstore 17:48:07Z; BepInExPack 5.4.2360). Zip from a fresh
+clone of `574b816` (zip md5 `ac908402...`, DLL md5 `03371adf...`), merged to main as `5fe0664`,
+tagged `v0.13.1`, GitHub pre-release with the zip; Thunderstore byte-identical, Hexium the same DLL. Drazik asked for no support under a held item; dropping the
 stand was refused (a loose item rolls off and despawns after an hour; an item-as-piece is a new
 piece), hiding it was declined by the owner because the price stays, so the owner chose a cheap
 stand: `ItemStandWoodCost` (2, default on) rewrites BOTH item stands' recipe to wood and clears
@@ -197,7 +199,7 @@ day 0.12.0 shipped; Drazik (a player) asked for the tombstone light to sit highe
   `_0.11.1.test-build-not-store`), and a Gale update replaced the test build wholesale. Deploy
   with `rm` then `cp`, keep backups in `profiles\testing\_cairn-backups\`.
 
-**Status: 0.13.0 live on Hexium AND Thunderstore** (since 2026-11-13) under team
+**Status: 0.13.1 live on Hexium AND Thunderstore** (since 2026-11-14) under team
 `RavenIronStudios`, categorised "Client & Server - must be installed on both" (Thunderstore:
 Mods, Building). Thunderstore became a channel on 2026-11-13 (see the Distribution row). The
 owner does every Hexium upload, always.
