@@ -18,7 +18,85 @@ namespace RavenIron.Cairn.Core
     /// </summary>
     public static class SignColour
     {
+        /// <summary>
+        /// The builder's colour: a colour TAG if the sign has one that reads, otherwise a colour
+        /// word in square brackets anywhere on the sign (0.13.0), e.g. `[blue] Home` or
+        /// `Old Ford [gold]`. Brackets, never bare words, on purpose: "Red Cliff" and "Black Forest
+        /// Camp" are names, and a camp whose light went black would vanish. The bracket only
+        /// colours the light; the sign shows it as typed, and the raven leaves it out
+        /// (<see cref="DisplayText.ForSpeech"/>).
+        /// </summary>
         public static bool TryRead(string name, out float r, out float g, out float b, out float a)
+        {
+            if (TryReadTag(name, out r, out g, out b, out a)) return true;
+            return TryReadBracket(name, out r, out g, out b, out a);
+        }
+
+        /// <summary>The first `[word]` on the sign that is a colour word. Other brackets are text.</summary>
+        public static bool TryReadBracket(string name, out float r, out float g, out float b, out float a)
+        {
+            r = g = b = 0f; a = 1f;
+            if (string.IsNullOrEmpty(name)) return false;
+
+            int from = 0;
+            while (from < name.Length)
+            {
+                int open = name.IndexOf('[', from);
+                if (open < 0) return false;
+                int close = name.IndexOf(']', open + 1);
+                if (close < 0) return false;
+                if (TryBracketWord(name.Substring(open + 1, close - open - 1), out r, out g, out b)) return true;
+                from = open + 1;
+            }
+            return false;
+        }
+
+        /// <summary>Is this the inside of a colour bracket? For the raven, which leaves them out.</summary>
+        public static bool IsBracketWord(string inner) => TryBracketWord(inner, out _, out _, out _);
+
+        /// <summary>
+        /// The bracket words: TextMeshPro's ten (black aside: a black light is no light) and ten
+        /// more, chosen to read as a lamp at night. Case, spaces, hyphens and underscores are
+        /// ignored, so `[Light Blue]` and `[light-blue]` are `lightblue`.
+        /// </summary>
+        private static bool TryBracketWord(string inner, out float r, out float g, out float b)
+        {
+            r = g = b = 0f;
+            if (inner == null || inner.Length == 0 || inner.Length > 24) return false;
+
+            var key = new System.Text.StringBuilder(inner.Length);
+            foreach (char c in inner)
+                if (c != ' ' && c != '-' && c != '_') key.Append(char.ToLowerInvariant(c));
+
+            string hex;
+            switch (key.ToString())
+            {
+                case "red":       hex = "E83A3A"; break;
+                case "crimson":   hex = "B0102A"; break;
+                case "pink":      hex = "FF6FB5"; break;
+                case "magenta":   hex = "FF3DF0"; break;
+                case "orange":    hex = "FF8A1F"; break;
+                case "amber":     hex = "FFB02A"; break;
+                case "gold":      hex = "FFC83A"; break;
+                case "yellow":    hex = "FFE040"; break;
+                case "lime":      hex = "A8F03A"; break;
+                case "green":     hex = "4ED45A"; break;
+                case "teal":      hex = "2AC9B0"; break;
+                case "cyan":      hex = "5CE8FF"; break;
+                case "lightblue": hex = "A8D8FF"; break;
+                case "blue":      hex = "3A6BFF"; break;
+                case "violet":    hex = "8A3CFF"; break;
+                case "purple":    hex = "A050FF"; break;
+                case "white":     hex = "F0F4FF"; break;
+                case "silver":    hex = "C8CCD6"; break;
+                case "grey":
+                case "gray":      hex = "9A9A9A"; break;
+                default: return false;
+            }
+            return TryHex(hex, out r, out g, out b, out _);
+        }
+
+        private static bool TryReadTag(string name, out float r, out float g, out float b, out float a)
         {
             r = g = b = 0f; a = 1f;
             if (string.IsNullOrEmpty(name)) return false;
@@ -38,6 +116,16 @@ namespace RavenIron.Cairn.Core
 
             if (value[0] == '#') return TryHex(value.Substring(1), out r, out g, out b, out a);
             return TryNamed(value, out r, out g, out b);
+        }
+
+        /// <summary>A bare hex colour, `RGB`, `RGBA`, `RRGGBB` or `RRGGBBAA`, with or without '#'.</summary>
+        public static bool TryReadHex(string hex, out float r, out float g, out float b, out float a)
+        {
+            r = g = b = 0f; a = 1f;
+            if (string.IsNullOrEmpty(hex)) return false;
+            hex = hex.Trim();
+            if (hex.StartsWith("#")) hex = hex.Substring(1);
+            return TryHex(hex, out r, out g, out b, out a);
         }
 
         private static bool TryHex(string hex, out float r, out float g, out float b, out float a)

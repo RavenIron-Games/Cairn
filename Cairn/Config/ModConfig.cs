@@ -58,6 +58,9 @@ namespace RavenIron.Cairn.Config
         public static ConfigEntry<bool>   BeaconOcclusion;
         public static ConfigEntry<Color>  BeaconColour;
         public static ConfigEntry<bool>   UseSignColours;
+        public static ConfigEntry<string> HolderPrefabs;
+        public static ConfigEntry<string> HeldColours;
+        public static ConfigEntry<bool>   StandsHoldListedItems;
 
         // ---- The raven ------------------------------------------------------------
         public static ConfigEntry<bool>  EnableRavenVoice;
@@ -68,6 +71,7 @@ namespace RavenIron.Cairn.Config
         public static ConfigEntry<bool>   EnableTombstoneLights;
         public static ConfigEntry<bool>   ShowTombstoneLight;
         public static ConfigEntry<Color>  TombstoneColour;
+        public static ConfigEntry<float>  TombstoneHeightMeters;
 
         public static void Bind(ConfigFile config)
         {
@@ -321,11 +325,47 @@ namespace RavenIron.Cairn.Config
 
             UseSignColours = config.Bind(
                 "4 - The light", "UseSignColours", true,
-                "Light a named cairn in the colour its sign is written in. Write the sign as " +
-                "<color=#4A9EFF>Home</color> and that cairn burns blue, for everyone who has this " +
-                "on. Cairns with no colour on their sign use BeaconColour. " +
-                "Set this to false to use your own BeaconColour on EVERY cairn and ignore signs. " +
+                "Light a cairn in the colour its builder gave it. Three ways to give one: a colour word " +
+                "in square brackets on the sign, like [blue] Home; the sign written as " +
+                "<color=#4A9EFF>Home</color>; or an item listed in HeldColours on an " +
+                "item stand at the cairn (a surtling core burns red). The item wins when a cairn " +
+                "has both. Cairns with neither use BeaconColour. " +
+                "Set this to false to use your own BeaconColour on EVERY cairn and ignore both. " +
                 "Read by each player's own game, and a change shows at once.");
+
+            HolderPrefabs = config.Bind(
+                "4 - The light", "HolderPrefabs", "itemstandh,itemstand",
+                "Pieces that can hold an item to colour a cairn (0.13.0): the item stand, lying " +
+                "flat (itemstandh) or on a wall (itemstand). One within LandmarkPairMeters of a " +
+                "cairn, holding an item listed in HeldColours, gives that cairn the item's colour. " +
+                "These may also be placed ON the stones of a cairn when StackableStones is on. " +
+                "Set it on the server, and on each player's game for placing them on stones.");
+
+            HeldColours = config.Bind(
+                "4 - The light", "HeldColours",
+                "Raspberry=E83A3A,Mushroom=FF3030,Bloodbag=B0102A,SurtlingCore=FF4020,Carrot=FF8A1F," +
+                "Resin=FF9A2A,Cloudberry=FFB040,Dandelion=FFD21F,MushroomYellow=FFE040,Honey=FFC02A," +
+                "Guck=7ACC3A,Ooze=8CE04A,TrophyGreydwarf=5BD13A,Wisp=7FF6FF,GreydwarfEye=4A9EFF," +
+                "Blueberries=3A6BFF,MushroomBlue=3A7BFF,FreezeGland=A8E4FF,Thistle=A050FF," +
+                "Crystal=EAF4FF,BoneFragments=F2EEE0",
+                "Which held items colour a cairn, and how: ItemPrefab=RRGGBB (or RRGGBBAA), " +
+                "comma-separated. These are the items' PREFAB names, such as SurtlingCore, not the " +
+                "names shown in game. The defaults are cheap, everyday things on purpose: a cairn " +
+                "stands in the wild. `cairn holdable` lists every item a stand will hold, and the server " +
+                "log names any listed item that is unknown or that no stand will take when a world " +
+                "loads. An item not on the list leaves the cairn's colour alone. " +
+                "Set it on the server: it decides the colour, and every player sees the same one. " +
+                "Players need the same list in their own games for an item vanilla will not put on a " +
+                "stand (see StandsHoldListedItems).");
+
+            StandsHoldListedItems = config.Bind(
+                "4 - The light", "StandsHoldListedItems", true,
+                "Let an item stand hold an item on the HeldColours list even when vanilla will not, " +
+                "like a greydwarf eye, and draw the item's own model on the stand. Vanilla only lets a " +
+                "stand hold items with a model made for it. This changes what a VANILLA piece accepts, " +
+                "and only for listed items on the stands in HolderPrefabs. False leaves stands exactly " +
+                "as the game made them. Read by each player's own game: it decides what fits on a " +
+                "stand, and draws it.");
 
             BeaconOcclusion = config.Bind(
                 "4 - The light", "BeaconOcclusion", true,
@@ -384,6 +424,15 @@ namespace RavenIron.Cairn.Config
                 "with sliders. In this file it is hex, RRGGBBAA, for example FF2A2AFF; the last " +
                 "two digits (alpha) set how strong the light is. " +
                 "Read by each player's own game, and a change shows at once.");
+
+            // Raised for a player's request, 2026-11-13: at the cairn's 1.2 m the glow sat on the
+            // tombstone itself.
+            TombstoneHeightMeters = config.Bind(
+                "6 - Tombstones", "TombstoneHeightMeters", 2.5f,
+                new ConfigDescription(
+                    "How far above your tombstone its light sits, in metres. " +
+                    "Read by each player's own game.",
+                    new AcceptableValueRange<float>(0f, 10f)));
         }
     }
 }

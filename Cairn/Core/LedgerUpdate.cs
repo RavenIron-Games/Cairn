@@ -37,6 +37,27 @@ namespace RavenIron.Cairn.Core
             Func<Vector3, bool> inScope,
             bool allowPrune,
             long nowUtcTicks)
+            => Apply(stones, signPositions, signNames, signAuthors, NoHolders, NoColours,
+                     inScope, allowPrune, nowUtcTicks);
+
+        private static readonly Vector3[] NoHolders = new Vector3[0];
+        private static readonly string[] NoColours = new string[0];
+
+        /// <summary>
+        /// With held colours (0.13.0): <paramref name="holderPositions"/> are item stands holding
+        /// an item listed in `HeldColours`, and <paramref name="holderColours"/> their RRGGBBAA.
+        /// Each one colours at most one cairn, the nearest within `LandmarkPairMeters`, by the
+        /// same pairing a sign uses to name one. Like signs, pairing runs over everything passed
+        /// in, so a stand near the edge of a quick check's scope goes to the same pile a world
+        /// sweep would give it.
+        /// </summary>
+        public static Result Apply(
+            IList<Vector3> stones,
+            IList<Vector3> signPositions, IList<string> signNames, IList<string> signAuthors,
+            IList<Vector3> holderPositions, IList<string> holderColours,
+            Func<Vector3, bool> inScope,
+            bool allowPrune,
+            long nowUtcTicks)
         {
             var result = new Result();
 
@@ -56,6 +77,7 @@ namespace RavenIron.Cairn.Core
             var pileTops = new List<Vector3>(piles.Count);
             foreach (PileDetection.Pile pile in piles) pileTops.Add(pile.Top);
             int[] signFor = PileDetection.PairSigns(pileTops, signPositions, Config.ModConfig.LandmarkPairMeters.Value);
+            int[] heldFor = PileDetection.PairSigns(pileTops, holderPositions, Config.ModConfig.LandmarkPairMeters.Value);
 
             for (int p = 0; p < piles.Count; p++)
             {
@@ -77,8 +99,9 @@ namespace RavenIron.Cairn.Core
 
                 string name = sign >= 0 ? signNames[sign] : "";
                 string author = sign >= 0 ? signAuthors[sign] : SignReading.UnknownAuthor;
+                string held = heldFor[p] >= 0 ? holderColours[heldFor[p]] ?? "" : "";
 
-                if (LandmarkStore.Upsert(key, name, author, true, pile.Top, nowUtcTicks)) result.Changed++;
+                if (LandmarkStore.Upsert(key, name, author, true, pile.Top, nowUtcTicks, held)) result.Changed++;
                 seen.Add(key);
                 if (sign < 0) newUnnamedPiles.Add(key);
             }

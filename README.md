@@ -15,6 +15,22 @@ It adds no pieces, no assets and nothing to your screen. It changes one vanilla 
 
 ---
 
+![NEW IN 0.13.0](https://img.shields.io/badge/NEW_IN_0.13.0-A_CAIRN_HOLDS_ITS_COLOUR-8b1e1e?style=for-the-badge&labelColor=1b1b1b)
+
+**Put an item on an item stand at a cairn, and the cairn burns in that item's colour.**
+
+| You | It |
+|---|---|
+| **Set a surtling core on an item stand on the stones** | That cairn burns red, for everyone, within a couple of seconds |
+| **Use what you forage** | A greydwarf eye, blueberries or a blue mushroom burn blue, a freeze gland ice blue, a raspberry, red mushroom or bloodbag red, a carrot, resin or cloudberry orange, a dandelion, yellow mushroom or honey yellow, guck, ooze or a greydwarf trophy green, a wisp cyan, a thistle purple, a crystal or bone fragments white. Cheap on purpose: it stands in the wild |
+| **Items vanilla keeps off a stand** | A greydwarf eye has no model made for a stand, so vanilla refuses it. Cairn lets listed items on anyway and draws the item's own model there (`StandsHoldListedItems`, on) |
+| **Take the item off** | The cairn goes back to its sign's colour, or the usual firelight |
+| **Choose your own items** | `HeldColours` on the server lists them: `SurtlingCore=FF4020`, and so on. `cairn holdable` lists every item a stand will take, and `cairn holdable more` the ones Cairn can put on if you list them |
+| **Write a colour word in square brackets on a sign** | `[blue] Home` or `Old Ford [gold]` and that cairn burns that colour. No tag to type, and Hugin leaves the bracket out when he says the name |
+| **Find your tombstone** | Its light now sits 2.5 m above the stone instead of on it (`TombstoneHeightMeters`) |
+
+An item stand may go on the stones, like a sign. Building one needs whatever vanilla asks for; `cairn pieces itemstand` says exactly what that is in your game, crafting station included.
+
 ![NEW IN 0.12.0](https://img.shields.io/badge/NEW_IN_0.12.0-PICK_YOUR_COLOURS-8b1e1e?style=for-the-badge&labelColor=1b1b1b)
 
 **Pick the colour of the lights in game, with sliders, and give each cairn its own colour from its sign.**
@@ -178,6 +194,10 @@ On a server, set `EnableTombstoneLights = true` in the server's `BepInEx/config/
 
 **In the file:** in your own `com.raveniron.cairn.cfg`, set `BeaconColour` under `[4 - The light]` to a hex colour such as `4A9EFF`. Cairn writes it back as `RRGGBBAA` (`4A9EFFFF`); the last two digits are the alpha. A value that will not read is left at the default, and BepInEx says so in the log. `TombstoneColour`, under `[6 - Tombstones]`, works the same way.
 
+**On an item stand at the cairn:** put an item listed in `HeldColours` on an item stand (flat or on a wall) on the stones or within 6 m (`LandmarkPairMeters`). The cairn takes that item's colour for everyone, and the item wins over a sign's colour. The server decides it from its own `HeldColours` list, which uses the items' prefab names (`SurtlingCore`, `GreydwarfEye`); the server's log names any it does not recognise when a world loads.
+
+**In square brackets on the sign:** write a colour word in brackets anywhere on the sign, such as `[blue] Home` or `Old Ford [gold]`. The cairn's light takes the colour; the sign shows the words as typed, and Hugin leaves the bracket out when he says the name. The words are red, crimson, pink, magenta, orange, amber, gold, yellow, lime, green, teal, cyan, lightblue, blue, violet, purple, white, silver and grey (case and spaces do not matter, so `[Light Blue]` works). Only brackets count: a sign reading Red Cliff keeps the usual light. Each player's game reads it, so every player needs 0.13.0 to see it.
+
 **On a cairn's sign:** write the sign's text inside a colour tag, for example `<color=#4A9EFF>Home</color>` or `<color=red>Red Cliff</color>`. That cairn's light takes the colour, for every player who has `UseSignColours` on (the default), and the sign shows the name in the same colour. Hex (`#RGB`, `#RRGGBB`, `#RRGGBBAA`) always works; the names the sign understands are red, lightblue, blue, grey, black, green, white, orange, purple and yellow. If a sign has more than one colour tag, the first one counts. Set `UseSignColours = false` to light every cairn in your own `BeaconColour` instead.
 
 </details>
@@ -227,6 +247,7 @@ All safe to leave alone. They are in `BepInEx/config/com.raveniron.cairn.cfg`, a
 | 2 - Landmarks | `QuickChecks` | placing, removing or knocking down a stone, or writing or removing a sign, updates its cairn in a couple of seconds; off, changes wait for the full search (on) |
 | 2 - Landmarks | `LandmarkRotationSeconds` | how often the whole world is searched for cairns, which catches anything a quick check missed (20 s) |
 | 2 - Landmarks | `SignPrefabs` | which pieces count as signs |
+| 4 - The light | `HeldColours` · `HolderPrefabs` | which held items colour a cairn and in what colour, and which pieces hold them (item stands) |
 | 3 - Cairn piles | `StonePrefabs` | which stone pieces a cairn can be built from |
 | 3 - Cairn piles | `PileMinPieces` · `PileMaxPieces` | how many stones make a cairn (4), and the most one may hold (100); raise the first if decorative stones start lighting up |
 | 3 - Cairn piles | `PileLinkMeters` · `PileMaxExtentMeters` | stones this close join one cairn (2.5 m); the footprint that separates a waymark from a building (4 m) |
@@ -248,7 +269,7 @@ All safe to leave alone. They are in `BepInEx/config/com.raveniron.cairn.cfg`, a
 | **3 - Cairn piles** | `StackableStones` (each player's own copy decides their placing) · `StonePileStoneCost` (0 leaves the hammer's stone pile recipe alone; any other value is charged by your own game only) |
 | **4 - The light** | `EnableBeacons` · `BeaconColour` · `UseSignColours` · `BeaconMaxDistanceMeters` (800 m) · `BeaconOcclusion` (terrain hides beacons; leave it on) · `BeaconAngularSize` · `BeaconMinSizeMeters` · `BeaconMaxSizeMeters` · `BeaconHeightMeters` |
 | **5 - The raven** | `EnableRavenVoice` · `RavenNameMeters` · `RavenNameMaxLength` |
-| **6 - Tombstones** | `ShowTombstoneLight` · `TombstoneColour` |
+| **6 - Tombstones** | `ShowTombstoneLight` · `TombstoneColour` · `TombstoneHeightMeters` (2.5 m) |
 
 </details>
 

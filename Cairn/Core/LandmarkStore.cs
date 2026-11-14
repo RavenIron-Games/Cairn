@@ -43,10 +43,11 @@ namespace RavenIron.Cairn.Core
             => Upsert(key, name, author, false, default, seenUtcTicks);
 
         public static bool Upsert(LandmarkKey key, string name, string author,
-                                  bool hasPile, Vector3 light, long seenUtcTicks)
+                                  bool hasPile, Vector3 light, long seenUtcTicks, string held = "")
         {
             name = name ?? "";
             author = author ?? "";
+            held = held ?? "";
 
             if (_landmarks.TryGetValue(key, out Landmark existing))
             {
@@ -56,12 +57,14 @@ namespace RavenIron.Cairn.Core
                 bool changed = existing.Name != name
                             || existing.Author != author
                             || existing.HasPile != hasPile
-                            || Moved(existing.Light, light);
+                            || Moved(existing.Light, light)
+                            || existing.Held != held;
 
                 existing.Name = name;
                 existing.Author = author;
                 existing.HasPile = hasPile;
                 existing.Light = light;
+                existing.Held = held;
                 existing.LastSeenUtcTicks = seenUtcTicks;
 
                 // LastSeen moves on every sweep and is not worth a disk write on its own; it
@@ -70,7 +73,7 @@ namespace RavenIron.Cairn.Core
                 return changed;
             }
 
-            _landmarks[key] = new Landmark(key, name, author, seenUtcTicks, seenUtcTicks, hasPile, light);
+            _landmarks[key] = new Landmark(key, name, author, seenUtcTicks, seenUtcTicks, hasPile, light) { Held = held };
             _dirty = true;
             return true;
         }

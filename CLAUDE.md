@@ -135,6 +135,50 @@ on upload: 4-space indent, LF, no final newline, and `"dependencies": []`. The d
 lives in the store API instead, which is what mod managers read. Its 0.11.1 zip is the same,
 so this is how Hexium works, not a fault in this upload.
 
+**PACKAGED 2026-11-13: v0.13.0, held colours, sign brackets, a higher tombstone light**
+(branch `feature/held-colours`, local only, not pushed or merged; zip in `dist\`). The owner asked for it the
+day 0.12.0 shipped; Drazik (a player) asked for the tombstone light to sit higher.
+- **A cairn takes the colour of what it holds.** An item stand (`HolderPrefabs`: itemstandh,
+  itemstand) on or within `LandmarkPairMeters` of a cairn, holding an item on `HeldColours`
+  (server-read, `ItemPrefab=RRGGBB`), colours it for everyone. The server reads the stand's
+  `ZDOVars.s_item` hash in the sweep and the quick check, pairs it like a sign, stores it as a
+  TWELFTH ledger field (a 0.12.0 reader takes field 10 as the name and never sees it), and sends
+  it as a block AFTER the beacons (a 0.12.0 client never reads it). Held beats sign tag beats
+  bracket. Item stands may go on stones.
+- **Vanilla refuses most items on a stand, and the owner's first two picks with them.** A
+  greydwarf eye has no "attach" model, and no stand accepts the Material type. `cairn holdable`
+  showed 598 holdable items and that GreydwarfEye, Crystal, Ruby and Amber are not among them.
+  So `StandsHoldListedItems` (on, client-read, the owner's call) lets a LISTED item past both
+  rules (never past a stand's own never-this list), and Cairn draws a plain copy of the item's
+  model on the stand (shared mesh and materials, no collider, no ZNetView, handed to vanilla as
+  `m_visualItem` so vanilla destroys it). `cairn holdable more` / `why <Item>` are the instruments.
+  Defaults are cheap forage on the owner's word ("those are expensive items to leave in the woods").
+- **`[colour]` in square brackets on a sign** colours the light (twenty words, no black); bare
+  words never count (the owner chose brackets). Hugin leaves colour brackets out of the name.
+- **`TombstoneHeightMeters`** (2.5 m, client-read) for the tombstone light.
+- **Verified in game 2026-11-13, single player (`testing` profile, Valheim 1.0.21):** stand on
+  the stones; a greydwarf eye on it, drawn and lighting blue (quick check 1 s after); surtling
+  core red, dandelion yellow, blue mushroom blue, all saved as v3 rows; item off and swap update
+  in seconds; `[cyan] Test` lit cyan and `Red Cliff` went back to firelight (owner's eyes).
+  **And on Storm10 the same evening** (dedicated, 1.0.21, `testing` client joined by code at
+  18:46): a greydwarf eye on a stand, let on and drawn by the client (18:47:38), the server's quick
+  check found `1 held colour(s) ... 1 changed` one second later, and the owner saw the eye and a
+  blue light; taking it off gave `0 held colour(s)`; a sign written `[blue]` named the cairn and
+  its bracket colour followed each edit (owner's eyes); the tombstone light sat above the stone
+  (owner's eyes). The final default list (21 cheap items) loaded on Storm10 as `21 item(s) can be
+  held`, and bone fragments on a stand gave `1 held colour(s)` and a white light with the bones
+  drawn (owner's eyes, 18:58). No errors on either side. **Not yet tried:** a 0.12.0 client against a 0.13.0
+  server; the drawn eye on a SECOND player's screen. Storm10 would
+  not take a join that afternoon: every boot after 15:16 logged a NullReferenceException in
+  `ZPlayFabMatchmaking.OnCheckJoinCodeSuccess` and the join code would not resolve, even after a
+  3-minute gap; it is a crossplay server, so joining by IP never works there. It healed by itself
+  after about two and a half hours off: the 18:45 boot retried the check twice and went active.
+  Lesson: a quick restart can strand a crossplay lobby under the same code; give it minutes.
+- **A deploy trap found the same day:** Gale profile plugin files are hard links into Gale's
+  cache, so copying a test DLL over one rewrote the cached store 0.11.1 (moved aside as
+  `_0.11.1.test-build-not-store`), and a Gale update replaced the test build wholesale. Deploy
+  with `rm` then `cp`, keep backups in `profiles\testing\_cairn-backups\`.
+
 **Status: 0.12.0 live on the store** (since 2026-11-13) under team `RavenIronStudios`,
 categorised "Client & Server - must be installed on both". The store's version list also
 holds 0.11.1, 0.11.0, 0.10.0 and 0.9.1. The owner does every Hexium upload.

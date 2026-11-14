@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.13.0
+
+**A cairn takes the colour of what it holds.**
+
+- **Put an item on an item stand at a cairn** and the cairn burns in that item's colour, for
+  everyone: a greydwarf eye, blueberries or a blue mushroom blue, a freeze gland ice blue, a
+  raspberry, red mushroom, bloodbag or surtling core red, a carrot, resin or cloudberry orange, a
+  dandelion, yellow mushroom or honey yellow, guck, ooze or a greydwarf trophy green, a wisp cyan,
+  a thistle purple, a crystal or bone fragments white. The
+  defaults are cheap, everyday things on purpose: a cairn stands in the wild. The stand can sit on the stones or within 6 m (`LandmarkPairMeters`).
+  Taking the item off returns the cairn to its sign's colour or the usual firelight, within a
+  couple of seconds.
+- **`HeldColours`** (on the server) lists the items and their colours, as
+  `ItemPrefab=RRGGBB`. The server log names any item it does not recognise when a world loads.
+  **`HolderPrefabs`** lists the pieces that hold them (both item stands). Only items a stand will
+  hold can work (vanilla wants a model made for it; a greydwarf eye has none): **`cairn holdable`**
+  lists them, and the server log names any listed item no stand will take.
+- **A stand holds listed items vanilla refuses**, like a greydwarf eye, and Cairn draws the
+  item's own model on it (`StandsHoldListedItems`, on by default, read by each player's game).
+  Vanilla only puts items with a model made for a stand on one. `cairn holdable more` lists the
+  items this opens up. Players need the server's `HeldColours` list for an item added to it.
+- An item stand may now be placed on the stones, as a sign can. Building one still needs what
+  vanilla asks for; `cairn pieces itemstand` now says which crafting station a piece needs.
+- When a cairn has both, the held item's colour wins over the sign's. `UseSignColours = false`
+  ignores both in your own game.
+- **A colour word in square brackets on a sign** colours the cairn: `[blue] Home`, `Old Ford [gold]`,
+  `[Light Blue] Lake`. Twenty words: red, crimson, pink, magenta, orange, amber, gold, yellow, lime,
+  green, teal, cyan, lightblue, blue, violet, purple, white, silver, grey and gray. Only brackets
+  count, so a sign reading Red Cliff keeps the usual light. The sign shows the words as typed;
+  Hugin leaves the bracket out of the name. A colour tag on the same sign still wins. Read by each
+  player's game.
+- **The tombstone light sits higher**: 2.5 m above the stone, where it used to sit on it.
+  `TombstoneHeightMeters` changes it, in your own game.
+- The server needs 0.13.0 to decide held colours. A player on 0.12.0 still sees every light,
+  just without the held colour; a 0.12.0 server simply sends none.
+
 ## 0.12.0
 
 **Pick the colour of the lights in game, with sliders, and give each cairn its own colour.**

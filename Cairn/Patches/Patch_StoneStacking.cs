@@ -19,7 +19,8 @@ namespace RavenIron.Cairn.Patches
     ///    a hut on a one-stone foundation, which is very likely why Iron Gate set it false. So
     ///    a postfix on `Player.UpdatePlacementGhost` refuses a placement vanilla judged valid when
     ///    the ghost is not a stone and the piece under the crosshair is one. Rocks on rocks —
-    ///    and, since 0.12.0, a sign (`SignPrefabs`) on a stone, so a cairn can wear its name.
+    ///    and, since 0.12.0, a sign (`SignPrefabs`) on a stone, so a cairn can wear its name;
+    ///    since 0.13.0 an item stand (`HolderPrefabs`) too, so it can hold its colour.
     ///
     /// This edits a VANILLA piece's behaviour, on by default — an amended locked decision
     /// (owner, 2026-10-16), announced at boot and switchable with `StackableStones`. It must be
@@ -75,8 +76,8 @@ namespace RavenIron.Cairn.Patches
                         if (ModConfig.StackableStones.Value)
                             Cairn.Log.LogWarning(
                                 $"stone stacking ON: {StoneStacking.StonePrefab} now holds up what is stacked on it " +
-                                $"(vanilla: supports={_vanillaSupports.ToString().ToLowerInvariant()}), and only a stone " +
-                                "or a sign may be placed on a stone. This changes a VANILLA piece — set StackableStones = false " +
+                                $"(vanilla: supports={_vanillaSupports.ToString().ToLowerInvariant()}), and only a stone, " +
+                                "a sign or an item stand may be placed on a stone. This changes a VANILLA piece — set StackableStones = false " +
                                 "to leave it alone.");
                         else
                             Cairn.Log.LogInfo("stone stacking off: Placeable_Stone is left exactly as vanilla made it.");
@@ -157,8 +158,9 @@ namespace RavenIron.Cairn.Patches
                     if (!ray(__instance, out _, out _, out Piece target, out _, out _, water)) return;
                     if (target == null) return;
 
+                    // Signs (0.12.0) and item stands (0.13.0) may go on the stones; nothing else.
                     if (!StoneStacking.Refuse(true, ___m_placementGhost.name, target.gameObject.name,
-                                              ModConfig.SignPrefabs.Value)) return;
+                                              ModConfig.SignPrefabs.Value + "," + ModConfig.HolderPrefabs.Value)) return;
 
                     // TryPlacePiece re-runs this method and then switches on the status, so this one
                     // assignment blocks the click and shows vanilla's own "invalid placement" message.

@@ -33,6 +33,7 @@ namespace RavenIron.Cairn.Net
             public LandmarkKey Key;
             public Vector3 Light;
             public string Name;
+            public string Held;   // RRGGBBAA of what the cairn holds, or "" (0.13.0)
         }
 
         private static readonly List<Beacon> _cache = new List<Beacon>(32);
@@ -54,7 +55,7 @@ namespace RavenIron.Cairn.Net
             foreach (Landmark l in LandmarkStore.Snapshot())
             {
                 if (!l.HasPile) continue;
-                live.Add(new Beacon { Key = l.Key, Light = l.Light, Name = l.Name });
+                live.Add(new Beacon { Key = l.Key, Light = l.Light, Name = l.Name, Held = l.Held ?? "" });
             }
             return live;
         }
@@ -125,8 +126,8 @@ namespace RavenIron.Cairn.Net
         /// `BeaconMaxCount`, the ones nearest a player (see BeaconSelection for why the
         /// oldest-first cut this replaced left every NEW cairn dark).
         ///
-        /// The packet's shape is unchanged from 0.9.1, so a 0.9.1 client reads a 0.9.2
-        /// server's broadcast exactly as before. Only the choice of WHICH cairns moved.
+        /// The beacons themselves are laid out as in 0.9.1, so any older client reads them exactly
+        /// as before; 0.13.0 only appends the held-colour block after them (see below).
         /// </summary>
         public static void Broadcast(int maxBeacons)
         {
@@ -170,6 +171,13 @@ namespace RavenIron.Cairn.Net
                     pkg.Write(l.Light.z);
                     pkg.Write(l.Name ?? "");
                 }
+
+                // Held colours (0.13.0), as a block AFTER every beacon rather than a field inside
+                // each: a 0.12.0 game reads the beacons exactly as before and never reaches these
+                // bytes, so this needs no new RPC name and old and new games mix freely. The count
+                // repeats the beacon count, which is what lets a reader know the block is whole.
+                pkg.Write(lit.Count);
+                foreach (Landmark l in lit) pkg.Write(l.Held ?? "");
 
                 rpc.InvokeRoutedRPC(ZRoutedRpc.Everybody, RpcName, pkg);
             }
@@ -249,8 +257,20 @@ namespace RavenIron.Cairn.Net
                     {
                         Key = new LandmarkKey(kx, ky, kz),
                         Light = new Vector3(lx, ly, lz),
-                        Name = name
+                        Name = name,
+                        Held = ""
                     });
+                }
+
+                // A 0.12.0 server sends no colour block; its push simply ends here.
+                if (pkg.GetPos() < pkg.Size() && pkg.ReadInt() == count)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        Beacon b = received[i];
+                        b.Held = HeldColour.Normalise(pkg.ReadString());   // anything malformed is no colour
+                        received[i] = b;
+                    }
                 }
 
                 _cache.Clear();

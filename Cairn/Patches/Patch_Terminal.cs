@@ -136,6 +136,7 @@ namespace RavenIron.Cairn.Patches
                     case "landmarks": Landmarks(args); return;
                     case "prefabs":   Prefabs(args); return;
                     case "pieces":    Pieces(args); return;
+                    case "holdable":  Holdable(args); return;
                     case "beacons":   Beacons(args); return;
                     case "raven":     RavenVoice(args); return;
                     case "save":      SaveNow(args); return;
@@ -154,7 +155,10 @@ namespace RavenIron.Cairn.Patches
             Say(args, "cairn status         — what this process is, and what is running");
             Say(args, "cairn landmarks      — every landmark in the ledger");
             Say(args, "cairn prefabs <text> — every prefab name containing <text>");
-            Say(args, "cairn pieces <text>  — only BUILDABLE pieces, with tool and cost");
+            Say(args, "cairn pieces <text>  — only BUILDABLE pieces, with tool, cost and station");
+            Say(args, "cairn holdable [text] — items an item stand will hold, for HeldColours");
+            Say(args, "cairn holdable more  — items Cairn could put on a stand if you list them");
+            Say(args, "cairn holdable why <Item> — every rule a stand applies to one item, and the answer");
             Say(args, "cairn beacons        — every light this client knows, and why it is dark");
             Say(args, "cairn raven          — why Hugin is or is not saying anything");
             Say(args, "cairn save           — flush the ledger now (authority only)");
@@ -224,6 +228,107 @@ namespace RavenIron.Cairn.Patches
             {
                 Say(args, "cairn: prefab listing failed: " + ex.Message);
             }
+        }
+
+        /// <summary>
+        /// Every item an item stand will hold in THIS game, by vanilla's own rule (see
+        /// <see cref="Core.Holdable"/>), with the prefab name `HeldColours` wants and whether it is
+        /// already on the list. Prefab names and attach models live in asset bundles, so the game
+        /// is the only authority; the greydwarf eye, the first item asked for, is not holdable.
+        /// </summary>
+        private static void Holdable(Terminal.ConsoleEventArgs args)
+        {
+            string filter = args.Args.Length > 2 ? args.Args[2].ToLowerInvariant() : "";
+            if (filter == "why")
+            {
+                HoldableWhy(args, args.Args.Length > 3 ? args.Args[3] : "");
+                return;
+            }
+            bool more = filter == "more";
+            if (more) filter = args.Args.Length > 3 ? args.Args[3].ToLowerInvariant() : "";
+            ObjectDB db = ObjectDB.instance;
+            if (db == null || db.m_items == null || db.m_items.Count == 0 || ZNetScene.instance == null)
+            {
+                Say(args, "cairn: the game's item list is not loaded — join or start a world first.");
+                return;
+            }
+
+            List<KeyValuePair<string, ItemStand>> stands = Core.Holdable.Stands();
+            if (stands.Count == 0)
+            {
+                Say(args, $"cairn: none of HolderPrefabs ({ModConfig.HolderPrefabs.Value}) is an item stand in this game.");
+                return;
+            }
+
+            Dictionary<string, string> listed = Core.HeldColour.Parse(ModConfig.HeldColours.Value);
+            var lines = new List<string>();
+            foreach (GameObject item in db.m_items)
+            {
+                if (item == null) continue;
+                string name = item.name;
+                ItemDrop drop = item.GetComponent<ItemDrop>();
+                string shown = drop != null && drop.m_itemData?.m_shared != null ? drop.m_itemData.m_shared.m_name : "";
+                if (filter.Length > 0 && !name.ToLowerInvariant().Contains(filter) && !shown.ToLowerInvariant().Contains(filter))
+                    continue;
+
+                string colour = listed.TryGetValue(name, out string hex) ? $"  colour #{hex}" : "";
+                if (more)
+                {
+                    // Vanilla refuses it on every stand, but only for want of a display model.
+                    bool anyVanilla = false;
+                    var drawable = new List<string>(2);
+                    foreach (KeyValuePair<string, ItemStand> s in stands)
+                    {
+                        if (Core.Holdable.VanillaHolds(s.Value, item)) anyVanilla = true;
+                        else if (Core.Holdable.Drawable(s.Value, item)) drawable.Add(s.Key);
+                    }
+                    if (anyVanilla || drawable.Count == 0) continue;
+                    lines.Add($"  {name}  {shown}  [{string.Join("/", drawable.ToArray())}, if listed]{colour}");
+                    continue;
+                }
+
+                string by = Core.Holdable.HeldBy(stands, item);
+                if (by.Length == 0) continue;
+                lines.Add($"  {name}  {shown}  [{by}]{colour}");
+            }
+
+            lines.Sort(StringComparer.OrdinalIgnoreCase);
+            Say(args, more
+                ? $"cairn: {lines.Count} item(s) vanilla keeps off a stand only for want of a display model; " +
+                  "add one to HeldColours and Cairn lets it on and draws it" +
+                  (filter.Length > 0 ? $" (matching \"{filter}\")" : "")
+                : $"cairn: {lines.Count} item(s) an item stand will hold" +
+                  (filter.Length > 0 ? $" matching \"{filter}\"" : "") + " (prefab name, game name, which stand)");
+            foreach (string l in lines) Say(args, l);
+        }
+
+        /// <summary>
+        /// One item, every stand, every rule: which one keeps it off. The instrument for "it still
+        /// will not go on", so the next answer comes from the game rather than a guess.
+        /// </summary>
+        private static void HoldableWhy(Terminal.ConsoleEventArgs args, string itemName)
+        {
+            ObjectDB db = ObjectDB.instance;
+            if (db == null || ZNetScene.instance == null)
+            {
+                Say(args, "cairn: the game's item list is not loaded — join or start a world first.");
+                return;
+            }
+            if (itemName.Length == 0) { Say(args, "cairn: usage: cairn holdable why <ItemPrefab>, e.g. GreydwarfEye"); return; }
+
+            GameObject item = db.GetItemPrefab(itemName);
+            if (item == null)
+            {
+                // Prefab names are case-sensitive; offer the right spelling.
+                foreach (GameObject g in db.m_items)
+                    if (g != null && string.Equals(g.name, itemName, StringComparison.OrdinalIgnoreCase)) { item = g; break; }
+                if (item == null) { Say(args, $"cairn: no item named {itemName}. `cairn holdable more` and `cairn holdable` list names."); return; }
+            }
+
+            bool listed = Core.Holdable.Listed().ContainsKey(item.name);
+            Say(args, $"cairn: {item.name} — {(listed ? "on" : "NOT on")} HeldColours; StandsHoldListedItems = {ModConfig.StandsHoldListedItems.Value}");
+            foreach (KeyValuePair<string, ItemStand> s in Core.Holdable.Stands())
+                Say(args, $"  {s.Key}: {Core.Holdable.Explain(s.Value, item)}");
         }
 
         /// <summary>
@@ -528,7 +633,12 @@ namespace RavenIron.Cairn.Patches
                     parts.Add($"{item.gameObject.name} x{amount}");
                 }
 
-                return parts.Count > 0 ? string.Join(", ", parts.ToArray()) : "free";
+                string cost = parts.Count > 0 ? string.Join(", ", parts.ToArray()) : "free";
+
+                // Which crafting station must be in range to build it (0.13.0): an item stand on
+                // a lonely headland is only buildable if this says "none".
+                var station = AccessTools.Field(piece.GetType(), "m_craftingStation")?.GetValue(piece) as Component;
+                return cost + (station != null ? $"  needs {station.gameObject.name} nearby" : "  needs no station");
             }
             catch
             {

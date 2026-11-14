@@ -56,8 +56,9 @@ namespace RavenIron.Cairn.Visuals
             public float Visibility;      // 0..1, smoothed — never pops
             public bool Blocked;
             public bool Tomb;             // a tombstone light (0.11.0), drawn in its own colour
-            public bool HasSign;          // the cairn's sign carries a colour (0.12.0)
+            public bool HasSign;          // the cairn has a builder's colour (0.12.0)
             public Color Sign;            // that colour, alpha included
+            public bool FromHeld;         // ...and it came from a held item, not the sign (0.13.0)
         }
 
         /// <summary>
@@ -154,10 +155,11 @@ namespace RavenIron.Cairn.Visuals
                     dist > maxDist ? $"OUT OF RANGE (>{maxDist:F0}m)" :
                     lit.Visibility > 0.01f ? "lit" : "fading";
 
+                string source = lit.FromHeld ? "held colour" : "sign colour";
                 string colour = lit.HasSign
                     ? (ModConfig.UseSignColours.Value
-                        ? $"  sign colour #{ColorUtility.ToHtmlStringRGBA(lit.Sign)}"
-                        : "  sign colour ignored (UseSignColours = false)")
+                        ? $"  {source} #{ColorUtility.ToHtmlStringRGBA(lit.Sign)}"
+                        : $"  {source} ignored (UseSignColours = false)")
                     : "";
                 lines.Add(
                     $"  {kv.Key}  {dist:F0}m  vis={lit.Visibility:F2}  {why}{colour}");
@@ -224,18 +226,24 @@ namespace RavenIron.Cairn.Visuals
                     Lit lit = Place(key, b.Light + Vector3.up * lift, tomb: false, wanted);
                     if (lit == null) return;
 
-                    // The builder's colour, read from the sign text the beacon already carries.
-                    lit.HasSign = SignColour.TryRead(b.Name, out float r, out float g, out float bl, out float a);
+                    // The builder's colour. What the cairn HOLDS wins (0.13.0): it is what you can
+                    // see standing on the stones. Otherwise the sign text the beacon already carries.
+                    float r, g, bl, a;
+                    lit.FromHeld = SignColour.TryReadHex(b.Held, out r, out g, out bl, out a);
+                    lit.HasSign = lit.FromHeld || SignColour.TryRead(b.Name, out r, out g, out bl, out a);
                     if (lit.HasSign) lit.Sign = new Color(r, g, bl, a);
                 }
             }
 
             if (ModConfig.ShowTombstoneLight.Value)
             {
+                // Its own height (0.13.0): a tombstone is low, and at the cairn's lift the glow
+                // sat on the stone itself.
+                float tombLift = ModConfig.TombstoneHeightMeters.Value;
                 foreach (TombstoneLights.Grave g in TombstoneSync.Mine())
                 {
                     LightKey key = LightKey.ForTomb(g);
-                    if (Place(key, g.Position + Vector3.up * lift, tomb: true, wanted) == null) return;
+                    if (Place(key, g.Position + Vector3.up * tombLift, tomb: true, wanted) == null) return;
                 }
             }
 

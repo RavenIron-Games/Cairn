@@ -51,6 +51,7 @@ namespace Cairn.Tests
                 TombstoneLightsTests();
                 SignColourTests();
                 LedgerUpdateTests();
+                HeldColourTests();
                 StoreTests();
                 PersistenceTests();
             }
@@ -197,6 +198,29 @@ namespace Cairn.Tests
             var unlit = new Landmark(new LandmarkKey(1, 2, 3), "Plain", "host", 1L, 2L);
             Check(Landmark.TryParse(unlit.Format(), out Landmark unlitBack), "a pileless v2 row parses");
             Check(!unlitBack.HasPile, "no pile stays no pile");
+
+            // --- v3 (0.13.0): the held colour, appended after the name -------------------------
+            var held = new Landmark(new LandmarkKey(10, 49, 27), "Red\tRock", "host", 111L, 222L,
+                                    true, new Vector3(10.25f, 51.5f, 27.75f)) { Held = "FF4020FF" };
+            string heldLine = held.Format();
+            Equal(12, heldLine.Split('\t').Length, "a v3 row has twelve fields");
+            Check(Landmark.TryParse(heldLine, out Landmark heldBack), "a v3 row parses");
+            Equal("FF4020FF", heldBack.Held, "the held colour round trips");
+            Equal("Red\tRock", heldBack.Name, "the name still round trips with a field after it");
+            Equal("", litBack.Held, "a row with nothing held reads back as nothing held");
+
+            // ROLLBACK: a 0.12.0 reader takes field 10 as the name and ignores the rest. Simulate
+            // that reader on a v3 line: the name it would show must be the name, not the colour.
+            Equal("Red\\tRock", heldLine.Split('\t')[10], "an older reader finds the (escaped) name in field 10");
+
+            // A v2 line (11 fields, as 0.12.0 wrote it) still reads, with nothing held.
+            string v2Line = string.Join("\t", heldLine.Split('\t'), 0, 11);
+            Check(Landmark.TryParse(v2Line, out Landmark v2Back) && v2Back.Held == "" && v2Back.Name == "Red\tRock",
+                  "a v2 row reads as before, holding nothing");
+
+            // A hand-edited or corrupt colour field is no colour, never a wrong one.
+            string junk = string.Join("\t", heldLine.Split('\t'), 0, 11) + "\tnot-a-colour";
+            Check(Landmark.TryParse(junk, out Landmark junkBack) && junkBack.Held == "", "a junk colour field reads as nothing held");
 
             // --- v1 migration: a live server wrote one of these on 2026-09-02 ---------------
             const string v1 = "10\t49\t27\t639239624414309706\t639239624414309706\tSteam_76561198392625778\ttest";
@@ -586,6 +610,33 @@ namespace Cairn.Tests
             Check(!SignColour.TryRead("<colour=#FF0000>British</colour>", out _, out _, out _, out _), "only the tag the sign understands counts");
 
             Equal(true, ModConfig.UseSignColours.Value, "sign colours are used by default; false forces your own colour everywhere");
+
+            // --- brackets (0.13.0): a colour word in [ ], anywhere on the sign -----------------
+            Check(SignColour.TryRead("[blue] Home", out r, out g, out b, out a) && b > 0.99f && r < 0.3f && Math.Abs(a - 1f) < 0.002f,
+                  "[blue] at the start colours the light blue");
+            Check(SignColour.TryRead("Old Ford [gold]", out r, out g, out b, out _) && r > 0.99f && g > 0.7f && b < 0.3f,
+                  "a bracket at the end works, and gold is a bracket word");
+            Check(SignColour.TryRead("[Light Blue] Lake", out _, out _, out b, out _) && b > 0.99f,
+                  "case and spaces inside the bracket are ignored");
+            Check(SignColour.TryRead("[light-blue] Lake", out _, out _, out _, out _), "so are hyphens");
+            Check(SignColour.TryRead("[north] Pass [teal]", out r, out g, out b, out _) && g > 0.7f && b > 0.6f && r < 0.2f,
+                  "a bracket that is not a colour is skipped for the next one");
+            Check(!SignColour.TryRead("Red Cliff", out _, out _, out _, out _), "a bare colour word is a name, never a colour");
+            Check(!SignColour.TryRead("Black Forest Camp", out _, out _, out _, out _), "so a camp is never put out by its name");
+            Check(!SignColour.TryRead("[black] Hole", out _, out _, out _, out _), "black is not a bracket word: a black light is no light");
+            Check(!SignColour.TryRead("[north] Pass", out _, out _, out _, out _), "an ordinary bracket colours nothing");
+            Check(!SignColour.TryRead("[blue Home", out _, out _, out _, out _), "an unclosed bracket colours nothing");
+            Check(SignColour.TryRead("<color=#FF0000>[blue] Both</color>", out r, out _, out b, out _) && r > 0.99f && b < 0.01f,
+                  "a colour tag wins over a bracket");
+            Check(SignColour.TryRead("<color=chartreuse>[green] Odd</color>", out r, out g, out _, out _) && g > 0.7f && r < 0.4f,
+                  "a tag the sign cannot read falls back to the bracket");
+            Check(!SignColour.TryRead("<color=chartreuse>Odd</color>", out _, out _, out _, out _),
+                  "and with no bracket it is still no colour, as before");
+
+            Equal("Home", DisplayText.ForSpeech("[blue] Home", 64), "the raven leaves a colour bracket out");
+            Equal("Old Ford", DisplayText.ForSpeech("Old Ford [Gold]", 64), "wherever it is");
+            Equal("[north] Pass", DisplayText.ForSpeech("[north] Pass [teal]", 64), "but keeps a bracket that is the builder's text");
+            Equal("Red Cliff", DisplayText.ForSpeech("Red Cliff", 64), "and a bare colour word is part of the name");
         }
 
         private static void TombstoneLightsTests()
@@ -904,7 +955,72 @@ namespace Cairn.Tests
             r = LedgerUpdate.Apply(Column(1f, 0f), noSigns, none, none, Near(new Vector3(0f, 0f, 0f), 24f), true, 7000L);
             Equal(0, r.Changed + r.Pruned + r.Carried, "a second identical check changes nothing");
 
+            // --- held colours (0.13.0) -------------------------------------------------------
             LandmarkStore.Clear();
+            var twoCairns = new List<Vector3>();
+            twoCairns.AddRange(Column(0f, 0f));
+            twoCairns.AddRange(Column(30f, 0f));
+            // A red stand on top of the first cairn, a blue one 3 m from the second, and a green
+            // one 20 m from both, beyond the 6 m reach.
+            var standAt = new List<Vector3> { new Vector3(0f, 3.2f, 0f), new Vector3(33f, 0f, 0f), new Vector3(15f, 0f, 20f) };
+            var standHex = new List<string> { "FF4020FF", "4A9EFFFF", "00FF00FF" };
+
+            r = LedgerUpdate.Apply(twoCairns, noSigns, none, none, standAt, standHex, world, true, 8000L);
+            Equal(2, r.Changed, "held: both cairns written");
+            Check(LandmarkStore.TryGet(new LandmarkKey(0, 2, 0), out Landmark red) && red.Held == "FF4020FF",
+                  "a stand on the stones colours its cairn");
+            Check(LandmarkStore.TryGet(new LandmarkKey(30, 2, 0), out Landmark blue) && blue.Held == "4A9EFFFF",
+                  "a stand beside a cairn, within reach, colours it");
+
+            // Taking the item off: the stand no longer holds a listed item, so it is not passed.
+            LandmarkStore.MarkClean();
+            r = LedgerUpdate.Apply(twoCairns, noSigns, none, none,
+                new List<Vector3> { standAt[1] }, new List<string> { standHex[1] }, world, true, 9000L);
+            Equal(1, r.Changed, "held: taking the item off changes that cairn only");
+            Check(LandmarkStore.TryGet(new LandmarkKey(0, 2, 0), out red) && red.Held == "", "and it holds nothing now");
+            Check(LandmarkStore.IsDirty, "and the change is saved");
+
+            // Two stands at one cairn: the nearer one decides, and the other colours nothing else.
+            LandmarkStore.Clear();
+            r = LedgerUpdate.Apply(Column(0f, 0f), noSigns, none, none,
+                new List<Vector3> { new Vector3(4f, 0f, 0f), new Vector3(1f, 0f, 0f) },
+                new List<string> { "4A9EFFFF", "FF4020FF" }, world, true, 10000L);
+            Check(LandmarkStore.TryGet(new LandmarkKey(0, 2, 0), out red) && red.Held == "FF4020FF",
+                  "the nearest stand wins");
+
+            // The old overload (no holders) clears nothing it was never told about? It passes NO
+            // holders, so a cairn it writes holds nothing: every caller in the mod passes holders.
+            r = LedgerUpdate.Apply(Column(0f, 0f), noSigns, none, none, world, true, 11000L);
+            Check(LandmarkStore.TryGet(new LandmarkKey(0, 2, 0), out red) && red.Held == "",
+                  "the holder-less overload means 'nothing held'");
+
+            LandmarkStore.Clear();
+        }
+
+        private static void HeldColourTests()
+        {
+            Section("HeldColour");
+
+            var bad = new List<string>();
+            var map = HeldColour.Parse(" GreydwarfEye=4A9EFF, SurtlingCore : #ff4020 ,Ruby=E0115F80,Broken,=FFFFFF,Amber=FFF,Crystal=GGGGGG ", bad);
+            Equal("4A9EFFFF", map["GreydwarfEye"], "RRGGBB gains full alpha");
+            Equal("FF4020FF", map["SurtlingCore"], "':' and '#' and lower case are accepted");
+            Equal("E0115F80", map["Ruby"], "RRGGBBAA keeps its alpha");
+            Equal(3, map.Count, "only the readable entries are kept");
+            Equal(4, bad.Count, "and each unreadable one is reported");
+            Check(bad.Contains("Amber=FFF"), "shorthand is refused, not guessed at");
+            Check(!map.ContainsKey("greydwarfeye"), "item names are case-sensitive, as prefab names are");
+
+            var dup = HeldColour.Parse("Ruby=111111,Ruby=222222");
+            Equal("222222FF", dup["Ruby"], "a repeated item keeps its last colour");
+
+            Equal("", HeldColour.Normalise(null), "null is no colour");
+            Equal("", HeldColour.Normalise("12345"), "a wrong length is no colour");
+            Equal(0, HeldColour.Parse("").Count, "an empty list colours nothing");
+
+            Check(SignColour.TryReadHex("FF402080", out float r, out float g, out float b, out float a)
+                  && Math.Abs(r - 1f) < 0.001f && Math.Abs(a - 128f / 255f) < 0.001f, "the renderer reads a stored colour");
+            Check(!SignColour.TryReadHex("", out _, out _, out _, out _), "an empty stored colour reads as none");
         }
 
         // ---- store ----------------------------------------------------------------------
