@@ -187,8 +187,8 @@ day 0.12.0 shipped; Drazik (a player) asked for the tombstone light to sit highe
 
 **Status: 0.13.0 live on Hexium AND Thunderstore** (since 2026-11-13) under team
 `RavenIronStudios`, categorised "Client & Server - must be installed on both" (Thunderstore:
-Mods, Building). Thunderstore became a channel on 2026-11-13; the locked Distribution row below
-still says Hexium only and is out of date. The owner does every Hexium upload, always.
+Mods, Building). Thunderstore became a channel on 2026-11-13 (see the Distribution row). The
+owner does every Hexium upload, always.
 **Next time anyone touches Cairn, finish the two open checks for tombstone lights.** Watch the
 light go out once the tombstone is emptied. Have a second player confirm they do NOT see it. 0.7.0, the first release, was built,
 verified and shipped in a single day (published 2026-09-02/03).
@@ -342,7 +342,7 @@ mod-authored light needs its own decision.
 | Seabirds as a landfall signal | **Not in v1.** Good idea, unproven, and it competes for the same "is this legible?" budget as the beacon. Revisit once the beacon is shipped. |
 | Console prefix | `cairn` |
 | GUID / namespace | `com.raveniron.cairn` / `RavenIron.Cairn` |
-| Distribution | **Hexium only** (hexium.gg), store team `RavenIronStudios`, packaged by `tools\package.ps1` — never hand-zipped. Thunderstore is deliberately NOT a channel (RavenIron's call, 2026-09-03). The zip is still built to Thunderstore's package *format*, because that is what Hexium consumes — format and channel are different things and these docs kept conflating them. |
+| Distribution | **Hexium AND Thunderstore** (amended 2026-11-13 by the owner: "we are on thunderstore now"; was Hexium only, RavenIron's call of 2026-09-03). Store team `RavenIronStudios` on both. ONE zip for both, packaged by `tools\package.ps1` from a fresh clone of the commit — never hand-zipped. **The owner does every Hexium upload, always** ("i will alway load hexium myself"); Claude uploads to Thunderstore only when the owner says so for that release, through the experimental submission API with the team key read from the owner's local env file at upload time (never copied anywhere). Thunderstore serves the uploaded zip byte-identical; Hexium rewrites `manifest.json` (empty dependencies in the zip, the real ones in its API) and serves the same DLL. **Check both stores' APIs before and after every release**: the BepInExPack pin against each store's current pack, and that the new version answers on each, since the two can drift (Cairn 0.12.0 sat on Hexium alone for an afternoon). |
 | Timeline | Open-ended. Done when it's done. |
 
 ### Deliberately unresolved
