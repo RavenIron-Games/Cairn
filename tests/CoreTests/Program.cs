@@ -1021,6 +1021,10 @@ namespace Cairn.Tests
             Check(SignColour.TryReadHex("FF402080", out float r, out float g, out float b, out float a)
                   && Math.Abs(r - 1f) < 0.001f && Math.Abs(a - 128f / 255f) < 0.001f, "the renderer reads a stored colour");
             Check(!SignColour.TryReadHex("", out _, out _, out _, out _), "an empty stored colour reads as none");
+
+            Equal(2, ModConfig.ItemStandWoodCost.Value, "an item stand costs 2 wood by default (0.13.1, the owner's call)");
+            Check(ModConfig.HolderPrefabs.Value.Contains("itemstandh") && ModConfig.HolderPrefabs.Value.Contains("itemstand,") ||
+                  ModConfig.HolderPrefabs.Value == "itemstandh,itemstand", "both item stands are holders, so both get the price");
         }
 
         // ---- store ----------------------------------------------------------------------

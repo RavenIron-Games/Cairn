@@ -135,6 +135,18 @@ on upload: 4-space indent, LF, no final newline, and `"dependencies": []`. The d
 lives in the store API instead, which is what mod managers read. Its 0.11.1 zip is the same,
 so this is how Hexium works, not a fault in this upload.
 
+**PACKAGED 2026-11-14: v0.13.1, an item stand costs 2 wood and needs no workbench** (branch
+`feature/stand-cost`, local only). Drazik asked for no support under a held item; dropping the
+stand was refused (a loose item rolls off and despawns after an hour; an item-as-piece is a new
+piece), hiding it was declined by the owner because the price stays, so the owner chose a cheap
+stand: `ItemStandWoodCost` (2, default on) rewrites BOTH item stands' recipe to wood and clears
+the crafting station, everywhere, from a ZNetScene.Awake postfix (`Patch_StandCost`), announced
+at boot; 0 restores vanilla. Not cheap-only-on-a-cairn, because a refund pays the CURRENT recipe.
+**Vanilla's recipe, read out of the game that day: 4 FineWood + 1 BronzeNails at a
+piece_workbench** for both stands (the workbench question 0.13.0 left open). Verified in single
+player (`testing`, 1.0.21): both stands announced at 2 Wood with no station, the build menu showed
+2 wood, and a flat stand was placed on a cairn away from any workbench (owner's eyes).
+
 **CUT 2026-11-13: v0.13.0, held colours, sign brackets, a higher tombstone light, LIVE ON BOTH
 STORES that evening** (Hexium API `date_created` 02:03:42Z and Thunderstore 02:05:15Z, both on
 2026-11-14 UTC; dependency `BepInExPack_Valheim-5.4.2360`). Zip built by `tools\package.ps1` from a

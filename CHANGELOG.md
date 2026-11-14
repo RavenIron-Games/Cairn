@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.13.1
+
+**An item stand costs 2 wood and needs no workbench.**
+
+- So a cairn's colour can be set on a lonely headland without fine wood or a trip back to a
+  workbench. Both item stands, everywhere, trophy walls included: a recipe belongs to the piece.
+- **`ItemStandWoodCost`** (2) sets the price; **0 leaves the stands exactly as the game made
+  them.** It edits a vanilla recipe, and the log says so at start-up with the old price.
+- Each player's own game charges the cost, so each player's setting is what they pay.
+- A stand built before the change refunds 2 wood when you take it down, not its old materials.
+
 ## 0.13.0
 
 **A cairn takes the colour of what it holds.**
