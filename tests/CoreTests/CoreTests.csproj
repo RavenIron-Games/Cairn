@@ -35,10 +35,12 @@
     <Compile Include="..\..\Cairn\Core\TombstoneLights.cs" />
     <Compile Include="..\..\Cairn\Core\SignColour.cs" />
     <Compile Include="..\..\Cairn\Core\HeldColour.cs" />
+    <Compile Include="..\..\Cairn\Core\ServerRules.cs" />
     <Compile Include="..\..\Cairn\Core\DisplayText.cs" />
     <Compile Include="..\..\Cairn\Core\Persistence.cs" />
     <Compile Include="..\..\Cairn\Core\ConfigLedger.cs" />
     <Compile Include="..\..\Cairn\Config\ModConfig.cs" />
+    <Compile Include="..\..\Cairn\Config\ConfigurationManagerAttributes.cs" />
   </ItemGroup>
 
   <ItemGroup>

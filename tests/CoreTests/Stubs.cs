@@ -87,7 +87,7 @@ namespace BepInEx.Configuration
 
     public class ConfigDescription
     {
-        public ConfigDescription(string description, object acceptableValues = null) { }
+        public ConfigDescription(string description, object acceptableValues = null, params object[] tags) { }
     }
 
     public class ConfigEntry<T>

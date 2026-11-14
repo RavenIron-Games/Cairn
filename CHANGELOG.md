@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.13.2
+
+**A server can turn sign colours off, so only what a cairn holds colours it.**
+
+- **`ServerAllowsSignColours`** (on by default) is a rule for everyone in the world, set on the
+  server and sent to every player's game. Off, a sign's colour tag or `[bracket]` no longer colours
+  a cairn; an item on a stand still does. So a red cairn means finding something red. Signs still
+  name cairns. A player's idea.
+- `UseSignColours` is unchanged: each player's own switch to see their own colour on every cairn.
+- The two were easy to mix up, so in the F1 window they now read **Cairn colours: from signs
+  (SERVER RULE, everyone)** and **Cairn colours: show them (JUST YOU)**, side by side, and each
+  description opens with who it affects. Only the labels changed; the file keeps the old key.
+- `cairn status` gives each its own line: whether signs colour cairns in this world and who
+  decided, then what you see.
+- A player still on 0.13.1 or older keeps seeing sign colours until they update.
+
 ## 0.13.1
 
 **An item stand costs 2 wood and needs no workbench.**

@@ -835,6 +835,16 @@ namespace RavenIron.Cairn.Patches
                         ? " — OVER THE CAP: only the cairns nearest a player reach clients"
                         : ""));
 
+            // The colour settings (0.13.2), one line each, saying WHO each one is for: the world's
+            // rule (and who decided it), then this player's own choice.
+            Say(args, $"  signs      : {(Net.LandmarkSync.SignColoursAllowed ? "CAN colour cairns" : "do NOT colour cairns; only items on stands do")}" +
+                      (Persistence.IsLoaded
+                          ? " (rule for everyone: ServerAllowsSignColours, set in this game)"
+                          : " (rule for everyone: set by the server)"));
+            Say(args, ModConfig.UseSignColours.Value
+                ? "  you see    : each cairn's own colour (UseSignColours, just you)"
+                : "  you see    : your own BeaconColour on every cairn (UseSignColours = false, just you)");
+
             // Quick checks (0.12.0): a placed stone or written sign lights its cairn in seconds.
             if (Persistence.IsLoaded)
                 Say(args, ModConfig.QuickChecks.Value

@@ -23,6 +23,7 @@ It adds no pieces, no assets and nothing to your screen. It changes one vanilla 
 |---|---|
 | **Set a surtling core on an item stand on the stones** | That cairn burns red, for everyone, within a couple of seconds |
 | **Use what you forage** | A greydwarf eye, blueberries or a blue mushroom burn blue, a freeze gland ice blue, a raspberry, red mushroom or bloodbag red, a carrot, resin or cloudberry orange, a dandelion, yellow mushroom or honey yellow, guck, ooze or a greydwarf trophy green, a wisp cyan, a thistle purple, a crystal or bone fragments white. Cheap on purpose: it stands in the wild |
+| **Make colour something you find** | Set `ServerAllowsSignColours = false` on the server and only items on stands colour cairns: a red cairn needs something red. Signs still name them |
 | **Build the stand anywhere** | An item stand costs 2 wood and needs no workbench (`ItemStandWoodCost`; 0 keeps vanilla's recipe). It changes every item stand, trophy walls too |
 | **Items vanilla keeps off a stand** | A greydwarf eye has no model made for a stand, so vanilla refuses it. Cairn lets listed items on anyway and draws the item's own model there (`StandsHoldListedItems`, on) |
 | **Take the item off** | The cairn goes back to its sign's colour, or the usual firelight |
@@ -40,7 +41,7 @@ An item stand may go on the stones, like a sign. Building one needs whatever van
 |---|---|
 | **Press F1 in game** (needs the BepInEx Configuration Manager mod) | `BeaconColour` and `TombstoneColour` show a colour swatch with red, green, blue and alpha sliders, and the lights change as you drag |
 | **Write a colour on a cairn's sign** | Write the sign as `<color=#4A9EFF>Home</color>` and that cairn burns blue for everyone. The sign shows the word in blue too |
-| **Prefer your own colour everywhere?** | Set `UseSignColours = false` and every cairn uses your `BeaconColour`, whatever its sign says |
+| **Prefer your own colour everywhere?** | Set `UseSignColours = false` and every cairn uses your `BeaconColour` on your screen, whatever it holds or its sign says. Just you; nobody else is affected |
 | **Keep your old colours** | A colour you already set, like `4A9EFF`, carries over as it is |
 | **Only players' games need it** | Colours are worked out on each player's own game, so the server does not need this version for them |
 
@@ -268,7 +269,7 @@ All safe to leave alone. They are in `BepInEx/config/com.raveniron.cairn.cfg`, a
 |---|---|
 | **1 - Core** | `VerboseLogging` |
 | **3 - Cairn piles** | `StackableStones` (each player's own copy decides their placing) · `StonePileStoneCost` (0 leaves the hammer's stone pile recipe alone; any other value is charged by your own game only) |
-| **4 - The light** | `EnableBeacons` · `BeaconColour` · `UseSignColours` · `BeaconMaxDistanceMeters` (800 m) · `BeaconOcclusion` (terrain hides beacons; leave it on) · `BeaconAngularSize` · `BeaconMinSizeMeters` · `BeaconMaxSizeMeters` · `BeaconHeightMeters` |
+| **4 - The light** | `EnableBeacons` · `BeaconColour` · `UseSignColours` (just you) · `ServerAllowsSignColours` (server rule) · `BeaconMaxDistanceMeters` (800 m) · `BeaconOcclusion` (terrain hides beacons; leave it on) · `BeaconAngularSize` · `BeaconMinSizeMeters` · `BeaconMaxSizeMeters` · `BeaconHeightMeters` |
 | **5 - The raven** | `EnableRavenVoice` · `RavenNameMeters` · `RavenNameMaxLength` |
 | **4 - The light (building)** | `ItemStandWoodCost` (2 wood, no workbench; 0 leaves vanilla's recipe) · `StandsHoldListedItems` |
 | **6 - Tombstones** | `ShowTombstoneLight` · `TombstoneColour` · `TombstoneHeightMeters` (2.5 m) |
@@ -281,6 +282,7 @@ All safe to leave alone. They are in `BepInEx/config/com.raveniron.cairn.cfg`, a
 
 **Needs:** [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/)
 
+- **Thanks to Drazik** for testing and feedback. The higher tombstone light, the cheaper item stand and the server's sign-colour rule all began as their ideas.
 - **Design document**: the reasoning behind every decision, including the ones that were wrong: <https://claude.ai/code/artifact/a04abbae-14d5-4a21-9bdc-032e91da0936>
 - **Support Raven Iron.** Every Raven Iron mod is free, and stays free: all of it, always. Nothing is held back for patrons, and nothing ever will be. To help cover server hosting and test hardware: the [website](https://ravenirongames.com/) · [Patreon](https://www.patreon.com/cw/RavenIronGames) · [Discord](https://discord.gg/AGKDEurAVa), a channel per mod and where the testing happens.
 

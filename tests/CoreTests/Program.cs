@@ -1023,6 +1023,13 @@ namespace Cairn.Tests
             Check(!SignColour.TryReadHex("", out _, out _, out _, out _), "an empty stored colour reads as none");
 
             Equal(2, ModConfig.ItemStandWoodCost.Value, "an item stand costs 2 wood by default (0.13.1, the owner's call)");
+
+            // World rules (0.13.2): sent after the held colours as one int.
+            Check(ServerRules.SignColours(0), "no rules sent (an older server) means sign colours on, as before");
+            Check(ServerRules.SignColours(ServerRules.Encode(true)), "a server allowing sign colours says so");
+            Check(!ServerRules.SignColours(ServerRules.Encode(false)), "a server refusing sign colours says so");
+            Equal(0, ServerRules.Encode(true), "'on' encodes as zero, so a missing rule and the default agree");
+            Equal(true, ModConfig.ServerAllowsSignColours.Value, "sign colours are on by default; off is the server owner's choice");
             Check(ModConfig.HolderPrefabs.Value.Contains("itemstandh") && ModConfig.HolderPrefabs.Value.Contains("itemstand,") ||
                   ModConfig.HolderPrefabs.Value == "itemstandh,itemstand", "both item stands are holders, so both get the price");
         }
