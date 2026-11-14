@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using RavenIron.Cairn.Config;
 using RavenIron.Cairn.Core;
 using UnityEngine;
 
@@ -39,6 +40,15 @@ namespace RavenIron.Cairn.Net
         private static readonly List<Beacon> _cache = new List<Beacon>(32);
         private static ZRoutedRpc _registeredOn;
 
+        private static bool _serverSignColours = true;
+
+        /// <summary>
+        /// May a cairn take its colour from its sign in THIS world (0.13.2)? The authority (single
+        /// player, a host) reads its own `SignColours`; a joined player's game uses what the server
+        /// last sent, and "nothing sent" — a server older than 0.13.2 — means yes, as before.
+        /// </summary>
+        public static bool SignColoursAllowed => Persistence.IsLoaded ? ModConfig.SignColours.Value : _serverSignColours;
+
         /// <summary>Bumped on every received push, so a renderer can rebuild only on change.</summary>
         public static int Revision { get; private set; }
 
@@ -70,6 +80,7 @@ namespace RavenIron.Cairn.Net
             // reference check re-registers on the next world by itself, and re-registering on
             // the same instance would throw on the duplicate name.
             _cache.Clear();
+            _serverSignColours = true;
             Revision++;
             LastLit = -1;
             LastSent = -1;
@@ -179,6 +190,10 @@ namespace RavenIron.Cairn.Net
                 pkg.Write(lit.Count);
                 foreach (Landmark l in lit) pkg.Write(l.Held ?? "");
 
+                // World rules (0.13.2), after the held colours for the same reason: older games
+                // stop reading before they reach it. See ServerRules.
+                pkg.Write(ServerRules.Encode(ModConfig.SignColours.Value));
+
                 rpc.InvokeRoutedRPC(ZRoutedRpc.Everybody, RpcName, pkg);
             }
             catch (Exception ex)
@@ -263,6 +278,7 @@ namespace RavenIron.Cairn.Net
                 }
 
                 // A 0.12.0 server sends no colour block; its push simply ends here.
+                int rules = 0;   // none sent (a server older than 0.13.2): sign colours on, as before
                 if (pkg.GetPos() < pkg.Size() && pkg.ReadInt() == count)
                 {
                     for (int i = 0; i < count; i++)
@@ -271,8 +287,10 @@ namespace RavenIron.Cairn.Net
                         b.Held = HeldColour.Normalise(pkg.ReadString());   // anything malformed is no colour
                         received[i] = b;
                     }
+                    if (pkg.GetPos() < pkg.Size()) rules = pkg.ReadInt();
                 }
 
+                _serverSignColours = ServerRules.SignColours(rules);
                 _cache.Clear();
                 _cache.AddRange(received);
                 Revision++;

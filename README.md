@@ -23,6 +23,7 @@ It adds no pieces, no assets and nothing to your screen. It changes one vanilla 
 |---|---|
 | **Set a surtling core on an item stand on the stones** | That cairn burns red, for everyone, within a couple of seconds |
 | **Use what you forage** | A greydwarf eye, blueberries or a blue mushroom burn blue, a freeze gland ice blue, a raspberry, red mushroom or bloodbag red, a carrot, resin or cloudberry orange, a dandelion, yellow mushroom or honey yellow, guck, ooze or a greydwarf trophy green, a wisp cyan, a thistle purple, a crystal or bone fragments white. Cheap on purpose: it stands in the wild |
+| **Make colour something you find** | Set `SignColours = false` on the server and only items on stands colour cairns: a red cairn needs something red. Signs still name them |
 | **Build the stand anywhere** | An item stand costs 2 wood and needs no workbench (`ItemStandWoodCost`; 0 keeps vanilla's recipe). It changes every item stand, trophy walls too |
 | **Items vanilla keeps off a stand** | A greydwarf eye has no model made for a stand, so vanilla refuses it. Cairn lets listed items on anyway and draws the item's own model there (`StandsHoldListedItems`, on) |
 | **Take the item off** | The cairn goes back to its sign's colour, or the usual firelight |

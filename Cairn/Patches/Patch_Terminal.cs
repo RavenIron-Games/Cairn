@@ -835,6 +835,11 @@ namespace RavenIron.Cairn.Patches
                         ? " — OVER THE CAP: only the cairns nearest a player reach clients"
                         : ""));
 
+            // The world's colour rule (0.13.2), and who decided it.
+            Say(args, $"  colours    : sign colours {(Net.LandmarkSync.SignColoursAllowed ? "ON" : "OFF — only held items colour a cairn")}" +
+                      (Persistence.IsLoaded ? " (SignColours, this game's setting)" : " (the server's rule)") +
+                      (ModConfig.UseSignColours.Value ? "" : "; you hide every builder's colour (UseSignColours = false)"));
+
             // Quick checks (0.12.0): a placed stone or written sign lights its cairn in seconds.
             if (Persistence.IsLoaded)
                 Say(args, ModConfig.QuickChecks.Value

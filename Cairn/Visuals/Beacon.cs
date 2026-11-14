@@ -160,7 +160,7 @@ namespace RavenIron.Cairn.Visuals
                     ? (ModConfig.UseSignColours.Value
                         ? $"  {source} #{ColorUtility.ToHtmlStringRGBA(lit.Sign)}"
                         : $"  {source} ignored (UseSignColours = false)")
-                    : "";
+                    : LandmarkSync.SignColoursAllowed ? "" : "  (sign colours are off in this world)";
                 lines.Add(
                     $"  {kv.Key}  {dist:F0}m  vis={lit.Visibility:F2}  {why}{colour}");
             }
@@ -220,6 +220,7 @@ namespace RavenIron.Cairn.Visuals
 
             if (ModConfig.EnableBeacons.Value)
             {
+                bool signsAllowed = LandmarkSync.SignColoursAllowed;
                 foreach (LandmarkSync.Beacon b in LandmarkSync.Current())
                 {
                     LightKey key = LightKey.ForCairn(b.Key);
@@ -227,10 +228,12 @@ namespace RavenIron.Cairn.Visuals
                     if (lit == null) return;
 
                     // The builder's colour. What the cairn HOLDS wins (0.13.0): it is what you can
-                    // see standing on the stones. Otherwise the sign text the beacon already carries.
+                    // see standing on the stones. Otherwise the sign text the beacon already carries,
+                    // unless this world's rule turns sign colours off (SignColours, 0.13.2).
                     float r, g, bl, a;
                     lit.FromHeld = SignColour.TryReadHex(b.Held, out r, out g, out bl, out a);
-                    lit.HasSign = lit.FromHeld || SignColour.TryRead(b.Name, out r, out g, out bl, out a);
+                    lit.HasSign = lit.FromHeld ||
+                                  (signsAllowed && SignColour.TryRead(b.Name, out r, out g, out bl, out a));
                     if (lit.HasSign) lit.Sign = new Color(r, g, bl, a);
                 }
             }

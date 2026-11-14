@@ -58,6 +58,7 @@ namespace RavenIron.Cairn.Config
         public static ConfigEntry<bool>   BeaconOcclusion;
         public static ConfigEntry<Color>  BeaconColour;
         public static ConfigEntry<bool>   UseSignColours;
+        public static ConfigEntry<bool>   SignColours;
         public static ConfigEntry<string> HolderPrefabs;
         public static ConfigEntry<string> HeldColours;
         public static ConfigEntry<bool>   StandsHoldListedItems;
@@ -331,8 +332,17 @@ namespace RavenIron.Cairn.Config
                 "<color=#4A9EFF>Home</color>; or an item listed in HeldColours on an " +
                 "item stand at the cairn (a surtling core burns red). The item wins when a cairn " +
                 "has both. Cairns with neither use BeaconColour. " +
-                "Set this to false to use your own BeaconColour on EVERY cairn and ignore both. " +
+                "Set this to false to use your own BeaconColour on EVERY cairn and ignore every builder's " +
+                "colour, in your own game only. (SignColours, on the server, is the rule for the world.) " +
                 "Read by each player's own game, and a change shows at once.");
+
+            SignColours = config.Bind(
+                "4 - The light", "SignColours", true,
+                "A RULE FOR THE WHOLE WORLD: may a cairn take its colour from its sign (a colour tag, " +
+                "or a word in square brackets like [blue])? False means only what a cairn holds on an " +
+                "item stand colours it, so a red cairn needs something red. " +
+                "Set it on the server; it is sent to every player's game. A player on Cairn older " +
+                "than 0.13.2 still sees sign colours. In single player, set it in your own game.");
 
             HolderPrefabs = config.Bind(
                 "4 - The light", "HolderPrefabs", "itemstandh,itemstand",
