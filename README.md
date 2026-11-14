@@ -22,7 +22,7 @@ It adds no pieces, no assets and nothing to your screen. It changes one vanilla 
 | You | It |
 |---|---|
 | **Set a surtling core on an item stand on the stones** | That cairn burns red, for everyone, within a couple of seconds |
-| **Use what you forage** | A greydwarf eye, blueberries or a blue mushroom burn blue, a freeze gland ice blue, a raspberry or bloodbag red, a carrot or resin orange, a dandelion, yellow mushroom or honey yellow, guck or a greydwarf trophy green, a thistle purple, a crystal white. Cheap on purpose: it stands in the wild |
+| **Use what you forage** | A greydwarf eye, blueberries or a blue mushroom burn blue, a freeze gland ice blue, a raspberry, red mushroom or bloodbag red, a carrot, resin or cloudberry orange, a dandelion, yellow mushroom or honey yellow, guck, ooze or a greydwarf trophy green, a wisp cyan, a thistle purple, a crystal or bone fragments white. Cheap on purpose: it stands in the wild |
 | **Items vanilla keeps off a stand** | A greydwarf eye has no model made for a stand, so vanilla refuses it. Cairn lets listed items on anyway and draws the item's own model there (`StandsHoldListedItems`, on) |
 | **Take the item off** | The cairn goes back to its sign's colour, or the usual firelight |
 | **Choose your own items** | `HeldColours` on the server lists them: `SurtlingCore=FF4020`, and so on. `cairn holdable` lists every item a stand will take, and `cairn holdable more` the ones Cairn can put on if you list them |

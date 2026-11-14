@@ -6,8 +6,9 @@
 
 - **Put an item on an item stand at a cairn** and the cairn burns in that item's colour, for
   everyone: a greydwarf eye, blueberries or a blue mushroom blue, a freeze gland ice blue, a
-  raspberry, bloodbag or surtling core red, a carrot or resin orange, a dandelion, yellow mushroom
-  or honey yellow, guck or a greydwarf trophy green, a thistle purple, a crystal white. The
+  raspberry, red mushroom, bloodbag or surtling core red, a carrot, resin or cloudberry orange, a
+  dandelion, yellow mushroom or honey yellow, guck, ooze or a greydwarf trophy green, a wisp cyan,
+  a thistle purple, a crystal or bone fragments white. The
   defaults are cheap, everyday things on purpose: a cairn stands in the wild. The stand can sit on the stones or within 6 m (`LandmarkPairMeters`).
   Taking the item off returns the cairn to its sign's colour or the usual firelight, within a
   couple of seconds.

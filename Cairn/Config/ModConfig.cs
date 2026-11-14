@@ -343,10 +343,11 @@ namespace RavenIron.Cairn.Config
 
             HeldColours = config.Bind(
                 "4 - The light", "HeldColours",
-                "Raspberry=E83A3A,Bloodbag=B0102A,SurtlingCore=FF4020,Carrot=FF8A1F,Resin=FF9A2A," +
-                "Dandelion=FFD21F,MushroomYellow=FFE040,Honey=FFC02A,Guck=7ACC3A,TrophyGreydwarf=5BD13A," +
-                "GreydwarfEye=4A9EFF,Blueberries=3A6BFF,MushroomBlue=3A7BFF,FreezeGland=A8E4FF," +
-                "Thistle=A050FF,Crystal=EAF4FF",
+                "Raspberry=E83A3A,Mushroom=FF3030,Bloodbag=B0102A,SurtlingCore=FF4020,Carrot=FF8A1F," +
+                "Resin=FF9A2A,Cloudberry=FFB040,Dandelion=FFD21F,MushroomYellow=FFE040,Honey=FFC02A," +
+                "Guck=7ACC3A,Ooze=8CE04A,TrophyGreydwarf=5BD13A,Wisp=7FF6FF,GreydwarfEye=4A9EFF," +
+                "Blueberries=3A6BFF,MushroomBlue=3A7BFF,FreezeGland=A8E4FF,Thistle=A050FF," +
+                "Crystal=EAF4FF,BoneFragments=F2EEE0",
                 "Which held items colour a cairn, and how: ItemPrefab=RRGGBB (or RRGGBBAA), " +
                 "comma-separated. These are the items' PREFAB names, such as SurtlingCore, not the " +
                 "names shown in game. The defaults are cheap, everyday things on purpose: a cairn " +
