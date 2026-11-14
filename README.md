@@ -282,6 +282,7 @@ All safe to leave alone. They are in `BepInEx/config/com.raveniron.cairn.cfg`, a
 
 **Needs:** [BepInExPack Valheim](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/)
 
+- **Thanks to Drazik** for testing and feedback. The higher tombstone light, the cheaper item stand and the server's sign-colour rule all began as their ideas.
 - **Design document**: the reasoning behind every decision, including the ones that were wrong: <https://claude.ai/code/artifact/a04abbae-14d5-4a21-9bdc-032e91da0936>
 - **Support Raven Iron.** Every Raven Iron mod is free, and stays free: all of it, always. Nothing is held back for patrons, and nothing ever will be. To help cover server hosting and test hardware: the [website](https://ravenirongames.com/) · [Patreon](https://www.patreon.com/cw/RavenIronGames) · [Discord](https://discord.gg/AGKDEurAVa), a channel per mod and where the testing happens.
 
