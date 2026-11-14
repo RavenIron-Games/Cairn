@@ -135,9 +135,13 @@ on upload: 4-space indent, LF, no final newline, and `"dependencies": []`. The d
 lives in the store API instead, which is what mod managers read. Its 0.11.1 zip is the same,
 so this is how Hexium works, not a fault in this upload.
 
-**CUT 2026-11-14: v0.13.2, a server rule that turns sign colours off, PACKAGED** (not yet on any
-store; BepInExPack 5.4.2360, still the newest on both stores that day). Zip from a fresh clone of
-`5f3737c` (zip md5 `027517bb...`, DLL md5 `e6051fc1...`), revprobe-clean on 1.0.21. Drazik asked
+**CUT 2026-11-14: v0.13.2, a server rule that turns sign colours off, LIVE ON BOTH STORES the
+same day** (Hexium 20:29:58Z, Thunderstore 20:33:08Z; BepInExPack 5.4.2360, still the newest on both
+stores that day). Zip from a fresh clone of `5f3737c` (zip md5 `027517bb...`, DLL md5
+`e6051fc1...`), revprobe-clean on 1.0.21, merged to main as `0de6299`, tagged `v0.13.2`, GitHub
+pre-release with the zip; Thunderstore byte-identical, Hexium the same DLL (revprobe-clean).
+Thunderstore's package summary kept naming 0.13.1 as latest for some minutes after the upload
+while the version page and the metrics API already had 0.13.2: cache lag, not a failed upload. Drazik asked
 to turn off sign colours but keep held-item colours, so a red cairn means finding something red.
 `ServerAllowsSignColours` (default on) is a WORLD rule: the authority reads its own value, and
 joined clients take the server's, sent as an int of flags (`ServerRules`) appended after the
@@ -219,7 +223,7 @@ day 0.12.0 shipped; Drazik (a player) asked for the tombstone light to sit highe
   `_0.11.1.test-build-not-store`), and a Gale update replaced the test build wholesale. Deploy
   with `rm` then `cp`, keep backups in `profiles\testing\_cairn-backups\`.
 
-**Status: 0.13.1 live on Hexium AND Thunderstore** (since 2026-11-14) under team
+**Status: 0.13.2 live on Hexium AND Thunderstore** (since 2026-11-14) under team
 `RavenIronStudios`, categorised "Client & Server - must be installed on both" (Thunderstore:
 Mods, Building). Thunderstore became a channel on 2026-11-13 (see the Distribution row). The
 owner does every Hexium upload, always.
