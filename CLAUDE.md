@@ -160,11 +160,18 @@ day 0.12.0 shipped; Drazik (a player) asked for the tombstone light to sit highe
   the stones; a greydwarf eye on it, drawn and lighting blue (quick check 1 s after); surtling
   core red, dandelion yellow, blue mushroom blue, all saved as v3 rows; item off and swap update
   in seconds; `[cyan] Test` lit cyan and `Red Cliff` went back to firelight (owner's eyes).
-  **Not yet tried:** the tombstone height; anything on Storm10 (a server deciding held colours
-  for a joined client, a 0.12.0 client, the drawn eye on another player's screen). Storm10 would
+  **And on Storm10 the same evening** (dedicated, 1.0.21, `testing` client joined by code at
+  18:46): a greydwarf eye on a stand, let on and drawn by the client (18:47:38), the server's quick
+  check found `1 held colour(s) ... 1 changed` one second later, and the owner saw the eye and a
+  blue light; taking it off gave `0 held colour(s)`; a sign written `[blue]` named the cairn and
+  its bracket colour followed each edit (owner's eyes); the tombstone light sat above the stone
+  (owner's eyes). No errors on either side. **Not yet tried:** a 0.12.0 client against a 0.13.0
+  server; the drawn eye on a SECOND player's screen. Storm10 would
   not take a join that afternoon: every boot after 15:16 logged a NullReferenceException in
   `ZPlayFabMatchmaking.OnCheckJoinCodeSuccess` and the join code would not resolve, even after a
-  3-minute gap; it is a crossplay server, so joining by IP never works there.
+  3-minute gap; it is a crossplay server, so joining by IP never works there. It healed by itself
+  after about two and a half hours off: the 18:45 boot retried the check twice and went active.
+  Lesson: a quick restart can strand a crossplay lobby under the same code; give it minutes.
 - **A deploy trap found the same day:** Gale profile plugin files are hard links into Gale's
   cache, so copying a test DLL over one rewrote the cached store 0.11.1 (moved aside as
   `_0.11.1.test-build-not-store`), and a Gale update replaced the test build wholesale. Deploy
