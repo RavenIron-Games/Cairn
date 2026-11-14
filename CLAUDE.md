@@ -135,6 +135,26 @@ on upload: 4-space indent, LF, no final newline, and `"dependencies": []`. The d
 lives in the store API instead, which is what mod managers read. Its 0.11.1 zip is the same,
 so this is how Hexium works, not a fault in this upload.
 
+**CUT 2026-11-14: v0.13.2, a server rule that turns sign colours off, PACKAGED** (not yet on any
+store; BepInExPack 5.4.2360, still the newest on both stores that day). Zip from a fresh clone of
+`5f3737c` (zip md5 `027517bb...`, DLL md5 `e6051fc1...`), revprobe-clean on 1.0.21. Drazik asked
+to turn off sign colours but keep held-item colours, so a red cairn means finding something red.
+`ServerAllowsSignColours` (default on) is a WORLD rule: the authority reads its own value, and
+joined clients take the server's, sent as an int of flags (`ServerRules`) appended after the
+held-colour block of the beacon packet, so older clients never read it and a client of an older
+server defaults to allowed. Held colours are checked first and never gated by it
+(`Beacon.Rebuild`). The first cut named it `SignColours`, which in the F1 window sat beside the
+shipped `UseSignColours` and read as the same switch; the owner called it confusing. Fix: the new
+key was renamed (never released, so free), and both carry a `ConfigurationManagerAttributes`
+`DispName` ("Cairn colours: from signs (SERVER RULE, everyone)" / "Cairn colours: show them (JUST
+YOU)"). Configuration Manager finds that class BY NAME, copies public fields by name, and sorts a
+section by Order then DispName, so the shared prefix keeps the two together. `UseSignColours`
+kept its key: Cairn's ConfigLedger can rebase defaults but not move a key. `cairn status` gives
+each its own line. **Verified on Storm10 and in single player (1.0.21, owner's eyes):** with the
+rule off, a `[red]` sign cairn showed the player's own BeaconColour while the eye cairn stayed
+blue; status said "set by the server" on Storm10 and "set in this game" in single player. README
+now thanks Drazik.
+
 **CUT 2026-11-14: v0.13.1, an item stand costs 2 wood and needs no workbench, LIVE ON BOTH STORES
 the same day** (Hexium 17:47:53Z, Thunderstore 17:48:07Z; BepInExPack 5.4.2360). Zip from a fresh
 clone of `574b816` (zip md5 `ac908402...`, DLL md5 `03371adf...`), merged to main as `5fe0664`,
