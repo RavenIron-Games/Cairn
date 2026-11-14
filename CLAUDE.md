@@ -135,8 +135,8 @@ on upload: 4-space indent, LF, no final newline, and `"dependencies": []`. The d
 lives in the store API instead, which is what mod managers read. Its 0.11.1 zip is the same,
 so this is how Hexium works, not a fault in this upload.
 
-**IN PROGRESS 2026-11-13: v0.13.0, held colours, sign brackets, a higher tombstone light**
-(branch `feature/held-colours`, local only, not pushed, not packaged). The owner asked for it the
+**PACKAGED 2026-11-13: v0.13.0, held colours, sign brackets, a higher tombstone light**
+(branch `feature/held-colours`, local only, not pushed or merged; zip in `dist\`). The owner asked for it the
 day 0.12.0 shipped; Drazik (a player) asked for the tombstone light to sit higher.
 - **A cairn takes the colour of what it holds.** An item stand (`HolderPrefabs`: itemstandh,
   itemstand) on or within `LandmarkPairMeters` of a cairn, holding an item on `HeldColours`
@@ -165,7 +165,9 @@ day 0.12.0 shipped; Drazik (a player) asked for the tombstone light to sit highe
   check found `1 held colour(s) ... 1 changed` one second later, and the owner saw the eye and a
   blue light; taking it off gave `0 held colour(s)`; a sign written `[blue]` named the cairn and
   its bracket colour followed each edit (owner's eyes); the tombstone light sat above the stone
-  (owner's eyes). No errors on either side. **Not yet tried:** a 0.12.0 client against a 0.13.0
+  (owner's eyes). The final default list (21 cheap items) loaded on Storm10 as `21 item(s) can be
+  held`, and bone fragments on a stand gave `1 held colour(s)` and a white light with the bones
+  drawn (owner's eyes, 18:58). No errors on either side. **Not yet tried:** a 0.12.0 client against a 0.13.0
   server; the drawn eye on a SECOND player's screen. Storm10 would
   not take a join that afternoon: every boot after 15:16 logged a NullReferenceException in
   `ZPlayFabMatchmaking.OnCheckJoinCodeSuccess` and the join code would not resolve, even after a
