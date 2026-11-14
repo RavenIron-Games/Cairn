@@ -135,8 +135,14 @@ on upload: 4-space indent, LF, no final newline, and `"dependencies": []`. The d
 lives in the store API instead, which is what mod managers read. Its 0.11.1 zip is the same,
 so this is how Hexium works, not a fault in this upload.
 
-**PACKAGED 2026-11-13: v0.13.0, held colours, sign brackets, a higher tombstone light**
-(branch `feature/held-colours`, local only, not pushed or merged; zip in `dist\`). The owner asked for it the
+**CUT 2026-11-13: v0.13.0, held colours, sign brackets, a higher tombstone light, LIVE ON BOTH
+STORES that evening** (Hexium API `date_created` 02:03:42Z and Thunderstore 02:05:15Z, both on
+2026-11-14 UTC; dependency `BepInExPack_Valheim-5.4.2360`). Zip built by `tools\package.ps1` from a
+fresh clone of `42860f6`: zip md5 `5ab1e01b...`, DLL md5 `b242b3b5...`, revprobe-clean on 1.0.21.
+Merged to main as `30967db` (local merge, then pushed; no PR), tagged `v0.13.0`, GitHub pre-release
+with the zip. Thunderstore serves the zip byte-identical; Hexium serves the same DLL (it rewrites
+the manifest, as always). Claude uploaded to Thunderstore on the owner's word; the owner uploaded
+to Hexium. The owner asked for it the
 day 0.12.0 shipped; Drazik (a player) asked for the tombstone light to sit higher.
 - **A cairn takes the colour of what it holds.** An item stand (`HolderPrefabs`: itemstandh,
   itemstand) on or within `LandmarkPairMeters` of a cairn, holding an item on `HeldColours`
@@ -179,9 +185,10 @@ day 0.12.0 shipped; Drazik (a player) asked for the tombstone light to sit highe
   `_0.11.1.test-build-not-store`), and a Gale update replaced the test build wholesale. Deploy
   with `rm` then `cp`, keep backups in `profiles\testing\_cairn-backups\`.
 
-**Status: 0.12.0 live on the store** (since 2026-11-13) under team `RavenIronStudios`,
-categorised "Client & Server - must be installed on both". The store's version list also
-holds 0.11.1, 0.11.0, 0.10.0 and 0.9.1. The owner does every Hexium upload.
+**Status: 0.13.0 live on Hexium AND Thunderstore** (since 2026-11-13) under team
+`RavenIronStudios`, categorised "Client & Server - must be installed on both" (Thunderstore:
+Mods, Building). Thunderstore became a channel on 2026-11-13; the locked Distribution row below
+still says Hexium only and is out of date. The owner does every Hexium upload, always.
 **Next time anyone touches Cairn, finish the two open checks for tombstone lights.** Watch the
 light go out once the tombstone is emptied. Have a second player confirm they do NOT see it. 0.7.0, the first release, was built,
 verified and shipped in a single day (published 2026-09-02/03).
