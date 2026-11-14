@@ -44,10 +44,10 @@ namespace RavenIron.Cairn.Net
 
         /// <summary>
         /// May a cairn take its colour from its sign in THIS world (0.13.2)? The authority (single
-        /// player, a host) reads its own `SignColours`; a joined player's game uses what the server
+        /// player, a host) reads its own `ServerAllowsSignColours`; a joined player's game uses what the server
         /// last sent, and "nothing sent" — a server older than 0.13.2 — means yes, as before.
         /// </summary>
-        public static bool SignColoursAllowed => Persistence.IsLoaded ? ModConfig.SignColours.Value : _serverSignColours;
+        public static bool SignColoursAllowed => Persistence.IsLoaded ? ModConfig.ServerAllowsSignColours.Value : _serverSignColours;
 
         /// <summary>Bumped on every received push, so a renderer can rebuild only on change.</summary>
         public static int Revision { get; private set; }
@@ -192,7 +192,7 @@ namespace RavenIron.Cairn.Net
 
                 // World rules (0.13.2), after the held colours for the same reason: older games
                 // stop reading before they reach it. See ServerRules.
-                pkg.Write(ServerRules.Encode(ModConfig.SignColours.Value));
+                pkg.Write(ServerRules.Encode(ModConfig.ServerAllowsSignColours.Value));
 
                 rpc.InvokeRoutedRPC(ZRoutedRpc.Everybody, RpcName, pkg);
             }

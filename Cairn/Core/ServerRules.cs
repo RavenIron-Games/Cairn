@@ -5,7 +5,7 @@ namespace RavenIron.Cairn.Core
     /// held-colour block, so a game older than 0.13.2 never reaches it and a server older than
     /// 0.13.2 simply sends none.
     ///
-    /// Bit 0 set means sign colours are OFF on this world (`SignColours = false`): a cairn takes no
+    /// Bit 0 set means sign colours are OFF on this world (`ServerAllowsSignColours = false`): a cairn takes no
     /// colour from its sign's tag or `[bracket]`, only from what it holds. Stored as an OFF bit on
     /// purpose, so "no rules sent" and "zero" both mean the old behaviour: sign colours on.
     /// </summary>
