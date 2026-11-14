@@ -23,6 +23,7 @@ It adds no pieces, no assets and nothing to your screen. It changes one vanilla 
 |---|---|
 | **Set a surtling core on an item stand on the stones** | That cairn burns red, for everyone, within a couple of seconds |
 | **Use what you forage** | A greydwarf eye, blueberries or a blue mushroom burn blue, a freeze gland ice blue, a raspberry, red mushroom or bloodbag red, a carrot, resin or cloudberry orange, a dandelion, yellow mushroom or honey yellow, guck, ooze or a greydwarf trophy green, a wisp cyan, a thistle purple, a crystal or bone fragments white. Cheap on purpose: it stands in the wild |
+| **Build the stand anywhere** | An item stand costs 2 wood and needs no workbench (`ItemStandWoodCost`; 0 keeps vanilla's recipe). It changes every item stand, trophy walls too |
 | **Items vanilla keeps off a stand** | A greydwarf eye has no model made for a stand, so vanilla refuses it. Cairn lets listed items on anyway and draws the item's own model there (`StandsHoldListedItems`, on) |
 | **Take the item off** | The cairn goes back to its sign's colour, or the usual firelight |
 | **Choose your own items** | `HeldColours` on the server lists them: `SurtlingCore=FF4020`, and so on. `cairn holdable` lists every item a stand will take, and `cairn holdable more` the ones Cairn can put on if you list them |
@@ -269,6 +270,7 @@ All safe to leave alone. They are in `BepInEx/config/com.raveniron.cairn.cfg`, a
 | **3 - Cairn piles** | `StackableStones` (each player's own copy decides their placing) · `StonePileStoneCost` (0 leaves the hammer's stone pile recipe alone; any other value is charged by your own game only) |
 | **4 - The light** | `EnableBeacons` · `BeaconColour` · `UseSignColours` · `BeaconMaxDistanceMeters` (800 m) · `BeaconOcclusion` (terrain hides beacons; leave it on) · `BeaconAngularSize` · `BeaconMinSizeMeters` · `BeaconMaxSizeMeters` · `BeaconHeightMeters` |
 | **5 - The raven** | `EnableRavenVoice` · `RavenNameMeters` · `RavenNameMaxLength` |
+| **4 - The light (building)** | `ItemStandWoodCost` (2 wood, no workbench; 0 leaves vanilla's recipe) · `StandsHoldListedItems` |
 | **6 - Tombstones** | `ShowTombstoneLight` · `TombstoneColour` · `TombstoneHeightMeters` (2.5 m) |
 
 </details>

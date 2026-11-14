@@ -61,6 +61,7 @@ namespace RavenIron.Cairn.Config
         public static ConfigEntry<string> HolderPrefabs;
         public static ConfigEntry<string> HeldColours;
         public static ConfigEntry<bool>   StandsHoldListedItems;
+        public static ConfigEntry<int>    ItemStandWoodCost;
 
         // ---- The raven ------------------------------------------------------------
         public static ConfigEntry<bool>  EnableRavenVoice;
@@ -366,6 +367,18 @@ namespace RavenIron.Cairn.Config
                 "and only for listed items on the stands in HolderPrefabs. False leaves stands exactly " +
                 "as the game made them. Read by each player's own game: it decides what fits on a " +
                 "stand, and draws it.");
+
+            ItemStandWoodCost = config.Bind(
+                "4 - The light", "ItemStandWoodCost", 2,
+                new ConfigDescription(
+                    "What an item stand costs to build, in wood, with no workbench needed, so a " +
+                    "cairn's colour can be set on a lonely headland. Applies to the stands in " +
+                    "HolderPrefabs (both item stands) EVERYWHERE, trophy walls included: a recipe " +
+                    "belongs to the piece. This edits a VANILLA recipe and says so in the log at " +
+                    "start-up. 0 leaves the stands exactly as the game made them. " +
+                    "Read by each player's own game: the building player's setting is the cost they " +
+                    "pay. Takes effect when a world loads.",
+                    new AcceptableValueRange<int>(0, 50)));
 
             BeaconOcclusion = config.Bind(
                 "4 - The light", "BeaconOcclusion", true,
